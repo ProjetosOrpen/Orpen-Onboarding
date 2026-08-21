@@ -1,0 +1,20 @@
+{
+  "name": "orpen-setup-ia",
+  "version": "1.0.0",
+  "description": "Plataforma de Setup de Ambientes & IA Auditora ORPEN",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "orpen",
+    "ai",
+    "auditor",
+    "setup",
+    "whatsapp",
+    "sol-5.6"
+  ],
+  "author": "ORPEN",
+  "license": "MIT"
+}

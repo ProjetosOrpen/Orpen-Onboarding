@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ORPEN · Setup do Ambiente & IA Auditora</title>
+  
+  <!-- Fontes Oficiais ORPEN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Estilos Modulares -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/auditor.css">
+</head>
+<body>
+
+  <!-- Barra Superior Oficial ORPEN -->
+  <header class="top">
+    <div class="brand" style="display:flex;align-items:center;gap:10px">
+      <img src="orpen-logo-white.svg" alt="ORPEN" height="22" style="display:block">
+    </div>
+    <div class="who">Setup do ambiente · <b id="topcli">—</b></div>
+    <div class="right">
+      <div class="saved"><span class="dot"></span> salvo automaticamente</div>
+      <div class="pbar"><i id="pbar"></i></div>
+      <div class="ppct" id="ppct">0%</div>
+    </div>
+  </header>
+
+  <!-- Layout Principal em 3 Colunas -->
+  <div class="wrap">
+    <!-- Rail Esquerdo de Navegação dos Blocos -->
+    <nav class="rail" id="rail">
+      <p class="kicker">Blocos</p>
+    </nav>
+
+    <!-- Conteúdo Central Dinâmico -->
+    <main id="main"></main>
+
+    <!-- Copiloto Lateral Direito (IA Auditora OpenAI 5.6 Sol) -->
+    <aside class="sum" id="sum"></aside>
+  </div>
+
+  <!-- Notificações Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- MODAL DE PROMPT FINAL DO CLIENTE -->
+  <div class="prompt-modal-backdrop" id="modal_prompt_backdrop" onclick="if(event.target===this)fecharModalPromptFinal()">
+    <div class="prompt-modal">
+      <div class="prompt-modal-header">
+        <h3>📜 System Prompt Final do Cliente (Compilado pela Auditora)</h3>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="badge-prompt-stat" id="prompt_token_count">~620 tokens</span>
+          <button class="rowdel" style="color:#fff;font-size:20px;line-height:1" onclick="fecharModalPromptFinal()">×</button>
+        </div>
+      </div>
+      <div class="prompt-modal-body">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12px;color:var(--muted)">
+          <span>Este é o prompt final determinístico pronto para entrar em produção no WhatsApp/WebChat:</span>
+          <span id="prompt_tier_tag" class="tier-badge tier-gold" style="margin:0">PLANO GOLD</span>
+        </div>
+        <pre class="prompt-box-code" id="prompt_final_code"></pre>
+      </div>
+      <div class="prompt-modal-footer">
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-p" onclick="copiarPromptFinal()">📋 Copiar Prompt</button>
+          <button class="btn btn-s" onclick="baixarPromptTxt()">💾 Baixar .txt</button>
+        </div>
+        <button class="btn btn-s" onclick="fecharModalPromptFinal()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts Modulares da Aplicação -->
+  <script src="js/state.js"></script>
+  <script src="js/blocks.js"></script>
+  <script src="js/auditor.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
