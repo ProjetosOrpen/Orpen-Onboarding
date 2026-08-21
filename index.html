@@ -10,16 +10,1147 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   
-  <!-- Estilos Modulares -->
-  <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="css/auditor.css">
+  <style>
+    :root {
+      --ink: #0F212C;
+      --ink-2: #284450;
+      --muted: #5D7079;
+      --line: #D6E0E4;
+      --canvas: #EAEFF1;
+      --surface: #FFFFFF;
+      --surface-2: #F5F8F9;
+      --signal: #0C7A83;
+      --signal-soft: #E2F2F2;
+      --signal-deep: #075158;
+      --amber: #B0740B;
+      --amber-soft: #FBF0DC;
+      --rose: #A62B22;
+      --rose-soft: #FBE9E7;
+      --ok: #1D7A4F;
+      --r: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: "IBM Plex Sans", -apple-system, Segoe UI, sans-serif;
+      font-size: 14.5px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, .disp {
+      font-family: "Archivo", "IBM Plex Sans", sans-serif;
+      letter-spacing: -.015em;
+    }
+
+    code, .mono, input.mono {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+    }
+
+    /* ---------- top bar ---------- */
+    .top {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: var(--ink);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 12px 22px;
+    }
+
+    .brand {
+      font-family: "Archivo";
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: .14em;
+    }
+
+    .top .who {
+      font-size: 13px;
+      color: #9FB6BE;
+      border-left: 1px solid #2C4652;
+      padding-left: 18px;
+    }
+
+    .top .who b {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .top .right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .saved {
+      font-size: 12px;
+      color: #8FC9C4;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4FBFA0;
+      display: inline-block;
+    }
+
+    .pbar {
+      width: 150px;
+      height: 6px;
+      background: #25404B;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .pbar i {
+      display: block;
+      height: 100%;
+      background: #4FC4C9;
+      width: 0;
+      transition: width .4s cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .ppct {
+      font-family: "IBM Plex Mono";
+      font-size: 12px;
+      color: #CFE6E6;
+      min-width: 38px;
+      text-align: right;
+    }
+
+    /* ---------- layout ---------- */
+    .wrap {
+      display: grid;
+      grid-template-columns: 236px minmax(0, 1fr) 310px;
+      gap: 26px;
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 26px 22px 90px;
+    }
+
+    /* ---------- rail ---------- */
+    .rail {
+      position: sticky;
+      top: 74px;
+      align-self: start;
+    }
+
+    .rail .kicker {
+      font-size: 10.5px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 10px 4px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 10px;
+      align-items: center;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: 0;
+      cursor: pointer;
+      padding: 8px 8px;
+      border-radius: 8px;
+      color: var(--ink-2);
+      font: inherit;
+      font-size: 13.5px;
+    }
+
+    .step:hover {
+      background: #E1E8EA;
+    }
+
+    .step.on {
+      background: var(--surface);
+      box-shadow: 0 1px 2px rgba(15, 33, 44, .09);
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .step .mk {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 1.5px solid var(--line);
+      background: var(--surface);
+      display: grid;
+      place-items: center;
+      font-family: "IBM Plex Mono";
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .step.done .mk {
+      background: var(--signal);
+      border-color: var(--signal);
+      color: #fff;
+    }
+
+    .step.part .mk {
+      border-color: var(--amber);
+      color: var(--amber);
+      background: var(--amber-soft);
+    }
+
+    .step .lbl {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .railnote {
+      margin: 14px 4px 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    /* ---------- card / fields ---------- */
+    .card {
+      background: var(--surface);
+      border-radius: var(--r);
+      box-shadow: 0 1px 2px rgba(15, 33, 44, .08);
+      padding: 26px 28px;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow {
+      font-family: "IBM Plex Mono";
+      font-size: 11px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--signal);
+      margin: 0 0 4px;
+    }
+
+    h2 {
+      font-size: 21px;
+      margin: 0 0 6px;
+      font-weight: 700;
+    }
+
+    .lede {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0 0 22px;
+      line-height: 1.45;
+    }
+
+    .sect {
+      margin: 24px 0 12px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .sect h3 {
+      font-size: 14.5px;
+      margin: 0 0 3px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .sect p {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .f {
+      margin-bottom: 14px;
+    }
+
+    .f label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-2);
+      margin-bottom: 5px;
+    }
+
+    .req {
+      color: var(--rose);
+      font-weight: 700;
+    }
+
+    input[type=text], input[type=email], input[type=tel], input[type=date], textarea, select {
+      width: 100%;
+      font: inherit;
+      font-size: 13.5px;
+      color: var(--ink);
+      background: #fff;
+      border: 1.5px solid var(--line);
+      border-radius: 7px;
+      padding: 8px 11px;
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--signal);
+      box-shadow: 0 0 0 3px var(--signal-soft);
+    }
+
+    input.bad, textarea.bad {
+      border-color: var(--rose);
+      background: #FFFDFC;
+    }
+
+    textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    .hint {
+      font-size: 11.5px;
+      color: var(--muted);
+      margin-top: 4px;
+      display: block;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* ---------- buttons / options ---------- */
+    .opts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .opt {
+      font: inherit;
+      font-size: 13px;
+      background: var(--surface-2);
+      border: 1.5px solid var(--line);
+      border-radius: 7px;
+      padding: 7px 13px;
+      cursor: pointer;
+      color: var(--ink-2);
+      transition: .15s;
+    }
+
+    .opt:hover {
+      border-color: #B0C4CC;
+    }
+
+    .opt[aria-pressed=true] {
+      background: var(--signal-soft);
+      border-color: var(--signal);
+      color: var(--signal-deep);
+      font-weight: 600;
+    }
+
+    .opt.sm {
+      font-size: 12px;
+      padding: 5px 10px;
+    }
+
+    .btn {
+      font: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      border-radius: 7px;
+      padding: 9px 16px;
+      border: 0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: .15s;
+    }
+
+    .btn-p {
+      background: var(--signal);
+      color: #fff;
+    }
+
+    .btn-p:hover {
+      background: var(--signal-deep);
+    }
+
+    .btn-s {
+      background: var(--surface-2);
+      color: var(--ink-2);
+      border: 1.5px solid var(--line);
+    }
+
+    .btn-s:hover {
+      border-color: #B0C4CC;
+    }
+
+    .btn-g {
+      background: none;
+      color: var(--signal);
+      padding: 6px 10px;
+      font-size: 12.5px;
+      border: 0;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-g:hover {
+      text-decoration: underline;
+    }
+
+    .navrow {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .navrow .sp {
+      margin-left: auto;
+    }
+
+    /* ---------- tags / lists ---------- */
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-size: 12.5px;
+    }
+
+    .tag button {
+      background: none;
+      border: 0;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .tag button:hover {
+      color: var(--rose);
+    }
+
+    /* ---------- tables ---------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 7px 6px;
+      border-bottom: 1.5px solid var(--line);
+    }
+
+    td {
+      padding: 6px;
+      border-bottom: 1px solid #E8EFF2;
+      vertical-align: middle;
+    }
+
+    td input, td select {
+      font-size: 12.5px;
+      padding: 6px 8px;
+    }
+
+    .rowdel {
+      background: none;
+      border: 0;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .rowdel:hover {
+      color: var(--rose);
+    }
+
+    /* ---------- notes / alerts ---------- */
+    .note {
+      border-radius: 7px;
+      padding: 11px 13px;
+      font-size: 12.5px;
+      margin-bottom: 14px;
+      line-height: 1.45;
+    }
+
+    .note.info {
+      background: var(--surface-2);
+      border-left: 3px solid var(--signal);
+      color: var(--ink-2);
+    }
+
+    .note.warn {
+      background: var(--amber-soft);
+      border-left: 3px solid var(--amber);
+      color: #6E4904;
+    }
+
+    /* ---------- side summary ---------- */
+    .sum {
+      position: sticky;
+      top: 74px;
+      align-self: start;
+      background: var(--ink);
+      color: #fff;
+      border-radius: var(--r);
+      padding: 20px 18px;
+      font-size: 13px;
+    }
+
+    .sum h3 {
+      font-size: 14px;
+      margin: 0 0 2px;
+      color: #CFE6E6;
+      font-weight: 700;
+    }
+
+    .sum .cli {
+      font-size: 12px;
+      color: #78A5AC;
+      margin: 0 0 14px;
+    }
+
+    .sline {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #1E3743;
+      font-size: 12px;
+    }
+
+    .sline .k {
+      color: #8EAAB2;
+    }
+
+    .sline .v {
+      font-weight: 600;
+      color: #fff;
+      font-family: "IBM Plex Mono";
+    }
+
+    .sline .v.dim {
+      color: #557884;
+      font-weight: 400;
+    }
+
+    .pend {
+      margin-top: 14px;
+      background: #18303C;
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .pend h4 {
+      margin: 0 0 6px;
+      font-size: 11.5px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #E6B566;
+      font-weight: 700;
+    }
+
+    .pend button {
+      display: block;
+      background: none;
+      border: 0;
+      color: #F0D9AC;
+      font: inherit;
+      font-size: 12.5px;
+      text-align: left;
+      padding: 3px 0;
+      cursor: pointer;
+      line-height: 1.35;
+    }
+
+    .pend button:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    .done-box {
+      background: #12312A;
+      border-radius: 8px;
+      padding: 12px 13px;
+      margin-top: 14px;
+      color: #8FD8B4;
+      font-size: 12.5px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 26px;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 9px;
+      font-size: 13.5px;
+      opacity: 0;
+      pointer-events: none;
+      transition: .28s;
+      z-index: 60;
+      box-shadow: 0 8px 24px rgba(15, 33, 44, .3);
+    }
+
+    .toast.on {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ---------- node editor (bot) ---------- */
+    .node {
+      background: var(--surface-2);
+      border: 1.5px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .node .hd {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .keycap {
+      font-family: "IBM Plex Mono";
+      background: var(--ink);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    .sub-node {
+      margin-top: 10px;
+      padding-left: 14px;
+      border-left: 2px solid var(--line);
+    }
+
+    .pre {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 10px 12px;
+      background: var(--surface-2);
+      border-radius: 7px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .pre input[type=checkbox] {
+      margin-top: 3px;
+    }
+
+    .pre p {
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .pre p.sub {
+      font-size: 11.5px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .pre input[type=text] {
+      margin-left: auto;
+      max-width: 140px;
+      font-size: 12px;
+      padding: 4px 8px;
+    }
+
+    /* ---------- IA Auditora & Complexidade ---------- */
+    .auditor-banner {
+      background: linear-gradient(135deg, #1E144F, #2C1F75);
+      color: #fff;
+      border-radius: var(--r);
+      padding: 18px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .auditor-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #6C5CE7, #A855F7);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      font-size: 18px;
+    }
+
+    .auditor-content h4 {
+      margin: 0 0 4px;
+      font-size: 14.5px;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .auditor-content p {
+      margin: 0;
+      font-size: 13px;
+      color: #CBD5E1;
+      line-height: 1.45;
+    }
+
+    .auditor-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .auditor-chip {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      border-radius: 99px;
+      padding: 4px 11px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: .15s;
+    }
+
+    .auditor-chip:hover {
+      background: #6C5CE7;
+      border-color: #6C5CE7;
+    }
+
+    .meter-track {
+      height: 7px;
+      background: #25404B;
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 8px 0 6px;
+    }
+
+    .meter-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4ADE80, #FBBF24, #818CF8);
+      width: 45%;
+      transition: width .4s ease;
+    }
+
+    .ambig-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      font-size: 12px;
+      margin-bottom: 6px;
+      line-height: 1.35;
+    }
+
+    .ambig-warn {
+      color: #FCD34D;
+    }
+
+    .ambig-ok {
+      color: #4ADE80;
+    }
+
+    .tier-box {
+      background: #18303C;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+
+    .tier-box p {
+      margin: 0;
+      font-size: 12px;
+      color: #9FB6BE;
+      line-height: 1.4;
+    }
+
+    .tier-badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 5px;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      margin-bottom: 6px;
+      font-family: "IBM Plex Mono";
+    }
+
+    .tier-prata {
+      background: #334E5A;
+      color: #E2EFF2;
+    }
+
+    .tier-gold {
+      background: #855C08;
+      color: #FDF3D6;
+    }
+
+    .tier-diamante {
+      background: #1E3A5F;
+      color: #93C5FD;
+    }
+
+    .tier-consultor {
+      background: #5B21B6;
+      color: #DDD6FE;
+    }
+
+    /* ---------- IA Conversacional Chat Box ---------- */
+    .chat-container {
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      min-height: 500px;
+    }
+
+    .chat-cfg-bar {
+      background: #11222C;
+      color: #CFE6E6;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+      border-bottom: 1px solid #233D48;
+    }
+
+    .chat-cfg-bar input {
+      background: #1B3440;
+      border: 1px solid #2D5060;
+      color: #fff;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11.5px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      width: 260px;
+    }
+
+    .chat-stream {
+      flex: 1;
+      padding: 18px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: #F9FBFC;
+      max-height: 460px;
+    }
+
+    .chat-bubble {
+      display: flex;
+      gap: 10px;
+      max-width: 88%;
+    }
+
+    .chat-bubble.bot {
+      align-self: flex-start;
+    }
+
+    .chat-bubble.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .chat-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #1E144F;
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .chat-bubble.user .chat-avatar {
+      background: var(--signal);
+    }
+
+    .chat-text {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 15px;
+      font-size: 13.5px;
+      line-height: 1.45;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      color: var(--ink);
+    }
+
+    .chat-bubble.bot .chat-text {
+      background: #FFFFFF;
+      border-color: #D2DFE4;
+      border-top-left-radius: 2px;
+    }
+
+    .chat-bubble.user .chat-text {
+      background: var(--signal);
+      color: #fff;
+      border-color: var(--signal-deep);
+      border-top-right-radius: 2px;
+    }
+
+    .chat-input-row {
+      padding: 12px 16px;
+      background: #fff;
+      border-top: 1px solid var(--line);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .chat-input-row textarea {
+      min-height: 44px;
+      height: 44px;
+      resize: none;
+      padding: 9px 12px;
+      font-size: 13.5px;
+    }
+
+    .chat-quick-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 0 16px 12px;
+      background: #fff;
+    }
+
+    .c-chip {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      padding: 4px 11px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--ink-2);
+      transition: .15s;
+    }
+
+    .c-chip:hover {
+      background: var(--signal-soft);
+      border-color: var(--signal);
+      color: var(--signal-deep);
+    }
+
+    /* ---------- Modal de Prompt Final ---------- */
+    .prompt-modal-backdrop {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      background: rgba(15, 33, 44, .75) !important;
+      backdrop-filter: blur(4px);
+      z-index: 9999 !important;
+      display: none !important;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .prompt-modal-backdrop.open {
+      display: flex !important;
+    }
+
+    .prompt-modal {
+      background: #fff;
+      border-radius: 14px;
+      max-width: 860px;
+      width: 100%;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, .4);
+      overflow: hidden;
+      animation: modalPop .2s ease-out;
+    }
+
+    @keyframes modalPop {
+      from { opacity: 0; transform: scale(.96) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .prompt-modal-header {
+      background: #1E144F;
+      color: #fff;
+      padding: 16px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .prompt-modal-header h3 {
+      margin: 0;
+      font-size: 15.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .prompt-modal-body {
+      padding: 20px 22px;
+      overflow-y: auto;
+      flex: 1;
+      background: #F8FAFC;
+    }
+
+    .prompt-box-code {
+      background: #0F172A;
+      color: #E2E8F0;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      padding: 16px 18px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      border: 1px solid #1E293B;
+      max-height: 440px;
+      overflow-y: auto;
+      margin: 0;
+    }
+
+    .prompt-modal-footer {
+      padding: 14px 22px;
+      background: #fff;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .badge-prompt-stat {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-family: 'IBM Plex Mono', monospace;
+      color: #A5B4FC;
+    }
+
+    @media (max-width:1080px) {
+      .wrap {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 16px 14px 70px;
+      }
+      .rail {
+        position: static;
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+      }
+      .rail .kicker, .railnote {
+        display: none;
+      }
+      .step {
+        width: auto;
+        flex: 0 0 auto;
+        grid-template-columns: 20px auto;
+        background: var(--surface);
+      }
+      .sum {
+        position: static;
+        order: 3;
+      }
+      .grid2, .grid3 {
+        grid-template-columns: 1fr;
+      }
+      .card {
+        padding: 20px 17px;
+      }
+      .top {
+        padding: 10px 14px;
+        gap: 12px;
+      }
+      .top .who {
+        display: none;
+      }
+      .pbar {
+        width: 80px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
 </head>
 <body>
 
   <!-- Barra Superior Oficial ORPEN -->
   <header class="top">
     <div class="brand" style="display:flex;align-items:center;gap:10px">
-      <img src="orpen-logo-white.svg" alt="ORPEN" height="22" style="display:block">
+      <svg width="84" height="22" viewBox="0 0 160 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21 42C32.598 42 42 32.598 42 21C42 9.40202 32.598 0 21 0C9.40202 0 0 9.40202 0 21C0 32.598 9.40202 42 21 42Z" fill="#0C7A83"/>
+        <path d="M21 33C27.6274 33 33 27.6274 33 21C33 14.3726 27.6274 9 21 9C14.3726 9 9 14.3726 9 21C9 27.6274 14.3726 33 21 33Z" fill="#0F212C"/>
+        <path d="M56 29.5V12.5H62.5C66.5 12.5 69.5 15.5 69.5 19.5C69.5 23.5 66.5 26.5 62.5 26.5H59.5V29.5H56ZM59.5 23.5H62.5C64.7 23.5 66.5 21.7 66.5 19.5C66.5 17.3 64.7 15.5 62.5 15.5H59.5V23.5Z" fill="#FFFFFF"/>
+        <path d="M74 29.5V12.5H81C83.5 12.5 85.5 13.5 86.7 15.2C87.9 16.9 88.5 19.2 88.5 21.8C88.5 24.4 87.9 26.7 86.7 28.4C85.5 29.2 83.5 29.5 81 29.5H74ZM77.5 26.5H81C84.5 26.5 85.5 23.5 85.5 21C85.5 18.5 84.5 15.5 81 15.5H77.5V26.5Z" fill="#FFFFFF"/>
+        <path d="M93 29.5V12.5H103.5V15.5H96.5V19.5H102.5V22.5H96.5V26.5H103.5V29.5H93Z" fill="#FFFFFF"/>
+        <path d="M108 29.5V12.5H111.5L120.5 24.5V12.5H124V29.5H120.5L111.5 17.5V29.5H108Z" fill="#FFFFFF"/>
+      </svg>
     </div>
     <div class="who">Setup do ambiente · <b id="topcli">—</b></div>
     <div class="right">
@@ -73,10 +1204,1388 @@
     </div>
   </div>
 
-  <!-- Scripts Modulares da Aplicação -->
-  <script src="js/state.js"></script>
-  <script src="js/blocks.js"></script>
-  <script src="js/auditor.js"></script>
-  <script src="js/app.js"></script>
+  <script>
+    /* ============================================================
+       ESTADO GLOBAL, TEMPLATES E HELPERS
+       ============================================================ */
+    const S = {
+      contrato: {
+        razaoSocial: "Hospital Exemplo Ltda.",
+        cnpj: "12.345.678/0001-90",
+        cidade: "Porto Alegre / RS",
+        am: "Filipe Oliveira",
+        confirmado: false,
+        correcao: "",
+        canais: ["WhatsApp", "Voz"],
+        implantacao: "Nuvem",
+        licAgente: 15,
+        licGestor: 3,
+        numerosWhats: 1,
+        integracao: true,
+        ia: true
+      },
+      contatos: {
+        projNome: "", projEmail: "", projTel: "", projCargo: "",
+        finNome: "", finEmail: "", finTel: "",
+        legNome: "", legEmail: "", legTel: "",
+        tiNome: "", tiEmail: "", tiTel: ""
+      },
+      operacao: {
+        jornada: "comercial",
+        diasSem: "",
+        sabado: "",
+        domingo: "",
+        feriado: "forahorario",
+        setores: []
+      },
+      equipe: {
+        agentes: [],
+        gestores: [],
+        nomeVisivel: true
+      },
+      classif: {
+        tabulacoes: [],
+        pausas: [],
+        pesquisa: true,
+        pesquisaQuando: "sempre",
+        pesquisaTexto: "Por favor, avalie o atendimento digitando uma das opções abaixo:\n5 - Muito satisfeito\n4 - Satisfeito\n3 - Regular\n2 - Insatisfeito\n1 - Muito insatisfeito"
+      },
+      whats: {
+        numero: "",
+        emUso: "",
+        dataAtivacao: "",
+        m01: "",
+        m02: "",
+        avisarFim: true,
+        m03: "Atendimento finalizado. Obrigado pelo contato!",
+        foraHorario: "fila",
+        pre: { backup: false, grupos: false, exclusao: false, contatos: false },
+        preResp: { backup: "", grupos: "", exclusao: "", contatos: "" }
+      },
+      bot: {
+        opcoes: []
+      },
+      voz: {
+        operadora: "",
+        simultaneas: "",
+        entroncamento: "sip",
+        unica: "sim",
+        coexistencia: "",
+        ura: "sim",
+        uraNiveis: "2",
+        destinoSemUra: "",
+        agentesWeb: "",
+        ramais: "",
+        callback: false,
+        whatsback: false
+      },
+      ia: {
+        nome: "Luna",
+        extensaoResp: "curta",
+        tom: ["Cordial e acolhedor", "Direto e objetivo"],
+        emojiUso: "moderado",
+        emojisPermitidos: "💙, 👋, 🏥, ✅",
+        publicoAlvo: "Pacientes e clientes buscando agendamento, exames e orientações gerais.",
+        problema: "Alto tempo de espera no WhatsApp e dúvidas repetitivas sobre preparo e convênios.",
+        kpis: "Resolução rápida no 1º contato (>40%) e redução da fila de espera.",
+        habilidades: "- Horários de funcionamento e endereços das unidades\n- Relação de convênios atendidos\n- Orientações e preparos básicos de exames\n- Envio de links de agendamento online",
+        restricoes: "- Proibido fornecer diagnóstico médico ou prescrever condutas\n- Não confirmar cobertura sem checagem de plano\n- Não prometer procedimentos cirúrgicos",
+        foraEscopo: "Política, receitas caseiras, conselhos pessoais não médicos.",
+        smartJump: [],
+        preAtendimento: [],
+        tentativasErro: "3",
+        inatTempo: "10",
+        inatAcao: "finalizar",
+        inatFila: "",
+        baseUrl: "https://hospitalexemplo.com.br",
+        faqFreq: "semanal",
+        faqResp: ""
+      },
+      integ: {
+        sistema: "Tasy",
+        temApi: "sim",
+        docUrl: "",
+        contatoNome: "",
+        contatoEmail: "",
+        contatoTel: "",
+        casos: ["Consultar agendamentos do paciente", "Identificar o cliente pelo telefone"]
+      },
+      obs: { texto: "" }
+    };
+
+    const TPL = {
+      saude: {
+        setores: [
+          { nome: "Agendamento", dac: "7001", horario: "07:00–19:00" },
+          { nome: "Recepção / Triagem", dac: "7002", horario: "07:00–19:00" },
+          { nome: "Resultados de exames", dac: "7003", horario: "08:00–18:00" },
+          { nome: "Faturamento / Convênios", dac: "7004", horario: "08:00–17:00" }
+        ],
+        tabulacoes: ["Agendamento realizado", "Reagendamento", "Cancelamento", "Dúvida sobre convênio", "Resultado de exame", "Cliente não respondeu", "Fora do escopo"],
+        pausas: ["Almoço", "Lanche", "Banheiro", "Reunião", "Treinamento", "Feedback"]
+      },
+      generico: {
+        setores: [
+          { nome: "Atendimento", dac: "7001", horario: "08:00–18:00" },
+          { nome: "Comercial", dac: "7002", horario: "08:00–18:00" },
+          { nome: "Suporte", dac: "7003", horario: "08:00–18:00" },
+          { nome: "Financeiro", dac: "7004", horario: "08:00–17:00" }
+        ],
+        tabulacoes: ["Resolvido no primeiro contato", "Encaminhado para outro setor", "Cliente não respondeu", "Solicitação de orçamento", "Reclamação", "Fora do escopo"],
+        pausas: ["Almoço", "Lanche", "Banheiro", "Reunião", "Treinamento"]
+      }
+    };
+
+    const has = c => S.contrato.canais.includes(c);
+    const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+    function get(p) { return p.split(".").reduce((o, k) => o?.[k], S); }
+    function set(p, v) { const k = p.split("."), l = k.pop(); k.reduce((o, x) => o[x], S)[l] = v; }
+
+    const vEmail = v => /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(v || "");
+    const vTel = v => (v || "").replace(/\D/g, "").length >= 10;
+    const vLogin = v => /^[1-9]\d{2,}$/.test(v || "");
+
+    function ro(l, v) { return `<div class="f"><label>${l}</label><input type="text" value="${esc(v)}" readonly style="background:var(--surface-2);color:var(--muted)"></div>`; }
+    function fi(l, p, t = "text", ph = "") {
+      const v = get(p) ?? "";
+      return `<div class="f"><label>${l}</label><input type="${t === 'email' ? 'text' : t}" data-path="${p}" value="${esc(v)}" placeholder="${esc(ph)}"></div>`;
+    }
+    function fin(p, ph) { return `<input type="text" data-path="${p}" value="${esc(get(p) ?? "")}" placeholder="${esc(ph)}">`; }
+    function fta(p, ph) { return `<textarea data-path="${p}" placeholder="${esc(ph)}">${esc(get(p) ?? "")}</textarea>`; }
+    function tagBox(p, ph) {
+      const arr = get(p) || [];
+      return `<div class="tags">${arr.map((t, i) => `<span class="tag">${esc(t)}<button onclick="delTag('${p}',${i})">×</button></span>`).join("") || '<span class="hint">nada ainda</span>'}</div>
+      <input type="text" placeholder="${ph} — digite e aperte Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();addTag('${p}',this.value);this.value=''}">`;
+    }
+    function nav() {
+      const v = visible(), i = v.findIndex(b => b.id === cur);
+      return `<div class="navrow" style="margin-top:24px">
+        ${i > 0 ? `<button class="btn btn-s" onclick="go('${v[i - 1].id}')">Voltar</button>` : ""}
+        ${i < v.length - 1 ? `<button class="btn btn-p sp" onclick="go('${v[i + 1].id}')">Continuar</button>` : ""}</div>`;
+    }
+
+    function addTag(p, v) { v = v.trim(); if (!v) return; const a = get(p); if (!a.includes(v)) a.push(v); draw(); }
+    function delTag(p, i) { get(p).splice(i, 1); draw(); }
+    function loadTpl(k, f) {
+      const d = TPL[k][f];
+      if (f === "setores") S.operacao.setores = JSON.parse(JSON.stringify(d));
+      else S.classif[f] = [...new Set([...S.classif[f], ...d])];
+      draw(); toast("Modelo aplicado — ajuste o que quiser");
+    }
+    function addSetor() { const n = 7001 + S.operacao.setores.length; S.operacao.setores.push({ nome: "", dac: String(n), horario: S.operacao.diasSem || "" }); draw(); }
+    function addAgente() { S.equipe.agentes.push({ login: nextLogin(), nome: "", email: "", setor: "" }); draw(); }
+    function addGestor() { S.equipe.gestores.push({ nome: "", email: "", setor: "" }); draw(); }
+    function nextLogin() { const used = S.equipe.agentes.map(a => +a.login).filter(Boolean); let n = 101; while (used.includes(n)) n++; return String(n); }
+    function parseBulk() {
+      const raw = document.getElementById("bulk").value.trim(); if (!raw) return;
+      let n = 0;
+      raw.split(/\n/).forEach(line => {
+        const c = line.split(/\t|;|,/).map(s => s.trim()).filter(Boolean); if (!c.length) return;
+        const email = c.find(x => x.includes("@")) || "";
+        const nome = c.find(x => !x.includes("@") && !/^\d+$/.test(x)) || "";
+        const setorMatch = c.slice(1).find(x => S.operacao.setores.some(s => s.nome.toLowerCase() === x.toLowerCase()));
+        S.equipe.agentes.push({ login: nextLogin(), nome, email, setor: setorMatch || "" }); n++;
+      });
+      document.getElementById("bulk").value = ""; draw(); toast(n + " agente(s) importado(s)");
+    }
+    function addOpcao() { S.bot.opcoes.push({ rotulo: "", acao: "transferir", destino: "", texto: "", filhos: [] }); draw(); }
+    function addFilho(i) { S.bot.opcoes[i].filhos = S.bot.opcoes[i].filhos || []; S.bot.opcoes[i].filhos.push({ rotulo: "", destino: "" }); draw(); }
+    function botFromSetores() { S.bot.opcoes = S.operacao.setores.map(s => ({ rotulo: s.nome, acao: "transferir", destino: s.nome, filhos: [] })); draw(); toast("Menu gerado a partir dos setores"); }
+    function previewBot() {
+      const cab = S.whats.m01 || "Olá! Escolha uma das opções abaixo:";
+      return cab + "\n" + S.bot.opcoes.map((o, i) => `${i + 1} - ${o.rotulo || "…"}`).join("\n");
+    }
+    function sugerirM01() {
+      S.whats.m01 = `Olá! Você está falando com o ${S.contrato.razaoSocial}. 😊\nEscolha uma das opções abaixo para continuar:`; draw();
+    }
+    function sugerirM02() {
+      S.whats.m02 = `Olá! Nosso atendimento funciona ${S.operacao.diasSem ? "de segunda a sexta, das " + S.operacao.diasSem : "em horário comercial"}.\nDeixe sua mensagem que retornamos no próximo dia útil.`; draw();
+    }
+    function togCaso(c) { const a = S.integ.casos, i = a.indexOf(c); i < 0 ? a.push(c) : a.splice(i, 1); draw(); }
+    function togIaTom(t) { const a = S.ia.tom, i = a.indexOf(t); i < 0 ? a.push(t) : a.splice(i, 1); draw(); }
+    function appendIaField(path, text) {
+      const current = get(path) || "";
+      const sep = current.trim() ? (current.includes("\n") ? "\n" : ", ") : "";
+      set(path, current + sep + text);
+      draw();
+      toast("Sugestão adicionada!");
+    }
+    function addSmartJump() { S.ia.smartJump.push({ categoria: "", gatilhos: "", destino: "" }); draw(); }
+    function addPreAtendimento() { S.ia.preAtendimento.push({ fluxo: "", pergunta: "" }); draw(); }
+
+    function loadIaTemplates() {
+      const defSetor = S.operacao.setores[0]?.nome || "";
+      const finSetor = S.operacao.setores.find(s => /financ|fatur/i.test(s.nome))?.nome || defSetor;
+      const supSetor = S.operacao.setores.find(s => /suporte|recep|triag/i.test(s.nome))?.nome || defSetor;
+      S.ia.smartJump = [
+        { categoria: "Emergência / Risco à Vida", gatilhos: "dor no peito, falta de ar, infarto, sangramento, socorro, desmaio", destino: supSetor },
+        { categoria: "Financeiro / Faturas", gatilhos: "boleto, nota fiscal, 2ª via, faturamento, pagar, cobrança", destino: finSetor },
+        { categoria: "Envio de Arquivos / Guias", gatilhos: "mandar a guia, foto da receita, enviar requisição, comprovante", destino: defSetor },
+        { categoria: "Pedido Explícito de Humano", gatilhos: "falar com atendente, humano, pessoa, falar com gente", destino: supSetor }
+      ];
+      draw(); toast("Regras de Smart Jump carregadas!");
+    }
+
+    function loadPreAtendSaude() {
+      S.ia.preAtendimento = [
+        { fluxo: "Agendamento de Consulta", pergunta: "Qual a especialidade desejada?" },
+        { fluxo: "Agendamento de Consulta", pergunta: "Qual o CPF do paciente?" },
+        { fluxo: "Agendamento de Consulta", pergunta: "Qual o nome completo do paciente?" },
+        { fluxo: "Agendamento de Consulta", pergunta: "Qual a data de nascimento?" },
+        { fluxo: "Agendamento de Consulta", pergunta: "O atendimento é Particular ou por Convênio?" }
+      ];
+      draw(); toast("Roteiro de qualificação de saúde carregado!");
+    }
+
+    function aplicarPerfilClinica() {
+      S.ia.nome = "Ires";
+      S.ia.publicoAlvo = "Pacientes particulares e conveniados buscando agendamentos, preparos de exames e orientações hospitalares.";
+      S.ia.problema = "Tempo de espera elevado na recepção e dúvidas repetitivas sobre convênios e laudos de exames.";
+      S.ia.kpis = "Taxa de resolução superior a 50% no 1º contato e transbordo qualificado com especialidade identificada.";
+      S.ia.habilidades = "- Consulta de unidades, horários e rotas de atendimento\n- Lista de convênios aceitos e orientações de preparo\n- Envio de link seguro para agendamento online";
+      S.ia.restricoes = "- Proibido dar parecer médico, diagnósticos ou interpretar exames\n- Não prometer horários cirúrgicos sem confirmação da regulação";
+      loadIaTemplates();
+      loadPreAtendSaude();
+      draw();
+      toast("Modelo Clínicas / Saúde aplicado com sucesso!");
+    }
+
+    function aplicarPerfilComercial() {
+      S.ia.nome = "Max";
+      S.ia.publicoAlvo = "Novos clientes e empresas interessadas em contratação e orçamentos B2B.";
+      S.ia.problema = "Perda de leads fora do horário comercial e demora na qualificação de propostas.";
+      S.ia.kpis = "Agilidade na resposta (< 10s) e coleta obrigatória de CNPJ, volume de usuários e decisor.";
+      S.ia.habilidades = "- Apresentação dos planos e módulos da plataforma\n- Envio de cases de sucesso e catálogo de serviços\n- Agendamento de demonstração com o time comercial";
+      S.ia.restricoes = "- Não conceder descontos acima da tabela padrão sem autorização da diretoria\n- Não firmar contratos sem assinatura jurídica";
+      const defSetor = S.operacao.setores[0]?.nome || "";
+      const comSetor = S.operacao.setores.find(s => /comercial|vendas/i.test(s.nome))?.nome || defSetor;
+      S.ia.smartJump = [
+        { categoria: "Orçamento Grande / Enterprise", gatilhos: "proposta personalizada, mais de 50 agentes, enterprise", destino: comSetor },
+        { categoria: "Falar com Consultor", gatilhos: "consultor comercial, vendedor, negociar, proposta", destino: comSetor }
+      ];
+      S.ia.preAtendimento = [
+        { fluxo: "Qualificação Comercial", pergunta: "Qual o nome da sua empresa?" },
+        { fluxo: "Qualificação Comercial", pergunta: "Quantos operadores vão utilizar a plataforma?" },
+        { fluxo: "Qualificação Comercial", pergunta: "Qual o seu cargo na empresa?" }
+      ];
+      draw();
+      toast("Modelo Comercial / Vendas aplicado com sucesso!");
+    }
+
+    function otimizarIaAuditora() {
+      let hab = S.ia.habilidades || "";
+      let rest = S.ia.restricoes || "";
+      hab = hab.split('\n').map(s => s.trim()).filter(Boolean).join('\n');
+      rest = rest.split('\n').map(s => s.trim()).filter(Boolean).join('\n');
+      S.ia.habilidades = hab;
+      S.ia.restricoes = rest;
+      draw();
+      toast("Prompt enxugado e otimizado pela IA Auditora!");
+    }
+
+    /* ============================================================
+       IA AUDITORA (OPENAI 5.6 SOL) & CHAT CONVERSACIONAL
+       ============================================================ */
+    let AUDITOR_CHAT_MESSAGES = [
+      { sender: "bot", text: "Olá! Sou a **IA Auditora da ORPEN** (motor 5.6 Sol). Vou te guiar na criação do assistente virtual da sua empresa passo a passo.\n\nPara começarmos: **Qual será o nome do seu assistente de IA e qual o tom de voz desejado?** (Ex.: 'Ires, tom cordial e acolhedor')." }
+    ];
+
+    let AUDITOR_STEP = 0;
+
+    function getOpenAIKey() {
+      try { return localStorage.getItem("orpen_openai_sk") || ""; } catch (e) { return ""; }
+    }
+
+    function salvarOpenAIKey(k) {
+      try { localStorage.setItem("orpen_openai_sk", k.trim()); } catch (e) { }
+      toast("Chave OpenAI salva para a Auditora!");
+    }
+
+    function renderChatMessages() {
+      return AUDITOR_CHAT_MESSAGES.map(m => `
+        <div class="chat-bubble ${m.sender}">
+          <div class="chat-avatar">${m.sender === 'bot' ? '🤖' : '👤'}</div>
+          <div class="chat-text">${m.text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>')}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderChatQuickChips() {
+      if (AUDITOR_STEP === 0) {
+        return `
+          <button class="c-chip" onclick="responderRapido('Ires, tom cordial, acolhedor e direto.')">💡 Ires (Cordial e Direto)</button>
+          <button class="c-chip" onclick="responderRapido('Sofia, tom formal e institucional.')">💡 Sofia (Formal / Corporativo)</button>
+          <button class="c-chip" onclick="responderRapido('Max, tom consultivo e focado em vendas.')">💡 Max (Comercial / Vendas)</button>
+        `;
+      }
+      if (AUDITOR_STEP === 1) {
+        return `
+          <button class="c-chip" onclick="responderRapido('Atender pacientes e convênios para agendamento e reduzir filas.')">💡 Pacientes e Agendamento</button>
+          <button class="c-chip" onclick="responderRapido('Qualificar leads comerciais B2B que chegam pelo WhatsApp.')">💡 Qualificar Leads Comerciais</button>
+        `;
+      }
+      if (AUDITOR_STEP === 2) {
+        return `
+          <button class="c-chip" onclick="responderRapido('Ela deve tirar dúvidas de endereço, convênios aceitos e enviar links de agendamento.')">💡 FAQs, Convênios e Agendamento</button>
+          <button class="c-chip" onclick="responderRapido('Ela resolve qualquer dúvida de clientes sem restrições.')">⚠️ Ela resolve tudo (Testar Indagação)</button>
+        `;
+      }
+      if (AUDITOR_STEP === 3) {
+        return `
+          <button class="c-chip" onclick="responderRapido('Nunca fornecer diagnóstico médico, nem confirmar cobertura sem autorização prévia.')">💡 Proibir Diagnósticos e Laudos</button>
+          <button class="c-chip" onclick="responderRapido('Não dar descontos sem autorização e não assinar contratos.')">💡 Proibir Descontos sem Aprovação</button>
+        `;
+      }
+      if (AUDITOR_STEP === 4) {
+        return `
+          <button class="c-chip" onclick="responderRapido('Casos de dor forte e emergência transferem imediatamente para Recepção / Triagem.')">💡 Emergência → Recepção</button>
+          <button class="c-chip" onclick="responderRapido('Dúvidas de boletos e notas fiscais transferem para o Financeiro.')">💡 Boletos → Financeiro</button>
+        `;
+      }
+      return `<button class="c-chip" onclick="reiniciarChatAuditora()">↺ Reiniciar Conversa</button>`;
+    }
+
+    function responderRapido(txt) {
+      const inp = document.getElementById("chat_user_input");
+      if (inp) inp.value = txt;
+      enviarChatUser();
+    }
+
+    async function enviarChatUser() {
+      const inp = document.getElementById("chat_user_input");
+      if (!inp) return;
+      const userText = inp.value.trim();
+      if (!userText) return;
+      inp.value = "";
+
+      AUDITOR_CHAT_MESSAGES.push({ sender: "user", text: userText });
+      document.getElementById("chat_stream").innerHTML = renderChatMessages();
+      const stream = document.getElementById("chat_stream");
+      if (stream) stream.scrollTop = stream.scrollHeight;
+
+      const key = getOpenAIKey();
+
+      if (key && key.startsWith("sk-")) {
+        try {
+          const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
+            body: JSON.stringify({
+              model: "gpt-4o-mini",
+              messages: [
+                { role: "system", content: "Você é a IA Auditora da ORPEN (motor 5.6 Sol). Audite e colete os dados do assistente de atendimento do cliente. Indague sobre ambiguidades e determine o plano ideal (Prata, Gold ou Diamante) de forma acolhedora e precisa." },
+                ...AUDITOR_CHAT_MESSAGES.map(m => ({ role: m.sender === 'bot' ? 'assistant' : 'user', content: m.text }))
+              ]
+            })
+          });
+          const data = await resp.json();
+          if (data.choices && data.choices[0]) {
+            const botReply = data.choices[0].message.content;
+            AUDITOR_CHAT_MESSAGES.push({ sender: "bot", text: botReply });
+            processarExtracaoConversacional(userText);
+            draw();
+            return;
+          }
+        } catch (err) {
+          console.warn("Falha na chamada da OpenAI API, usando motor 5.6 Sol simulado.", err);
+        }
+      }
+
+      setTimeout(() => {
+        processarFluxoAuditoraSimulado(userText);
+        draw();
+      }, 350);
+    }
+
+    function processarFluxoAuditoraSimulado(userText) {
+      let botReply = "";
+
+      if (AUDITOR_STEP === 0) {
+        const partes = userText.split(/,|;|-|\./);
+        const nomeDetectado = partes[0].replace(/meu assistente|chame|nome|é|vai ser/gi, "").trim();
+        S.ia.nome = nomeDetectado || "Ires";
+        if (/formal|institucional/i.test(userText)) S.ia.tom = ["Formal e institucional"];
+        else if (/consultivo|técnico/i.test(userText)) S.ia.tom = ["Técnico e consultivo"];
+        else S.ia.tom = ["Cordial e acolhedor", "Direto e objetivo"];
+
+        AUDITOR_STEP = 1;
+        botReply = `Perfeito! O assistente se chamará **${S.ia.nome}** com tom **${S.ia.tom.join(" e ")}**.\n\nAgora me conte: **Qual é o público-alvo principal e quais problemas operacionais você deseja que a ${S.ia.nome} resolva no WhatsApp?**`;
+      }
+      else if (AUDITOR_STEP === 1) {
+        S.ia.publicoAlvo = userText;
+        S.ia.problema = userText;
+        S.ia.kpis = "Resolução no 1º contato acima de 40% e redução do tempo de espera.";
+        AUDITOR_STEP = 2;
+        botReply = `Entendido! Alinhei os objetivos de negócio.\n\n**O que a ${S.ia.nome} terá AUTONOMIA TOTAL para resolver sozinha?** (Ex.: informar horários, listar convênios aceitos, orientações de exames ou enviar links).`;
+      }
+      else if (AUDITOR_STEP === 2) {
+        if (/tudo|qualquer|sem limites|tudo que o cliente pedir/i.test(userText)) {
+          botReply = `⚠️ **Alerta de Ambiguidade:** Permitir 'tudo' gera alto risco de alucinação e respostas fora de escopo.\n\nPara mantermos a precisão, **quais são os tópicos principais que ela está estritamente PROIBIDA de fazer?** (Ex.: diagnóstico médico, prometer encaixes, passar laudos sem autorização).`;
+          S.ia.habilidades = "- Consulta de informações institucionais e convênios\n- Orientações de preparo de exames\n- Envio de links de agendamento";
+          AUDITOR_STEP = 3;
+        } else {
+          S.ia.habilidades = userText;
+          AUDITOR_STEP = 3;
+          botReply = `Excelente mapeamento de escopo.\n\nPara proteger sua operação contra alucinações: **O que a ${S.ia.nome} está terminantemente PROIBIDA de responder ou prometer?**`;
+        }
+      }
+      else if (AUDITOR_STEP === 3) {
+        S.ia.restricoes = userText;
+        AUDITOR_STEP = 4;
+        loadIaTemplates();
+        botReply = `Ótimo! Regras anti-alucinação registradas com prioridade máxima.\n\nAgora sobre o **Transbordo Humano (Smart Jump)**: Se o cliente falar sobre *emergência, dor intensa, reclamações financeiras ou pedir atendente*, para quais setores devemos transferir na hora?`;
+      }
+      else if (AUDITOR_STEP === 4) {
+        AUDITOR_STEP = 5;
+        loadPreAtendSaude();
+        botReply = `🎉 **Compreensão Concluída com Sucesso!**\n\nTodos os parâmetros da **${S.ia.nome}** foram auditados e inseridos no setup. Seu assistente foi classificado no **${avaliarTierIa().tier}** com score de complexidade **${avaliarTierIa().score}/100**.\n\nVocê pode conferir o resumo no painel lateral direito ou clicar em 'Visualizar Prompt Final da IA'!`;
+      }
+      else {
+        botReply = `A IA ${S.ia.nome} já está configurada! Se quiser alterar alguma regra específica, basta me mandar por aqui ou clicar em '↺ Reiniciar Conversa'.`;
+      }
+
+      AUDITOR_CHAT_MESSAGES.push({ sender: "bot", text: botReply });
+    }
+
+    function processarExtracaoConversacional(userText) {
+      if (userText.length > 3 && !S.ia.nome) S.ia.nome = "Ires";
+      if (userText.length > 20 && !S.ia.habilidades) S.ia.habilidades = userText;
+      soft();
+    }
+
+    function reiniciarChatAuditora() {
+      AUDITOR_STEP = 0;
+      AUDITOR_CHAT_MESSAGES = [
+        { sender: "bot", text: "Olá! Sou a **IA Auditora da ORPEN** (motor 5.6 Sol). Vou te guiar na criação do assistente virtual da sua empresa passo a passo.\n\nPara começarmos: **Qual será o nome do seu assistente de IA e qual o tom de voz desejado?** (Ex.: 'Ires, tom cordial e acolhedor')." }
+      ];
+      draw();
+      toast("Conversa com a IA Auditora reiniciada!");
+    }
+
+    function avaliarTierIa() {
+      const temInteg = S.contrato.integracao && S.integ.sistema;
+      const temApi = S.integ.temApi === 'sim';
+      const temCasosComplexos = S.integ.casos.some(c => /marcar|remarcar|laudo|exame/i.test(c));
+      const temSmartJump = S.ia.smartJump.length >= 2;
+      const temPreColeta = S.ia.preAtendimento.length >= 2;
+      const temRestricoes = (S.ia.restricoes || "").length > 20;
+      const temBaseExtensa = (S.ia.habilidades || "").length > 100;
+
+      let score = 20;
+      if (S.ia.nome) score += 5;
+      if (S.ia.tom.length > 1) score += 5;
+      if (temRestricoes) score += 10;
+      if (temSmartJump) score += 15;
+      if (temPreColeta) score += 15;
+      if (temBaseExtensa) score += 10;
+      if (temInteg) score += 15;
+      if (score > 100) score = 100;
+
+      let complexidadeNivel = "Baixa";
+      if (score > 35) complexidadeNivel = "Moderada";
+      if (score > 65) complexidadeNivel = "Avançada";
+      if (score > 85) complexidadeNivel = "Alta Densidade";
+
+      const ambiguidades = [];
+      if (!temRestricoes) {
+        ambiguidades.push({ tipo: "warn", txt: "Restrições vagas: Adicione limites claros anti-alucinação." });
+      } else {
+        ambiguidades.push({ tipo: "ok", txt: "Limites e regras anti-alucinação bem definidos." });
+      }
+
+      if (S.ia.smartJump.length < 2) {
+        ambiguidades.push({ tipo: "warn", txt: "Transbordo sensível: Poucos gatilhos de Smart Jump cadastrados." });
+      } else {
+        ambiguidades.push({ tipo: "ok", txt: `${S.ia.smartJump.length} regras de transbordo inteligente ativas.` });
+      }
+
+      if (S.ia.preAtendimento.length === 0) {
+        ambiguidades.push({ tipo: "warn", txt: "Sem pré-qualificação: O atendente humano receberá o lead sem triagem prévia." });
+      } else {
+        ambiguidades.push({ tipo: "ok", txt: `${S.ia.preAtendimento.length} etapa(s) de qualificação sequencial configurada(s).` });
+      }
+
+      if (temInteg && temCasosComplexos && temBaseExtensa && temPreColeta && temSmartJump) {
+        return {
+          tier: "Plano Diamante+",
+          badgeClass: "tier-consultor",
+          score,
+          complexidadeNivel,
+          ambiguidades,
+          desc: "Arquitetura com integração a ERP/APIs em tempo real, transbordo multi-departamental e validação contínua."
+        };
+      }
+      if (temInteg || temApi || temCasosComplexos) {
+        return {
+          tier: "Plano Diamante",
+          badgeClass: "tier-diamante",
+          score,
+          complexidadeNivel,
+          ambiguidades,
+          desc: "Capacidade transacional com chamadas de ferramentas/APIs, consulta a bancos de dados e roteamento prioritário."
+        };
+      }
+      if (temBaseExtensa || S.ia.baseUrl || temSmartJump) {
+        return {
+          tier: "Plano Gold",
+          badgeClass: "tier-gold",
+          score,
+          complexidadeNivel,
+          ambiguidades,
+          desc: "Estrutura com base de conhecimento (RAG), regras anti-alucinação e triagem inteligente para múltiplos setores."
+        };
+      }
+      return {
+        tier: "Plano Prata",
+        badgeClass: "tier-prata",
+        score,
+        complexidadeNivel,
+        ambiguidades,
+        desc: "Atendimento direto alimentado com regras ágeis de triagem e respostas em system prompt."
+      };
+    }
+
+    function gerarPromptFinalCompilado() {
+      const nome = S.ia.nome || "Assistente Virtual";
+      const empresa = S.contrato.razaoSocial || "Empresa";
+      const tom = (S.ia.tom && S.ia.tom.length) ? S.ia.tom.join(", ") : "Cordial, acolhedor e direto";
+      const emoji = S.ia.emojiUso === 'nenhum' ? "Não utilize emojis." : `Utilize emojis com moderação (${S.ia.emojisPermitidos || '💙, 👋, 🏥, ✅'}).`;
+      const extensao = S.ia.extensaoResp === 'curta' ? "Respostas curtas e objetivas (máximo 2 a 3 frases)." : "Respostas estruturadas e concisas.";
+
+      let prompt = `### PERSONA E PAPEL DO ASSISTENTE
+Você é ${nome}, o assistente virtual oficial de atendimento da empresa ${empresa}.
+Seu objetivo principal é atender clientes no WhatsApp de forma ágil, resolutiva e profissional.
+
+### DIRETRIZES DE COMUNICAÇÃO
+- Tom de voz: ${tom}.
+- Formato: ${extensao}
+- Emojis: ${emoji}
+- Linguagem: Português do Brasil, claro, sem termos técnicos desnecessários.
+
+### CONTEXTO E OBJETIVOS DO NEGÓCIO
+${S.ia.publicoAlvo ? `- Público-alvo: ${S.ia.publicoAlvo}` : '- Público-alvo: Clientes e pacientes em atendimento'}
+${S.ia.problema ? `- Foco de resolução: ${S.ia.problema}` : ''}
+${S.ia.kpis ? `- Métricas prioritárias: ${S.ia.kpis}` : ''}
+
+### ESCOPO E HABILIDADES (AUTONOMIA TOTAL)
+Você está autorizado a resolver diretamente os seguintes tópicos:
+${S.ia.habilidades ? S.ia.habilidades : '- Fornecer informações gerais e tirar dúvidas frequentes da empresa'}
+
+### RESTRIÇÕES CRÍTICAS (ANTI-ALUCINAÇÃO)
+${S.ia.restricoes ? S.ia.restricoes : '- Não forneça informações fora do escopo institucional da empresa\n- Não prometa prazos ou valores sem confirmação oficial'}
+${S.ia.foraEscopo ? `- Assuntos fora de escopo (recuse educadamente): ${S.ia.foraEscopo}` : ''}
+`;
+
+      if (S.ia.smartJump && S.ia.smartJump.length > 0) {
+        prompt += `\n### REGRAS DE ROTEAMENTO E TRANSBORDO (SMART JUMP)\nSe o cliente mencionar os seguintes gatilhos, encerre a triagem e transfira IMEDIATAMENTE para a fila humana correspondente:\n`;
+        S.ia.smartJump.forEach((r, idx) => {
+          prompt += `${idx + 1}. [${r.categoria || 'Geral'}]: Gatilhos ("${r.gatilhos || ''}") -> Transferir para ${r.destino || 'Fila de Atendimento'}\n`;
+        });
+      }
+
+      if (S.ia.preAtendimento && S.ia.preAtendimento.length > 0) {
+        prompt += `\n### ROTEIRO DE QUALIFICAÇÃO PRÉ-TRANSBORDO\nAntes de concluir o agendamento ou transbordo, colete os seguintes dados de forma SEQUENCIAL (uma pergunta por vez):\n`;
+        S.ia.preAtendimento.forEach((p, idx) => {
+          prompt += `Passo ${idx + 1} [${p.fluxo || 'Qualificação'}]: "${p.pergunta || ''}"\n`;
+        });
+      }
+
+      if (S.ia.baseUrl) {
+        prompt += `\n### BASE DE CONHECIMENTO E CONSULTA\nFonte oficial de informações: ${S.ia.baseUrl}\n`;
+      }
+
+      prompt += `\n### POLÍTICA DE SEGURANÇA E FALLBACK\n- Caso não compreenda a solicitação do usuário após ${S.ia.tentativasErro || '3'} tentativas, solicite desculpas e transfira para um atendente humano.\n- NUNCA invente links, telefones ou procedimentos não cadastrados acima.`;
+
+      return prompt;
+    }
+
+    function abrirModalPromptFinal() {
+      const promptCode = gerarPromptFinalCompilado();
+      document.getElementById("prompt_final_code").textContent = promptCode;
+      const diag = avaliarTierIa();
+      document.getElementById("prompt_tier_tag").textContent = diag.tier.toUpperCase();
+      document.getElementById("prompt_tier_tag").className = `tier-badge ${diag.badgeClass}`;
+      const tokensEst = Math.round(promptCode.length / 4);
+      document.getElementById("prompt_token_count").textContent = `~${tokensEst} tokens`;
+      document.getElementById("modal_prompt_backdrop").classList.add("open");
+    }
+
+    function fecharModalPromptFinal() {
+      document.getElementById("modal_prompt_backdrop").classList.remove("open");
+    }
+
+    function copiarPromptFinal() {
+      const code = document.getElementById("prompt_final_code").textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        toast("Prompt copiado para a área de transferência!");
+      }).catch(() => {
+        toast("Prompt selecionado!");
+      });
+    }
+
+    function baixarPromptTxt() {
+      const code = document.getElementById("prompt_final_code").textContent;
+      const blob = new Blob([code], { type: "text/plain;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `system-prompt-${(S.ia.nome || 'orpen').toLowerCase()}.txt`;
+      a.click();
+      toast("Arquivo do System Prompt baixado!");
+    }
+
+    /* ============================================================
+       BLOCOS DO SETUP
+       ============================================================ */
+    const BLOCKS = [
+      {
+        id: "contrato", nome: "Contrato", when: () => true,
+        check() { const p = []; if (!S.contrato.confirmado) p.push("Confirmar os dados do contrato"); return p; },
+        render() {
+          const c = S.contrato;
+          return `<div class="card">
+            <p class="eyebrow">Bloco 1 de ${visible().length}</p>
+            <h2>Confirme o que está no contrato</h2>
+            <p class="lede">Estes dados já vieram do seu contrato com a ORPEN. Você só precisa conferir — se algo estiver diferente, escreva no campo abaixo e seu AM ajusta.</p>
+            <div class="grid2">
+              ${ro("Razão social", c.razaoSocial)}${ro("CNPJ", c.cnpj)}
+              ${ro("Cidade", c.cidade)}${ro("Account Manager", c.am)}
+              ${ro("Canais contratados", c.canais.join(" · "))}${ro("Implantação", c.implantacao)}
+              ${ro("Licenças de agente", c.licAgente)}${ro("Licenças de gestor", c.licGestor)}
+              ${ro("Números de WhatsApp", c.numerosWhats)}${ro("Extras", [c.integracao ? "Integração com sistema" : null, c.ia ? "Assistente de IA" : null].filter(Boolean).join(" · ") || "—")}
+            </div>
+            <div class="sect"><h3>Está tudo certo?</h3></div>
+            <div class="opts" style="margin-bottom:14px">
+              <button class="opt" aria-pressed="${c.confirmado}" onclick="S.contrato.confirmado=true;draw()">Sim, confirmo</button>
+              <button class="opt" aria-pressed="${c.confirmado === false && c.correcao.length > 0}" onclick="S.contrato.confirmado=false;draw()">Preciso corrigir algo</button>
+            </div>
+            <div class="f"><label>O que precisa mudar</label>
+              <textarea data-path="contrato.correcao" placeholder="Ex.: são 18 agentes, não 15.">${esc(c.correcao)}</textarea>
+              <span class="hint">Seu AM recebe isso na hora e responde por aqui mesmo.</span></div>
+            ${nav()}</div>`;
+        }
+      },
+
+      {
+        id: "contatos", nome: "Quem responde", when: () => true,
+        check() {
+          const p = [], c = S.contatos;
+          if (!c.projNome || !vEmail(c.projEmail)) p.push("Contato do projeto (nome e e-mail)");
+          if (!c.finNome || !vEmail(c.finEmail)) p.push("Responsável financeiro");
+          if (!c.legNome || !vEmail(c.legEmail)) p.push("Responsável pela assinatura");
+          if (S.contrato.canais.includes("Voz") && (!c.tiNome || !vEmail(c.tiEmail))) p.push("Contato de TI / rede");
+          return p;
+        },
+        render() {
+          const c = S.contatos;
+          return `<div class="card">
+            <p class="eyebrow">Pessoas</p><h2>Quem responde por cada frente</h2>
+            <p class="lede">Cada uma dessas pessoas recebe só a parte que é dela. Ninguém precisa preencher o formulário inteiro.</p>
+            <div class="sect"><h3>Contato do projeto <span class="req">*</span></h3><p>Quem acompanha a implantação com a ORPEN no dia a dia.</p></div>
+            <div class="grid2">${fi("Nome", "contatos.projNome")}${fi("Cargo", "contatos.projCargo")}${fi("E-mail", "contatos.projEmail", "email")}${fi("Telefone", "contatos.projTel", "tel")}</div>
+            <div class="sect"><h3>Responsável financeiro <span class="req">*</span></h3><p>Recebe a fatura e trata reajustes.</p></div>
+            <div class="grid3">${fi("Nome", "contatos.finNome")}${fi("E-mail", "contatos.finEmail", "email")}${fi("Telefone", "contatos.finTel", "tel")}</div>
+            <div class="sect"><h3>Assinatura do contrato <span class="req">*</span></h3><p>Quem tem poderes para assinar.</p></div>
+            <div class="grid3">${fi("Nome", "contatos.legNome")}${fi("E-mail", "contatos.legEmail", "email")}${fi("Telefone", "contatos.legTel", "tel")}</div>
+            ${has("Voz") || S.contrato.integracao ? `<div class="sect"><h3>TI / infraestrutura</h3><p>Necessário para liberar firewall, apontar SIP e tratar a integração.</p></div>
+            <div class="grid3">${fi("Nome", "contatos.tiNome")}${fi("E-mail", "contatos.tiEmail", "email")}${fi("Telefone", "contatos.tiTel", "tel")}</div>` : ""}
+            ${nav()}</div>`;
+        }
+      },
+
+      {
+        id: "operacao", nome: "Horário e filas", when: () => true,
+        check() {
+          const p = [];
+          if (!S.operacao.diasSem) p.push("Horário de atendimento em dias úteis");
+          if (!S.operacao.setores.length) p.push("Cadastrar ao menos um setor / fila");
+          if (S.operacao.setores.some(s => !s.nome || !/^\d{3,5}$/.test(s.dac || ""))) p.push("Setor sem nome ou com DAC inválido");
+          return p;
+        },
+        render() {
+          const o = S.operacao;
+          return `<div class="card">
+            <p class="eyebrow">Operação</p><h2>Quando vocês atendem e por quais filas</h2>
+            <p class="lede">Os setores que você cadastrar aqui viram as filas (DAC) do ambiente — e vão aparecer sozinhos nos menus do chatbot, no cadastro dos agentes e nas regras da IA.</p>
+            <div class="f"><label>Jornada</label><div class="opts">
+              ${["comercial|Comercial (seg a sex)", "estendido|Estendido (inclui sábado)", "24x7|24 horas, todos os dias", "custom|Cada setor tem o seu"].map(x => {
+                const [v, l] = x.split("|");
+                return `<button class="opt" aria-pressed="${o.jornada === v}" onclick="S.operacao.jornada='${v}';draw()">${l}</button>`;
+              }).join("")}
+            </div></div>
+            ${o.jornada !== "24x7" ? `<div class="grid3">
+              ${fi("Segunda a sexta", "operacao.diasSem", "text", "07:30–18:00")}
+              ${o.jornada !== "comercial" ? fi("Sábado", "operacao.sabado", "text", "08:00–12:00") : ""}
+              ${o.jornada === "24x7" ? "" : fi("Domingo e feriados", "operacao.domingo", "text", "não atende")}
+            </div>` : ""}
+            <div class="sect"><h3>Setores / filas <span class="req">*</span></h3><p>O código DAC é o número da fila dentro da plataforma. Se não souber, deixe a sugestão.</p></div>
+            ${o.setores.length ? `<table><thead><tr><th style="width:44%">Setor</th><th style="width:20%">DAC</th><th>Horário</th><th style="width:36px"></th></tr></thead><tbody>
+              ${o.setores.map((s, i) => `<tr>
+                <td><input type="text" value="${esc(s.nome)}" oninput="S.operacao.setores[${i}].nome=this.value;soft()"></td>
+                <td><input type="text" class="mono ${/^\d{3,5}$/.test(s.dac || "") ? "" : "bad"}" value="${esc(s.dac)}" oninput="S.operacao.setores[${i}].dac=this.value;soft()"></td>
+                <td><input type="text" value="${esc(s.horario)}" oninput="S.operacao.setores[${i}].horario=this.value;soft()"></td>
+                <td><button class="rowdel" onclick="S.operacao.setores.splice(${i},1);draw()">×</button></td></tr>`).join("")}
+            </tbody></table>` : `<div class="note info">Nenhum setor ainda. Comece por um modelo pronto e ajuste o que quiser.</div>`}
+            <div class="navrow" style="margin-top:12px">
+              <button class="btn btn-s" onclick="addSetor()">+ Setor</button>
+              <button class="btn-g" onclick="loadTpl('saude','setores')">Usar modelo de saúde</button>
+              <button class="btn-g" onclick="loadTpl('generico','setores')">Usar modelo genérico</button>
+            </div>
+            ${nav()}</div>`;
+        }
+      },
+
+      {
+        id: "equipe", nome: "Equipe", when: () => true,
+        check() {
+          const p = [], e = S.equipe;
+          if (!e.agentes.length) p.push("Cadastrar os agentes");
+          if (e.agentes.some(a => !vLogin(a.login) || !a.nome || !vEmail(a.email))) p.push("Corrigir agentes com dado inválido");
+          if (e.agentes.length > S.contrato.licAgente) p.push(`Agentes acima das ${S.contrato.licAgente} licenças`);
+          if (!e.gestores.length) p.push("Cadastrar ao menos um gestor");
+          return p;
+        },
+        render() {
+          const e = S.equipe, over = e.agentes.length > S.contrato.licAgente;
+          const setOpts = v => `<option value="">—</option>` + S.operacao.setores.map(s => `<option value="${esc(s.nome)}" ${v === s.nome ? "selected" : ""}>${esc(s.nome)}</option>`).join("");
+          return `<div class="card">
+            <p class="eyebrow">Equipe</p><h2>Quem vai atender</h2>
+            <p class="lede">Cole direto do seu Excel ou RH — uma pessoa por linha, com nome, e-mail e setor separados por tabulação, vírgula ou ponto e vírgula.</p>
+            <div class="f"><label>Colar lista de agentes</label>
+              <textarea id="bulk" placeholder="Maria Souza	maria@empresa.com.br	Agendamento\nJoão Lima	joao@empresa.com.br	Recepção / Triagem"></textarea>
+              <div class="navrow"><button class="btn btn-p" onclick="parseBulk()">Importar lista</button>
+              <button class="btn btn-s" onclick="addAgente()">+ Adicionar um</button></div></div>
+            ${over ? `<div class="note warn"><b>${e.agentes.length} agentes para ${S.contrato.licAgente} licenças.</b> Remova ${e.agentes.length - S.contrato.licAgente} ou fale com seu AM sobre licenças adicionais.</div>` : ""}
+            ${e.agentes.length ? `<table><thead><tr><th style="width:15%">Login</th><th style="width:28%">Nome</th><th style="width:30%">E-mail</th><th>Setor</th><th style="width:36px"></th></tr></thead><tbody>
+              ${e.agentes.map((a, i) => `<tr>
+                <td><input type="text" class="mono ${vLogin(a.login) ? "" : "bad"}" value="${esc(a.login)}" oninput="S.equipe.agentes[${i}].login=this.value;soft()"></td>
+                <td><input type="text" value="${esc(a.nome)}" oninput="S.equipe.agentes[${i}].nome=this.value;soft()"></td>
+                <td><input type="text" class="${vEmail(a.email) ? "" : "bad"}" value="${esc(a.email)}" oninput="S.equipe.agentes[${i}].email=this.value;soft()"></td>
+                <td><select onchange="S.equipe.agentes[${i}].setor=this.value;soft()">${setOpts(a.setor)}</select></td>
+                <td><button class="rowdel" onclick="S.equipe.agentes.splice(${i},1);draw()">×</button></td></tr>`).join("")}
+            </tbody></table>
+            <p class="hint" style="margin-top:8px">Login: só números, não pode começar com 0, mínimo de 3 dígitos.</p>` : ""}
+            <div class="sect"><h3>Gestores <span class="req">*</span></h3><p>Acessam relatórios, monitoram filas e configuram o ambiente. ${S.contrato.licGestor} licenças no contrato.</p></div>
+            ${e.gestores.length ? `<table><thead><tr><th style="width:32%">Nome</th><th style="width:36%">E-mail</th><th>Setor</th><th style="width:36px"></th></tr></thead><tbody>
+              ${e.gestores.map((g, i) => `<tr>
+                <td><input type="text" value="${esc(g.nome)}" oninput="S.equipe.gestores[${i}].nome=this.value;soft()"></td>
+                <td><input type="text" class="${vEmail(g.email) ? "" : "bad"}" value="${esc(g.email)}" oninput="S.equipe.gestores[${i}].email=this.value;soft()"></td>
+                <td><select onchange="S.equipe.gestores[${i}].setor=this.value;soft()">${setOpts(g.setor)}</select></td>
+                <td><button class="rowdel" onclick="S.equipe.gestores.splice(${i},1);draw()">×</button></td></tr>`).join("")}
+            </tbody></table>` : ""}
+            <div class="navrow" style="margin-top:10px"><button class="btn btn-s" onclick="addGestor()">+ Gestor</button></div>
+            <div class="sect"><h3>O nome do agente aparece para o cliente?</h3></div>
+            <div class="opts">
+              <button class="opt" aria-pressed="${e.nomeVisivel}" onclick="S.equipe.nomeVisivel=true;draw()">Sim</button>
+              <button class="opt" aria-pressed="${!e.nomeVisivel}" onclick="S.equipe.nomeVisivel=false;draw()">Não</button></div>
+            ${nav()}</div>`;
+        }
+      },
+
+      {
+        id: "classif", nome: "Classificação", when: () => true,
+        check() {
+          const p = [];
+          if (S.classif.tabulacoes.length < 3) p.push("Definir ao menos 3 tabulações");
+          if (!S.classif.pausas.length) p.push("Definir as pausas dos agentes");
+          return p;
+        },
+        render() {
+          const c = S.classif;
+          return `<div class="card">
+            <p class="eyebrow">Classificação e qualidade</p><h2>Como cada atendimento é encerrado</h2>
+            <div class="note info">A tabulação é o que o agente escolhe ao fechar a conversa. É de onde saem quase todos os relatórios.</div>
+            <div class="sect"><h3>Tabulações <span class="req">*</span></h3><p>Comece por um modelo e ajuste. Evite mais de 12 opções.</p></div>
+            ${tagBox("classif.tabulacoes", "Ex.: Agendamento realizado")}
+            <div class="navrow"><button class="btn-g" onclick="loadTpl('saude','tabulacoes')">Modelo de saúde</button>
+              <button class="btn-g" onclick="loadTpl('generico','tabulacoes')">Modelo genérico</button></div>
+            <div class="sect"><h3>Pausas <span class="req">*</span></h3><p>Motivos que o agente pode selecionar ao sair do atendimento.</p></div>
+            ${tagBox("classif.pausas", "Ex.: Almoço")}
+            <div class="navrow"><button class="btn-g" onclick="loadTpl('saude','pausas')">Modelo de saúde</button>
+              <button class="btn-g" onclick="loadTpl('generico','pausas')">Modelo genérico</button></div>
+            <div class="sect"><h3>Pesquisa de satisfação</h3></div>
+            <div class="opts" style="margin-bottom:14px">
+              <button class="opt" aria-pressed="${c.pesquisa}" onclick="S.classif.pesquisa=true;draw()">Aplicar pesquisa</button>
+              <button class="opt" aria-pressed="${!c.pesquisa}" onclick="S.classif.pesquisa=false;draw()">Não aplicar</button></div>
+            ${c.pesquisa ? `<div class="f"><label>Quando enviar</label><div class="opts">
+              <button class="opt sm" aria-pressed="${c.pesquisaQuando === 'sempre'}" onclick="S.classif.pesquisaQuando='sempre';draw()">A cada atendimento</button>
+              <button class="opt sm" aria-pressed="${c.pesquisaQuando === 'amostra'}" onclick="S.classif.pesquisaQuando='amostra';draw()">Em parte deles</button>
+              <button class="opt sm" aria-pressed="${c.pesquisaQuando === '24h'}" onclick="S.classif.pesquisaQuando='24h';draw()">No máximo 1× por dia por cliente</button>
+            </div></div>
+            <div class="f"><label>Texto da pesquisa</label><textarea data-path="classif.pesquisaTexto" style="min-height:130px">${esc(c.pesquisaTexto)}</textarea>
+            <span class="hint">Padrão ORPEN pré-carregado. Edite se desejar.</span></div>` : ""}
+            ${nav()}</div>`;
+        }
+      },
+
+      {
+        id: "whats", nome: "WhatsApp", when: () => has("WhatsApp"),
+        check() {
+          const p = [], w = S.whats;
+          if (!/^\d{10,11}$/.test((w.numero || "").replace(/\D/g, ""))) p.push("Número do WhatsApp");
+          if (!w.emUso) p.push("Informar se o número já está em uso");
+          if (!w.m01) p.push("Mensagem de recepção (M01)");
+          if (!w.m02) p.push("Mensagem fora do horário (M02)");
+          if (w.emUso === "sim" && !Object.values(w.pre).every(Boolean)) p.push("Pré-requisitos do número em uso");
+          return p;
+        },
+        render() {
+          const w = S.whats;
+          return `<div class="card">
+            <p class="eyebrow">Canal</p><h2>WhatsApp</h2>
+            <div class="grid2">
+              ${fi("Número para a plataforma (DDD + número)", "whats.numero", "tel", "51 3000-0000")}
+              <div class="f"><label>Esse número já está em uso no WhatsApp? <span class="req">*</span></label><div class="opts">
+                <button class="opt" aria-pressed="${w.emUso === 'nao'}" onclick="S.whats.emUso='nao';draw()">Não, é novo</button>
+                <button class="opt" aria-pressed="${w.emUso === 'sim'}" onclick="S.whats.emUso='sim';draw()">Sim, está ativo</button>
+              </div></div></div>
+            ${w.emUso === "sim" ? `
+            <div class="note warn"><b>Atenção: o número precisa ser preparado antes da virada.</b> No dia da ativação a conta atual é excluída e o histórico não vem junto. Marque cada item quando concluído:</div>
+            ${[["backup", "Fazer backup das conversas do celular", "O histórico anterior não é importado para a plataforma."],
+               ["grupos", "Sair de todos os grupos desse número", "Grupos não funcionam na API Oficial."],
+               ["exclusao", "Excluir a conta WhatsApp na data da ativação", "Feito junto com a ORPEN, no horário combinado."],
+               ["contatos", "Exportar a agenda de contatos", "Opcional — permite importar os contatos para a plataforma."]]
+              .map(([k, t, s]) => `<div class="pre">
+                <input type="checkbox" ${w.pre[k] ? "checked" : ""} onchange="S.whats.pre.${k}=this.checked;draw()">
+                <div><p>${t}</p><p class="sub">${s}</p></div>
+                <input type="text" placeholder="Responsável" value="${esc(w.preResp[k])}" oninput="S.whats.preResp.${k}=this.value;soft()">
+              </div>`).join("")}
+            <div class="f" style="margin-top:16px"><label>Data desejada para a virada</label>
+              <input type="date" value="${esc(w.dataAtivacao)}" oninput="S.whats.dataAtivacao=this.value;soft()" style="max-width:220px"></div>` : ""}
+            <div class="sect"><h3>Mensagens do canal</h3></div>
+            <div class="f"><label>M01 · Recepção dentro do horário <span class="req">*</span></label>
+              <textarea data-path="whats.m01" placeholder="Olá! Bem-vindo ao ...">${esc(w.m01)}</textarea>
+              <button class="btn-g" onclick="sugerirM01()">Montar a partir dos meus setores</button></div>
+            <div class="f"><label>M02 · Fora do horário <span class="req">*</span></label>
+              <textarea data-path="whats.m02" placeholder="Nosso atendimento funciona de ...">${esc(w.m02)}</textarea>
+              <button class="btn-g" onclick="sugerirM02()">Montar a partir do meu horário</button></div>
+            <div class="f"><label>O que fazer com uma conversa nova fora do horário</label><div class="opts">
+              <button class="opt sm" aria-pressed="${w.foraHorario === 'fila'}" onclick="S.whats.foraHorario='fila';draw()">Guardar na fila para o dia seguinte</button>
+              <button class="opt sm" aria-pressed="${w.foraHorario === 'encerra'}" onclick="S.whats.foraHorario='encerra';draw()">Encerrar após a mensagem</button>
+            </div></div>
+            <div class="f"><label>Avisar o cliente quando o atendimento for finalizado?</label><div class="opts">
+              <button class="opt sm" aria-pressed="${w.avisarFim}" onclick="S.whats.avisarFim=true;draw()">Sim</button>
+              <button class="opt sm" aria-pressed="${!w.avisarFim}" onclick="S.whats.avisarFim=false;draw()">Não</button></div></div>
+            ${w.avisarFim ? `<div class="f"><label>M03 · Atendimento finalizado</label><textarea data-path="whats.m03">${esc(w.m03)}</textarea></div>` : ""}
+            ${nav()}</div>`;
+        }
+      },
+
+      {
+        id: "bot", nome: "Menu do bot", when: () => has("WhatsApp"),
+        check() {
+          const p = [];
+          if (!S.bot.opcoes.length) p.push("Montar o menu do chatbot");
+          if (S.bot.opcoes.some(o => !o.rotulo || (o.acao === "transferir" && !o.destino))) p.push("Opção do menu sem rótulo ou destino");
+          return p;
+        },
+        render() {
+          const b = S.bot;
+          const setOpts = v => `<option value="">Escolha o setor…</option>` + S.operacao.setores.map(s => `<option value="${esc(s.nome)}" ${v === s.nome ? "selected" : ""}>${esc(s.nome)} · DAC ${esc(s.dac)}</option>`).join("");
+          return `<div class="card">
+            <p class="eyebrow">Jornada</p><h2>O menu que o cliente vê</h2>
+            <p class="lede">Cada opção do menu leva a um setor, a um submenu ou a uma resposta pronta.</p>
+            ${!S.operacao.setores.length ? `<div class="note warn">Cadastre os setores primeiro — as opções de transferência vêm de lá.</div>` : ""}
+            ${b.opcoes.map((o, i) => `<div class="node">
+              <div class="hd"><span class="keycap">${i + 1}</span>
+                <input type="text" placeholder="Rótulo da opção. Ex.: Agendar consulta" value="${esc(o.rotulo)}" oninput="S.bot.opcoes[${i}].rotulo=this.value;soft()">
+                <button class="rowdel" onclick="S.bot.opcoes.splice(${i},1);draw()">×</button></div>
+              <div class="opts" style="margin-bottom:9px">
+                ${["transferir|Transferir para setor", "submenu|Abrir submenu", "mensagem|Responder e encerrar"].map(x => {
+                  const [v, l] = x.split("|");
+                  return `<button class="opt sm" aria-pressed="${o.acao === v}" onclick="S.bot.opcoes[${i}].acao='${v}';draw()">${l}</button>`;
+                }).join("")}
+              </div>
+              ${o.acao === "transferir" ? `<select onchange="S.bot.opcoes[${i}].destino=this.value;soft()">${setOpts(o.destino)}</select>` : ""}
+              ${o.acao === "mensagem" ? `<textarea placeholder="Resposta enviada ao cliente" oninput="S.bot.opcoes[${i}].texto=this.value;soft()">${esc(o.texto || "")}</textarea>` : ""}
+              ${o.acao === "submenu" ? `<div class="sub-node">
+                <textarea placeholder="Pergunta do submenu" oninput="S.bot.opcoes[${i}].texto=this.value;soft()">${esc(o.texto || "")}</textarea>
+                ${(o.filhos || []).map((f, j) => `<div class="hd" style="margin-top:8px"><span class="keycap">${i + 1}.${j + 1}</span>
+                  <input type="text" placeholder="Opção do submenu" value="${esc(f.rotulo)}" oninput="S.bot.opcoes[${i}].filhos[${j}].rotulo=this.value;soft()">
+                  <select onchange="S.bot.opcoes[${i}].filhos[${j}].destino=this.value;soft()" style="max-width:230px">${setOpts(f.destino)}</select>
+                  <button class="rowdel" onclick="S.bot.opcoes[${i}].filhos.splice(${j},1);draw()">×</button></div>`).join("")}
+                <button class="btn-g" onclick="addFilho(${i})">+ opção do submenu</button>
+              </div>` : ""}
+            </div>`).join("")}
+            <div class="navrow"><button class="btn btn-s" onclick="addOpcao()">+ Opção do menu</button>
+              ${S.operacao.setores.length ? `<button class="btn-g" onclick="botFromSetores()">Gerar menu a partir dos setores</button>` : ""}</div>
+            ${b.opcoes.length ? `<div class="sect"><h3>Prévia da conversa</h3></div>
+            <div class="note info" style="white-space:pre-wrap;font-family:'IBM Plex Sans'">${esc(previewBot())}</div>` : ""}
+            ${nav()}</div>`;
+        }
+      },
+
+      {
+        id: "voz", nome: "Voz", when: () => has("Voz"),
+        check() {
+          const p = [], v = S.voz;
+          if (!v.operadora) p.push("Operadora de telefonia");
+          if (!v.entroncamento) p.push("Tipo de entroncamento");
+          if (!v.unica) p.push("Se a ORPEN será a única central");
+          if (!v.ura) p.push("Se haverá URA");
+          if (v.ura === "nao" && !v.destinoSemUra) p.push("Destino das chamadas de entrada");
+          if (!v.agentesWeb) p.push("Quantidade de agentes de voz");
+          return p;
+        },
+        render() {
+          const v = S.voz;
+          return `<div class="card">
+            <p class="eyebrow">Canal</p><h2>Telefonia</h2>
+            <div class="grid2">
+              ${fi("Operadora atual", "voz.operadora", "text", "Algar, Directcall, Vivo…")}
+              ${fi("Chamadas simultâneas contratadas", "voz.simultaneas", "text", "Ex.: 10")}</div>
+            <div class="f"><label>Como a ORPEN se conecta à sua telefonia <span class="req">*</span></label><div class="opts">
+              <button class="opt" aria-pressed="${v.entroncamento === 'sip'}" onclick="S.voz.entroncamento='sip';draw()">SIP direto com a operadora</button>
+              <button class="opt" aria-pressed="${v.entroncamento === 'legada'}" onclick="S.voz.entroncamento='legada';draw()">SIP com a central que já temos</button>
+              <button class="opt" aria-pressed="${v.entroncamento === 'nsei'}" onclick="S.voz.entroncamento='nsei';draw()">Não sei — quero ajuda da ORPEN</button></div></div>
+            ${v.entroncamento === 'nsei' ? `<div class="note warn">Marcamos uma call técnica de 30 minutos com seu time de TI e a operadora.</div>` : ""}
+            <div class="f"><label>A ORPEN será a única central telefônica? <span class="req">*</span></label><div class="opts">
+              <button class="opt" aria-pressed="${v.unica === 'sim'}" onclick="S.voz.unica='sim';draw()">Sim</button>
+              <button class="opt" aria-pressed="${v.unica === 'nao'}" onclick="S.voz.unica='nao';draw()">Não, vai coexistir com outra</button></div></div>
+            ${v.unica === 'nao' ? `<div class="f">${fi("Qual central permanece e para quê", "voz.coexistencia", "text", "Ex.: PABX do bloco cirúrgico")}</div>` : ""}
+            <div class="f"><label>Vai ter URA (atendimento automático)? <span class="req">*</span></label><div class="opts">
+              <button class="opt" aria-pressed="${v.ura === 'sim'}" onclick="S.voz.ura='sim';draw()">Sim</button>
+              <button class="opt" aria-pressed="${v.ura === 'nao'}" onclick="S.voz.ura='nao';draw()">Não</button></div></div>
+            ${v.ura === 'sim' ? `<div class="f"><label>Tamanho da URA</label><div class="opts">
+                ${["1|1 nível", "2|2 níveis", "3|3 ou mais níveis"].map(x => {
+                  const [k, l] = x.split("|");
+                  return `<button class="opt sm" aria-pressed="${v.uraNiveis === k}" onclick="S.voz.uraNiveis='${k}';draw()">${l}</button>`;
+                }).join("")}
+              </div></div>` : ""}
+            ${v.ura === 'nao' ? fi("Para onde vão as chamadas de entrada", "voz.destinoSemUra", "text", "Ex.: direto para a fila Recepção") : ""}
+            <div class="grid2">${fi("Agentes de voz (Fullchannel)", "voz.agentesWeb", "text", "Ex.: 15")}${fi("Ramais comuns, só voz", "voz.ramais", "text", "Ex.: 20")}</div>
+            <div class="f"><label>Recursos adicionais</label><div class="opts">
+              <button class="opt sm" aria-pressed="${v.callback}" onclick="S.voz.callback=!S.voz.callback;draw()">Callback</button>
+              <button class="opt sm" aria-pressed="${v.whatsback}" onclick="S.voz.whatsback=!S.voz.whatsback;draw()">Whatsback</button></div></div>
+            ${nav()}</div>`;
+        }
+      },
+
+      {
+        id: "ia", nome: "Assistente de IA", when: () => S.contrato.ia,
+        check() {
+          const p = [], a = S.ia;
+          if (!a.nome) p.push("Nome do assistente de IA");
+          if (!a.tom.length) p.push("Tom de voz da IA");
+          if (!a.habilidades) p.push("Tópicos que a IA resolve sozinha");
+          if (!a.restricoes) p.push("O que a IA está proibida de fazer (Anti-alucinação)");
+          if (!a.smartJump.length) p.push("Ao menos uma regra de prioridade / Smart Jump");
+          return p;
+        },
+        render() {
+          const a = S.ia;
+          const setOpts = v => `<option value="">Escolha a fila / DAC…</option>` + S.operacao.setores.map(s => `<option value="${esc(s.nome)}" ${v === s.nome ? "selected" : ""}>${esc(s.nome)} · DAC ${esc(s.dac)}</option>`).join("");
+          return `<div class="card">
+            <div class="auditor-banner">
+              <div class="auditor-avatar">🤖</div>
+              <div class="auditor-content">
+                <h4>IA Auditora ORPEN (OpenAI 5.6 Sol) Ativa</h4>
+                <p>Estou analisando a construção do seu assistente em tempo real. Avalio ambiguidades nas regras de atendimento, densidade de contexto e determino o plano ideal para sua operação.</p>
+                <div class="auditor-actions">
+                  <button class="auditor-chip" onclick="aplicarPerfilClinica()">🏥 Modelo Clínicas / Saúde</button>
+                  <button class="auditor-chip" onclick="aplicarPerfilComercial()">💼 Modelo Comercial / Vendas</button>
+                  <button class="auditor-chip" onclick="otimizarIaAuditora()">✨ Otimizar Prompt com IA Auditora</button>
+                </div>
+              </div>
+            </div>
+
+            <p class="eyebrow">Inteligência Artificial</p>
+            <h2>Configuração e regras do Assistente de IA</h2>
+            <p class="lede">Estrutura completa para geração determinística do prompt de produção, triagem de filas, limites anti-alucinação e transbordo.</p>
+
+            <div class="sect"><h3>1. Identidade, Persona e Tom de Voz</h3><p>Como o assistente se apresenta e formata as respostas no WhatsApp.</p></div>
+            <div class="grid2">
+              ${fi("Nome da IA", "ia.nome", "text", "Ex.: Ires, Sofia, Max")}
+              <div class="f"><label>Tamanho médio das respostas <span class="req">*</span></label><div class="opts">
+                ${["curta|Curta (2 a 3 frases)", "media|Média (4 a 6 linhas)", "flexivel|Flexível"].map(x => {
+                  const [v, l] = x.split("|");
+                  return `<button class="opt sm" aria-pressed="${a.extensaoResp === v}" onclick="S.ia.extensaoResp='${v}';draw()">${l}</button>`;
+                }).join("")}
+              </div></div>
+            </div>
+            <div class="f"><label>Tom de Voz <span class="req">*</span></label><div class="opts">
+              ${["Cordial e acolhedor", "Formal e institucional", "Direto e objetivo", "Técnico e consultivo"].map(t =>
+                `<button class="opt sm" aria-pressed="${a.tom.includes(t)}" onclick="togIaTom('${t}')">${t}</button>`).join("")}
+            </div></div>
+            <div class="grid2">
+              <div class="f"><label>Uso de Emojis</label><div class="opts">
+                ${["nenhum|Sem emojis", "moderado|Moderado (máx 1)", "livre|Humanizado / Livre"].map(x => {
+                  const [v, l] = x.split("|");
+                  return `<button class="opt sm" aria-pressed="${a.emojiUso === v}" onclick="S.ia.emojiUso='${v}';draw()">${l}</button>`;
+                }).join("")}
+              </div></div>
+              ${a.emojiUso !== "nenhum" ? fi("Emojis permitidos / proibidos", "ia.emojisPermitidos", "text", "Ex.: Permitidos: 💙, 👋, 🏥, ✅ | Proibidos: ❤️, 😂") : ""}
+            </div>
+
+            <div class="sect"><h3>2. Contexto do Negócio e Objetivos</h3><p>Descreva o público-alvo, dores da operação e métricas de validação.</p></div>
+            <div class="f">
+              <label>Com qual parte do público a IA irá trabalhar? (Público-alvo)</label>
+              ${fta("ia.publicoAlvo", "Ex.: Pacientes particulares e de convênios buscando agendamento e informações; acompanhantes de pacientes internados; novos clientes com dúvidas de exames.")}
+              <div class="navrow" style="margin-top:2px">
+                <span class="hint">Sugestões rápidas:</span>
+                <button class="btn-g" onclick="appendIaField('ia.publicoAlvo','Pacientes e clientes finais (B2C)')">+ Pacientes B2C</button>
+                <button class="btn-g" onclick="appendIaField('ia.publicoAlvo','Empresas e fornecedores (B2B)')">+ Empresas B2B</button>
+                <button class="btn-g" onclick="appendIaField('ia.publicoAlvo','Novos leads comerciais')">+ Novos Leads</button>
+              </div>
+            </div>
+
+            <div class="grid2">
+              <div class="f">
+                <label>Qual o problema você deseja solucionar com a IA?</label>
+                ${fta("ia.problema", "Ex.: Alto tempo de espera na recepção, perda de leads fora do horário e sobrecarga da equipe com dúvidas repetitivas sobre preparo e convênios.")}
+              </div>
+              <div class="f">
+                <label>Quais métricas de sucesso (KPIs e taxas) validam a implementação?</label>
+                ${fta("ia.kpis", "Ex.: Taxa de resolução no 1º contato acima de 40%, redução do Tempo Médio de Espera (TME) em 50%, nota CSAT/NPS superior a 4.5 e zero transbordos indevidos.")}
+              </div>
+            </div>
+
+            <div class="sect"><h3>3. Escopo e Restrições de Autonomia</h3><p>O que a IA resolve sozinha e o que ela está terminantemente proibida de fazer.</p></div>
+            <div class="f"><label>Tópicos que a IA resolve sozinha (Autonomia Total) <span class="req">*</span></label>
+              ${fta("ia.habilidades", "Ex.:\n- Endereço e horários de atendimento das unidades\n- Lista de convênios aceitos\n- Orientações e preparos básicos de exames\n- Envio de links de agendamento online")}</div>
+            <div class="grid2">
+              <div class="f"><label>Restrições Críticas (Anti-Alucinação) <span class="req">*</span></label>
+                ${fta("ia.restricoes", "Ex.:\n- Não dar orientação médica ou diagnóstico\n- Não confirmar cobertura de plano sem consultar operadora\n- Não prometer horários vagos sem integração")}
+                <span class="hint">Regra mandatória de segurança da informação.</span></div>
+              <div class="f"><label>Assuntos Fora de Escopo (Filtro Anti-Ruído)</label>
+                ${fta("ia.foraEscopo", "Ex.: Política, futebol, receitas, assuntos pessoais não relacionados à empresa.")}</div>
+            </div>
+
+            <div class="sect"><h3>4. Roteamento Inteligente (Smart Jump) e Filas</h3><p>Gatilhos imediatos que cortam o menu e transferem para filas específicas.</p></div>
+            ${!S.operacao.setores.length ? `<div class="note warn">Cadastre os setores no bloco de Horário e Filas para vinculá-los aqui como destinos de transbordo.</div>` : ""}
+            ${a.smartJump.length ? `<table><thead><tr><th style="width:28%">Categoria / Intenção</th><th style="width:42%">Gatilhos (palavras-chave separadas por vírgula)</th><th>Fila / Ação</th><th style="width:36px"></th></tr></thead><tbody>
+              ${a.smartJump.map((r, i) => `<tr>
+                <td><input type="text" value="${esc(r.categoria)}" placeholder="Ex.: Emergência Médica" oninput="S.ia.smartJump[${i}].categoria=this.value;soft()"></td>
+                <td><input type="text" value="${esc(r.gatilhos)}" placeholder="Ex.: dor, sangramento, urgência" oninput="S.ia.smartJump[${i}].gatilhos=this.value;soft()"></td>
+                <td><select onchange="S.ia.smartJump[${i}].destino=this.value;soft()">${setOpts(r.destino)}</select></td>
+                <td><button class="rowdel" onclick="S.ia.smartJump.splice(${i},1);draw()">×</button></td></tr>`).join("")}
+            </tbody></table>` : `<div class="note info">Nenhuma regra de Smart Jump cadastrada. Clique abaixo para adicionar ou carregar o modelo.</div>`}
+            <div class="navrow" style="margin-top:10px">
+              <button class="btn btn-s" onclick="addSmartJump()">+ Regra Smart Jump</button>
+              <button class="btn-g" onclick="loadIaTemplates()">Carregar regras padrão de transbordo</button>
+            </div>
+
+            <div class="sect"><h3>5. Pré-Atendimento e Coleta Sequencial de Dados</h3><p>Campos que a IA deve perguntar (um por vez) para qualificar o cliente antes de passar para o atendente humano.</p></div>
+            ${a.preAtendimento.length ? `<table><thead><tr><th style="width:12%">Ordem</th><th style="width:40%">Fluxo</th><th>Pergunta obrigatória (uma por vez)</th><th style="width:36px"></th></tr></thead><tbody>
+              ${a.preAtendimento.map((p, i) => `<tr>
+                <td class="mono" style="font-weight:600">Passo ${i + 1}</td>
+                <td><input type="text" value="${esc(p.fluxo)}" placeholder="Ex.: Agendamento / Comercial" oninput="S.ia.preAtendimento[${i}].fluxo=this.value;soft()"></td>
+                <td><input type="text" value="${esc(p.pergunta)}" placeholder="Ex.: Qual a especialidade desejada?" oninput="S.ia.preAtendimento[${i}].pergunta=this.value;soft()"></td>
+                <td><button class="rowdel" onclick="S.ia.preAtendimento.splice(${i},1);draw()">×</button></td></tr>`).join("")}
+            </tbody></table>` : ""}
+            <div class="navrow" style="margin-top:8px">
+              <button class="btn btn-s" onclick="addPreAtendimento()">+ Campo de Coleta</button>
+              <button class="btn-g" onclick="loadPreAtendSaude()">Carregar roteiro padrão de coleta</button>
+            </div>
+            <div class="f" style="margin-top:14px"><label>Tentativas sem entender antes de transferir por falha (Catch-All)</label><div class="opts">
+              ${["1|1 tentativa (imediato)", "2|2 tentativas", "3|3 tentativas (recomendado)"].map(x => {
+                const [v, l] = x.split("|");
+                return `<button class="opt sm" aria-pressed="${a.tentativasErro === v}" onclick="S.ia.tentativasErro='${v}';draw()">${l}</button>`;
+              }).join("")}
+            </div></div>
+
+            <div class="sect"><h3>6. Inatividade e Encerramento</h3><p>Controle de tempo para clientes que param de responder.</p></div>
+            <div class="grid3">
+              <div class="f"><label>Tempo limite de inatividade</label><div class="opts">
+                ${["5|5 min", "10|10 min", "15|15 min", "30|30 min"].map(x => {
+                  const [v, l] = x.split("|");
+                  return `<button class="opt sm" aria-pressed="${a.inatTempo === v}" onclick="S.ia.inatTempo='${v}';draw()">${l}</button>`;
+                }).join("")}
+              </div></div>
+              <div class="f"><label>Ação ao esgotar o tempo</label><div class="opts">
+                ${["finalizar|Encerrar atendimento", "transferir|Transferir para fila"].map(x => {
+                  const [v, l] = x.split("|");
+                  return `<button class="opt sm" aria-pressed="${a.inatAcao === v}" onclick="S.ia.inatAcao='${v}';draw()">${l}</button>`;
+                }).join("")}
+              </div></div>
+              ${a.inatAcao === "transferir" ? `<div class="f"><label>Fila de destino</label><select onchange="S.ia.inatFila=this.value;soft()">${setOpts(a.inatFila)}</select></div>` : ""}
+            </div>
+
+            <div class="sect"><h3>7. Base de Conhecimento e Governança</h3><p>Fonte da verdade para atualização contínua do bot.</p></div>
+            <div class="grid2">
+              ${fi("Site institucional ou portal oficial", "ia.baseUrl", "text", "https://...")}
+              <div class="f"><label>Frequência de alteração das informações</label><div class="opts">
+                ${["semanal|Semanal / Mensal", "raramente|Raramente (Trimestral/Anual)", "api|Tempo Real (via API)"].map(x => {
+                  const [v, l] = x.split("|");
+                  return `<button class="opt sm" aria-pressed="${a.faqFreq === v}" onclick="S.ia.faqFreq='${v}';draw()">${l}</button>`;
+                }).join("")}
+              </div></div>
+            </div>
+            <div class="f">${fi("Responsável interno para dúvidas de FAQ (Nome / E-mail)", "ia.faqResp", "text", "Ex.: Mariana Souza - mariana@empresa.com.br")}</div>
+
+            <div class="navrow" style="margin-top:16px">
+              <button class="btn btn-p" onclick="abrirModalPromptFinal()">👁️ Visualizar System Prompt Compilado</button>
+            </div>
+
+            ${nav()}
+          </div>`;
+        }
+      },
+
+      {
+        id: "ia_chat", nome: "IA Conversacional 100% (5.6 Sol)", when: () => S.contrato.ia,
+        check() {
+          const p = [];
+          if (!S.ia.nome || !S.ia.habilidades) p.push("Concluir conversa com a IA Auditora");
+          return p;
+        },
+        render() {
+          return `<div class="card">
+            <div class="auditor-banner">
+              <div class="auditor-avatar">🤖</div>
+              <div class="auditor-content">
+                <h4>Auditoria Conversacional 100% Guiada (OpenAI 5.6 Sol)</h4>
+                <p>Neste modo, você não precisa preencher campos manuais. A IA Auditora conversa com você, tira dúvidas, elimina ambiguidades e vai preenchendo as configurações do seu assistente em tempo real.</p>
+              </div>
+            </div>
+
+            <div class="chat-container">
+              <div class="chat-cfg-bar">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ADE80"></span>
+                  <b>Motor: OpenAI 5.6 Sol</b>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <label style="color:#A4C4CE;font-size:11.5px">Chave OpenAI (sk-...):</label>
+                  <input type="password" id="sk_key_input" placeholder="sk-proj-..." value="${esc(getOpenAIKey())}" oninput="salvarOpenAIKey(this.value)" title="Insira sua chave sk da OpenAI para chamadas em tempo real">
+                </div>
+              </div>
+
+              <div class="chat-stream" id="chat_stream">
+                ${renderChatMessages()}
+              </div>
+
+              <div class="chat-quick-chips" id="chat_quick_chips">
+                ${renderChatQuickChips()}
+              </div>
+
+              <div class="chat-input-row">
+                <textarea id="chat_user_input" placeholder="Digite sua resposta para a IA Auditora... (Pressione Enter para enviar)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarChatUser()}"></textarea>
+                <button class="btn btn-p" style="padding:10px 18px" onclick="enviarChatUser()">Enviar</button>
+              </div>
+            </div>
+
+            <div class="navrow" style="margin-top:16px">
+              <button class="btn btn-s" onclick="reiniciarChatAuditora()">↺ Reiniciar Conversa</button>
+              <button class="btn btn-p" onclick="abrirModalPromptFinal()">👁️ Visualizar Prompt Final da IA</button>
+              <span class="hint sp">O painel lateral direito é atualizado automaticamente a cada resposta.</span>
+            </div>
+
+            ${nav()}
+          </div>`;
+        }
+      },
+
+      {
+        id: "integ", nome: "Integração", when: () => S.contrato.integracao,
+        check() {
+          const p = [], g = S.integ;
+          if (!g.sistema) p.push("Nome do sistema a integrar");
+          if (!g.temApi) p.push("Informar se o sistema tem API");
+          if (!g.contatoNome || !vEmail(g.contatoEmail)) p.push("Contato técnico da integração");
+          if (!g.casos.length) p.push("O que a integração precisa fazer");
+          return p;
+        },
+        render() {
+          const g = S.integ;
+          return `<div class="card">
+            <p class="eyebrow">Sistemas</p><h2>Integração com o sistema de vocês</h2>
+            <div class="grid2">${fi("Sistema a integrar", "integ.sistema", "text", "Ex.: IRIS, Tasy, MV, Protheus")}
+            <div class="f"><label>Ele tem API disponível? <span class="req">*</span></label><div class="opts">
+              <button class="opt sm" aria-pressed="${g.temApi === 'sim'}" onclick="S.integ.temApi='sim';draw()">Sim</button>
+              <button class="opt sm" aria-pressed="${g.temApi === 'nao'}" onclick="S.integ.temApi='nao';draw()">Não</button>
+              <button class="opt sm" aria-pressed="${g.temApi === 'nsei'}" onclick="S.integ.temApi='nsei';draw()">Não sei</button></div></div></div>
+            ${g.temApi === 'nao' ? `<div class="note warn">Sem API aberta, a integração depende de uma conversa com o fornecedor do sistema.</div>` : ""}
+            ${g.temApi === 'sim' ? fi("Link da documentação", "integ.docUrl", "text", "https://…") : ""}
+            <div class="sect"><h3>Contato técnico <span class="req">*</span></h3><p>Quem conhece o sistema — pode ser do fornecedor.</p></div>
+            <div class="grid3">${fi("Nome", "integ.contatoNome")}${fi("E-mail", "integ.contatoEmail", "email")}${fi("Telefone", "integ.contatoTel", "tel")}</div>
+            <div class="sect"><h3>O que a integração precisa fazer <span class="req">*</span></h3></div>
+            <div class="opts">
+              ${["Consultar agendamentos do paciente", "Marcar ou remarcar consulta", "Consultar status de exame", "Identificar o cliente pelo telefone", "Enviar documento ou laudo", "Registrar o atendimento no sistema"].map(c =>
+                `<button class="opt sm" aria-pressed="${g.casos.includes(c)}" onclick="togCaso('${c}')">${c}</button>`).join("")}
+            </div>
+            <div class="note info" style="margin-top:18px"><b>Credenciais não entram neste formulário.</b> Quando a integração for aprovada, a ORPEN envia um link seguro, de uso único, para o contato técnico registrar chave e endpoint.</div>
+            ${nav()}</div>`;
+        }
+      },
+
+      {
+        id: "revisao", nome: "Revisão", when: () => true,
+        check() { return []; },
+        render() {
+          const pend = allPending();
+          return `<div class="card">
+            <p class="eyebrow">Último passo</p><h2>Revisão e envio</h2>
+            ${pend.length ? `<div class="note warn"><b>Faltam ${pend.length} ${pend.length === 1 ? "item" : "itens"}.</b> Você pode enviar assim mesmo — a ORPEN começa a configurar o que já está pronto e cobra o resto por aqui.</div>
+              ${pend.map(p => `<div class="pre"><input type="checkbox" disabled><div><p>${esc(p.txt)}</p><p class="sub">${esc(p.bloco)}</p></div>
+                <button class="btn btn-s" onclick="go('${p.id}')">Preencher</button></div>`).join("")}`
+              : `<div class="note info"><b>Tudo preenchido.</b> Ao enviar, a ORPEN provisiona o ambiente e devolve o acesso de homologação.</div>`}
+            <div class="sect"><h3>Anexos</h3><p>Contatos para importar, áudios da URA, tabela de convênios, manuais.</p></div>
+            <div class="f"><input type="file" multiple style="border:1.5px dashed var(--line);padding:16px;background:var(--surface-2)"></div>
+            <div class="f"><label>Alguma observação para o time de implantação?</label>${fta("obs.texto", "Prazos, restrições, quem não pode ser incomodado em determinado horário…")}</div>
+            <div class="navrow" style="margin-top:20px">
+              <button class="btn btn-p" onclick="enviar()">Enviar para a ORPEN</button>
+              <button class="btn btn-s" onclick="baixarJSON()">Baixar o JSON do setup</button>
+              <span class="hint sp">O JSON é o que alimenta o provisionamento automático.</span></div>
+          </div>`;
+        }
+      }
+    ];
+
+    /* ============================================================
+       CONTROLADOR PRINCIPAL (APP)
+       ============================================================ */
+    let cur = "contrato";
+    const visible = () => BLOCKS.filter(b => b.when());
+
+    function allPending() {
+      const out = [];
+      visible().forEach(b => b.check().forEach(t => out.push({ id: b.id, bloco: b.nome, txt: t })));
+      return out;
+    }
+
+    function progress() {
+      const v = visible().filter(b => b.id !== "revisao");
+      const tot = v.length;
+      const ok = v.filter(b => !b.check().length).length;
+      return Math.round(ok / tot * 100);
+    }
+
+    function go(id) {
+      cur = id;
+      draw();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function draw() {
+      const v = visible();
+      const topCli = document.getElementById("topcli");
+      if (topCli) topCli.textContent = S.contrato.razaoSocial;
+
+      const rail = document.getElementById("rail");
+      if (rail) {
+        rail.innerHTML = '<p class="kicker">Blocos</p>' +
+          v.map((b, i) => {
+            const p = b.check().length;
+            const st = b.id === "revisao" ? "" : (p === 0 ? "done" : "part");
+            return `<button class="step ${b.id === cur ? "on" : ""} ${st}" onclick="go('${b.id}')">
+              <span class="mk">${st === "done" ? "✓" : i + 1}</span>
+              <span class="lbl">${b.nome}</span>
+            </button>`;
+          }).join("") +
+          `<p class="railnote">Blocos que não se aplicam ao seu contrato ficam ocultos. Você pode enviar cada bloco para uma pessoa diferente.</p>`;
+      }
+
+      const main = document.getElementById("main");
+      const currentBlock = BLOCKS.find(b => b.id === cur);
+      if (main && currentBlock) {
+        main.innerHTML = currentBlock.render();
+      }
+
+      soft();
+    }
+
+    function soft() {
+      const pc = progress();
+      const pbar = document.getElementById("pbar");
+      const ppct = document.getElementById("ppct");
+      if (pbar) pbar.style.width = pc + "%";
+      if (ppct) ppct.textContent = pc + "%";
+      drawSum();
+    }
+
+    function drawSum() {
+      const sumEl = document.getElementById("sum");
+      if (!sumEl) return;
+
+      const c = S.contrato;
+      const pend = allPending();
+      const diag = avaliarTierIa();
+      const line = (k, v, dim) => `<div class="sline"><span class="k">${k}</span><span class="v ${dim ? "dim" : ""}">${esc(v)}</span></div>`;
+
+      sumEl.innerHTML = `
+        <h3>IA Auditora (OpenAI 5.6 Sol)</h3>
+        <p class="cli">${esc(c.razaoSocial)}</p>
+
+        <div class="tier-box">
+          <span style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#78A5AC;font-weight:700;display:block;margin-bottom:4px">Plano Compreendido</span>
+          <span class="tier-badge ${diag.badgeClass}">${diag.tier}</span>
+          <p style="margin-top:4px">${diag.desc}</p>
+        </div>
+
+        <div style="background:#18303C;border:1px solid #284450;border-radius:8px;padding:11px 12px;margin:10px 0">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#8EAAB2;font-weight:600">
+            <span>Complexidade do Prompt</span>
+            <span style="color:#6FD3D6">${diag.complexidadeNivel} · ${diag.score}/100</span>
+          </div>
+          <div class="meter-track">
+            <div class="meter-fill" style="width:${diag.score}%"></div>
+          </div>
+          <div style="font-size:11px;color:#5F818B;display:flex;justify-content:space-between">
+            <span>Densidade: ${S.ia.habilidades.length > 120 ? 'Alta' : 'Moderada'}</span>
+            <span>Transbordo: ${S.ia.smartJump.length} regras</span>
+          </div>
+        </div>
+
+        <div style="background:#142731;border-radius:8px;padding:11px 12px;margin:10px 0">
+          <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#78A5AC;font-weight:700;margin-bottom:6px">Diagnóstico de Ambiguidades</div>
+          ${diag.ambiguidades.map(a => `
+            <div class="ambig-item">
+              <span class="${a.tipo === 'ok' ? 'ambig-ok' : 'ambig-warn'}">${a.tipo === 'ok' ? '✓' : '⚠'}</span>
+              <span style="color:${a.tipo === 'ok' ? '#DCE9EC' : '#FDE68A'}">${esc(a.txt)}</span>
+            </div>
+          `).join("")}
+          <button class="btn-g" style="color:#6FD3D6;font-size:12px;margin-top:6px;padding:0" onclick="otimizarIaAuditora()">✨ Otimizar regras com a Auditora</button>
+        </div>
+
+        ${line("Nome do Agente", S.ia.nome || "—", !S.ia.nome)}
+        ${line("Gatilhos Smart Jump", `${S.ia.smartJump.length} cadastrado(s)`, !S.ia.smartJump.length)}
+        ${line("Pré-Qualificação", `${S.ia.preAtendimento.length} etapa(s)`, !S.ia.preAtendimento.length)}
+        ${line("Integração de Sistema", S.contrato.integracao ? (S.integ.sistema || "Aguardando") : "Não contratado", !S.integ.sistema)}
+
+        <button class="btn btn-p" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#0C7A83,#075158);border:0;display:flex;align-items:center;justify-content:center;gap:6px" onclick="abrirModalPromptFinal()">
+          👁️ Visualizar Prompt Final da IA
+        </button>
+
+        ${pend.length ? `<div class="pend"><h4>Falta preencher (${pend.length})</h4>
+          ${pend.slice(0, 5).map(p => `<button onclick="go('${p.id}')">→ ${esc(p.txt)}</button>`).join("")}
+          ${pend.length > 5 ? `<button onclick="go('revisao')">→ e mais ${pend.length - 5}…</button>` : ""}</div>`
+          : `<div class="done-box">Setup 100% validado pela IA Auditora.</div>`}
+      `;
+    }
+
+    function toast(m) {
+      const t = document.getElementById("toast");
+      if (!t) return;
+      t.textContent = m;
+      t.classList.add("on");
+      clearTimeout(t._t);
+      t._t = setTimeout(() => t.classList.remove("on"), 2600);
+    }
+
+    document.addEventListener("input", e => {
+      const p = e.target.dataset.path;
+      if (!p) return;
+      set(p, e.target.value);
+      soft();
+    });
+
+    function enviar() {
+      const p = allPending();
+      toast(p.length ? `Enviado com ${p.length} item(ns) pendente(s) — a ORPEN vai cobrar por aqui.` : "Setup enviado. A ORPEN inicia o provisionamento.");
+    }
+
+    function baixarJSON() {
+      const blob = new Blob([JSON.stringify(S, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `orpen-setup-${(S.contrato.razaoSocial || 'cliente').toLowerCase().replace(/\s+/g, '-')}.json`;
+      a.click();
+      toast("JSON do setup baixado com sucesso!");
+    }
+
+    // Inicialização
+    draw();
+  </script>
 </body>
 </html>
