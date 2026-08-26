@@ -349,11 +349,11 @@ const BLOCKS = [
 
       const subSteps = [
         { n: 1, lbl: "1. Expectativas", full: "1. Alinhamento de Expectativas", desc: "Qual o objetivo central e qual indicador define o sucesso do projeto." },
-        { n: 2, lbl: "2. Persona", full: "2. Identidade, Persona e Diretrizes de Comunicação", desc: "Como o assistente se apresenta, quais idiomas fala e como formata mensagens." },
+        { n: 2, lbl: "2. Persona", full: "2. Identidade, Persona e Comunicação", desc: "Como o assistente se apresenta, quais idiomas fala e como formata mensagens." },
         { n: 3, lbl: "3. Contexto & Regras", full: "3. Contexto do Negócio e Objetivos", desc: "Defina o que a IA resolve com autonomia total, o que deve transbordar e o que ela nunca deve fazer." },
-        { n: 4, lbl: "4. Smart Jump", full: "4. Roteamento Inteligente (Smart Jump) e Filas", desc: "Gatilhos imediatos que cortam o menu e transferem para filas específicas." },
-        { n: 5, lbl: "5. Pré-Atendimento", full: "5. Pré-Atendimento e Coleta Sequencial de Dados", desc: "Roteiro de perguntas sequenciais (uma por vez) que a IA realiza para qualificar o atendimento antes de transferir ao atendente, estruturado por cada fluxo." },
-        { n: 6, lbl: "6. Inatividade", full: "6. Inatividade, Encerramento e Contingência", desc: "Controle de tempo e ação quando o cliente para de responder." },
+        { n: 4, lbl: "4. Roteamento", full: "4. Roteamento Inteligente e Filas", desc: "Gatilhos imediatos que cortam o menu e transferem para filas específicas." },
+        { n: 5, lbl: "5. Pré-Atendimento", full: "5. Pré-Atendimento e Coleta de Dados", desc: "Roteiro de perguntas sequenciais (uma por vez) que a IA realiza para qualificar o atendimento antes de transferir ao atendente, estruturado por cada fluxo." },
+        { n: 6, lbl: "6. Inatividade", full: "6. Inatividade e Encerramento", desc: "Controle de tempo e ação quando o cliente para de responder." },
         { n: 7, lbl: "7. Conhecimento", full: "7. Base de Conhecimento e Governança", desc: "Fontes de dados oficiais, procedimentos, arquivos anexos e responsáveis de contato." }
       ];
       const curStep = subSteps[etapa - 1] || subSteps[0];
@@ -380,7 +380,7 @@ const BLOCKS = [
           <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
             <button class="btn btn-s" onclick="prev()">← Bloco Anterior</button>
             <div class="sp"></div>
-            <button class="btn btn-p" onclick="setIaSubStep(2)">Continuar: 2. Persona & Diretrizes →</button>
+            <button class="btn btn-p" onclick="setIaSubStep(2)">Continuar: 2. Persona & Comunicação →</button>
           </div>
         `;
       } else if (etapa === 2) {
@@ -450,7 +450,7 @@ const BLOCKS = [
           <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
             <button class="btn btn-s" onclick="setIaSubStep(2)">← 2. Persona</button>
             <div class="sp"></div>
-            <button class="btn btn-p" onclick="setIaSubStep(4)">Continuar: 4. Smart Jump & Filas →</button>
+            <button class="btn btn-p" onclick="setIaSubStep(4)">Continuar: 4. Roteamento & Filas →</button>
           </div>
         `;
       } else if (etapa === 4) {
@@ -533,7 +533,7 @@ const BLOCKS = [
           </div></div>
 
           <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
-            <button class="btn btn-s" onclick="setIaSubStep(4)">← 4. Smart Jump</button>
+            <button class="btn btn-s" onclick="setIaSubStep(4)">← 4. Roteamento</button>
             <div class="sp"></div>
             <button class="btn btn-p" onclick="setIaSubStep(6)">Continuar: 6. Inatividade & Encerramento →</button>
           </div>
