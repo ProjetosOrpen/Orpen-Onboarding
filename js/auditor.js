@@ -186,18 +186,21 @@ function avaliarTierIa() {
   const temInteg = S.contrato.integracao && S.integ.sistema;
   const temApi = S.integ.temApi === 'sim';
   const temCasosComplexos = S.integ.casos.some(c => /marcar|remarcar|laudo|exame/i.test(c));
-  const temSmartJump = S.ia.smartJump.length >= 2;
-  const temPreColeta = S.ia.preAtendimento.length >= 2;
+  const temSmartJump = S.ia.smartJump && S.ia.smartJump.length >= 2;
+  const totalPassosFluxos = (S.ia.fluxosPreAtendimento || []).reduce((acc, f) => acc + (f.passos || []).filter(Boolean).length, 0);
+  const temPreColeta = totalPassosFluxos >= 2;
   const temRestricoes = (S.ia.restricoes || "").length > 20;
-  const temBaseExtensa = (S.ia.habilidades || "").length > 100;
+  const temBaseExtensa = (S.ia.habilidades || "").length > 100 || (S.ia.faqTexto || "").length > 100;
+  const temArquivosOuLinks = (S.ia.arquivos && S.ia.arquivos.length > 0) || (S.ia.linksAdicionais && S.ia.linksAdicionais.length > 0);
 
   let score = 20;
   if (S.ia.nome) score += 5;
-  if (S.ia.tom.length > 1) score += 5;
+  if (S.ia.tom && S.ia.tom.length > 1) score += 5;
+  if (S.ia.idiomas && S.ia.idiomas.length > 1) score += 5;
   if (temRestricoes) score += 10;
   if (temSmartJump) score += 15;
   if (temPreColeta) score += 15;
-  if (temBaseExtensa) score += 10;
+  if (temBaseExtensa || temArquivosOuLinks) score += 10;
   if (temInteg) score += 15;
   if (score > 100) score = 100;
 
@@ -213,16 +216,16 @@ function avaliarTierIa() {
     ambiguidades.push({ tipo: "ok", txt: "Limites e regras anti-alucinação bem definidos." });
   }
 
-  if (S.ia.smartJump.length < 2) {
+  if (!temSmartJump) {
     ambiguidades.push({ tipo: "warn", txt: "Transbordo sensível: Poucos gatilhos de Smart Jump cadastrados." });
   } else {
     ambiguidades.push({ tipo: "ok", txt: `${S.ia.smartJump.length} regras de transbordo inteligente ativas.` });
   }
 
-  if (S.ia.preAtendimento.length === 0) {
-    ambiguidades.push({ tipo: "warn", txt: "Sem pré-qualificação: O atendente humano receberá o lead sem triagem prévia." });
+  if (!temPreColeta) {
+    ambiguidades.push({ tipo: "warn", txt: "Sem pré-qualificação: Nenhum passo configurado nos fluxos de triagem." });
   } else {
-    ambiguidades.push({ tipo: "ok", txt: `${S.ia.preAtendimento.length} etapa(s) de qualificação sequencial configurada(s).` });
+    ambiguidades.push({ tipo: "ok", txt: `${(S.ia.fluxosPreAtendimento || []).length} fluxo(s) de pré-atendimento com ${totalPassosFluxos} passo(s) ao todo.` });
   }
 
   if (temInteg && temCasosComplexos && temBaseExtensa && temPreColeta && temSmartJump) {
@@ -245,7 +248,7 @@ function avaliarTierIa() {
       desc: "Capacidade transacional com chamadas de ferramentas/APIs, consulta a bancos de dados e roteamento prioritário."
     };
   }
-  if (temBaseExtensa || S.ia.baseUrl || temSmartJump) {
+  if (temBaseExtensa || S.ia.baseUrl || temSmartJump || temArquivosOuLinks) {
     return {
       tier: "Plano Gold",
       badgeClass: "tier-gold",
@@ -272,52 +275,87 @@ function gerarPromptFinalCompilado() {
   const nome = S.ia.nome || "Assistente Virtual";
   const empresa = S.contrato.razaoSocial || "Empresa";
   const tom = (S.ia.tom && S.ia.tom.length) ? S.ia.tom.join(", ") : "Cordial, acolhedor e direto";
+  const idiomas = (S.ia.idiomas && S.ia.idiomas.length) ? S.ia.idiomas.join(", ") : "Português (Brasil)";
   const emoji = S.ia.emojiUso === 'nenhum' ? "Não utilize emojis." : `Utilize emojis com moderação (${S.ia.emojisPermitidos || '💙, 👋, 🏥, ✅'}).`;
-  const extensao = S.ia.extensaoResp === 'curta' ? "Respostas curtas e objetivas (máximo 2 a 3 frases)." : "Respostas estruturadas e concisas.";
+  const extensao = S.ia.extensaoResp === 'curta' ? "Respostas curtas e objetivas (máximo 2 a 3 frases por mensagem)." : (S.ia.extensaoResp === 'media' ? "Respostas médias (4 a 6 linhas estruturadas)." : "Respostas flexíveis e bem contextualizadas.");
 
-  let prompt = `### PERSONA E PAPEL DO ASSISTENTE
+  let prompt = `### 1. PERSONA E PAPEL DO ASSISTENTE
 Você é ${nome}, o assistente virtual oficial de atendimento da empresa ${empresa}.
-Seu objetivo principal é atender clientes no WhatsApp de forma ágil, resolutiva e profissional.
+Seu papel é recepcionar clientes no WhatsApp com excelência, tirar dúvidas frequentes e qualificar a conversa antes de qualquer encaminhamento humano.
 
-### DIRETRIZES DE COMUNICAÇÃO
+### 2. DIRETRIZES DE COMUNICAÇÃO
 - Tom de voz: ${tom}.
-- Formato: ${extensao}
-- Emojis: ${emoji}
-- Linguagem: Português do Brasil, claro, sem termos técnicos desnecessários.
+- Extensão das respostas: ${extensao}
+- Idiomas atendidos: ${idiomas}.
+- Diretrizes de Emojis: ${emoji}
+- Clareza: Use linguagem acolhedora, objetiva e sem jargões técnicos desnecessários.
 
-### CONTEXTO E OBJETIVOS DO NEGÓCIO
-${S.ia.publicoAlvo ? `- Público-alvo: ${S.ia.publicoAlvo}` : '- Público-alvo: Clientes e pacientes em atendimento'}
-${S.ia.problema ? `- Foco de resolução: ${S.ia.problema}` : ''}
-${S.ia.kpis ? `- Métricas prioritárias: ${S.ia.kpis}` : ''}
+### 3. ALINHAMENTO DE EXPECTATIVAS E OBJETIVOS
+${S.ia.processoOtimizar ? `- Processo a otimizar: ${S.ia.processoOtimizar}` : '- Processo: Triagem ágil e redução de espera'}
+${S.ia.kpis ? `- Métricas e KPIs de sucesso: ${S.ia.kpis}` : ''}
+${S.ia.publicoAlvo ? `- Perfil do público-alvo: ${S.ia.publicoAlvo}` : ''}
 
-### ESCOPO E HABILIDADES (AUTONOMIA TOTAL)
-Você está autorizado a resolver diretamente os seguintes tópicos:
-${S.ia.habilidades ? S.ia.habilidades : '- Fornecer informações gerais e tirar dúvidas frequentes da empresa'}
+### 4. ESCOPO E AUTONOMIA TOTAL
+Você tem AUTONOMIA TOTAL para resolver diretamente os seguintes assuntos:
+${S.ia.habilidades ? S.ia.habilidades : '- Fornecer informações institucionais, horários e orientações gerais'}
 
-### RESTRIÇÕES CRÍTICAS (ANTI-ALUCINAÇÃO)
-${S.ia.restricoes ? S.ia.restricoes : '- Não forneça informações fora do escopo institucional da empresa\n- Não prometa prazos ou valores sem confirmação oficial'}
-${S.ia.foraEscopo ? `- Assuntos fora de escopo (recuse educadamente): ${S.ia.foraEscopo}` : ''}
+### 5. GATILHOS DE TRANSBORDO HUMANO
+Transfira o atendimento para um atendente humano quando houver:
+${S.ia.assuntosTransbordo ? S.ia.assuntosTransbordo : '- Solicitação explícita de atendente ou casos complexos fora de escopo'}
+
+### 6. RESTRIÇÕES CRÍTICAS (ANTI-ALUCINAÇÃO & GUARDRAILS)
+${S.ia.restricoes ? S.ia.restricoes : '- NUNCA forneça informações não confirmadas oficialmente pela empresa\n- NUNCA invente procedimentos, prazos ou valores'}
+${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.foraEscopo}` : ''}
 `;
 
   if (S.ia.smartJump && S.ia.smartJump.length > 0) {
-    prompt += `\n### REGRAS DE ROTEAMENTO E TRANSBORDO (SMART JUMP)\nSe o cliente mencionar os seguintes gatilhos, encerre a triagem e transfira IMEDIATAMENTE para a fila humana correspondente:\n`;
+    prompt += `\n### 7. REGRAS DE ROTEAMENTO IMEDIATO (SMART JUMP)\nSe o cliente mencionar algum dos gatilhos abaixo, interrompa a triagem e transfira IMEDIATAMENTE para a fila indicada:\n`;
     S.ia.smartJump.forEach((r, idx) => {
-      prompt += `${idx + 1}. [${r.categoria || 'Geral'}]: Gatilhos ("${r.gatilhos || ''}") -> Transferir para ${r.destino || 'Fila de Atendimento'}\n`;
+      prompt += `${idx + 1}. [${r.categoria || 'Intenção'}]: Gatilhos ("${r.gatilhos || ''}") -> Transferir para Fila: ${r.destino || 'Atendimento Geral'}\n`;
     });
   }
 
-  if (S.ia.preAtendimento && S.ia.preAtendimento.length > 0) {
-    prompt += `\n### ROTEIRO DE QUALIFICAÇÃO PRÉ-TRANSBORDO\nAntes de concluir o agendamento ou transbordo, colete os seguintes dados de forma SEQUENCIAL (uma pergunta por vez):\n`;
-    S.ia.preAtendimento.forEach((p, idx) => {
-      prompt += `Passo ${idx + 1} [${p.fluxo || 'Qualificação'}]: "${p.pergunta || ''}"\n`;
+  if (S.ia.fluxosPreAtendimento && S.ia.fluxosPreAtendimento.length > 0) {
+    prompt += `\n### 8. PRÉ-ATENDIMENTO E COLETA SEQUENCIAL POR FLUXO\nIdentifique o fluxo correspondente à solicitação do cliente e realize a coleta de dados de forma SEQUENCIAL (uma pergunta por vez):\n`;
+    S.ia.fluxosPreAtendimento.forEach((f, idx) => {
+      prompt += `\n▶ FLUXO ${idx + 1}: ${f.nome || 'Geral'}\n`;
+      (f.passos || []).forEach((passo, pIdx) => {
+        if (passo.trim()) {
+          prompt += `   Passo ${pIdx + 1}: "${passo.trim()}"\n`;
+        }
+      });
     });
+    if (S.ia.filaFallback) {
+      prompt += `\n* Se a IA não identificar o fluxo do cliente ou houver falha de compreensão, encaminhar para a Fila de Contingência: ${S.ia.filaFallback}.\n`;
+    }
   }
 
-  if (S.ia.baseUrl) {
-    prompt += `\n### BASE DE CONHECIMENTO E CONSULTA\nFonte oficial de informações: ${S.ia.baseUrl}\n`;
+  if (S.ia.baseUrl || (S.ia.linksAdicionais && S.ia.linksAdicionais.length) || S.ia.faqTexto || (S.ia.arquivos && S.ia.arquivos.length)) {
+    prompt += `\n### 9. BASE DE CONHECIMENTO E GOVERNANÇA\n`;
+    if (S.ia.baseUrl) prompt += `- Site oficial: ${S.ia.baseUrl}\n`;
+    if (S.ia.linksAdicionais && S.ia.linksAdicionais.length) {
+      const validLinks = S.ia.linksAdicionais.filter(Boolean);
+      if (validLinks.length) prompt += `- Links adicionais de consulta: ${validLinks.join(" | ")}\n`;
+    }
+    if (S.ia.faqTexto) {
+      prompt += `- Informações e Procedimentos Oficiais:\n${S.ia.faqTexto}\n`;
+    }
+    if (S.ia.arquivos && S.ia.arquivos.length) {
+      prompt += `- Documentos e Manuais de Referência: ${S.ia.arquivos.map(a => a.nome).join(", ")}\n`;
+    }
+    if (S.ia.faqFreq) {
+      prompt += `- Governança de atualização: Frequência ${S.ia.faqFreq}.\n`;
+    }
+    if (S.ia.faqRespNome || S.ia.faqRespEmail) {
+      prompt += `- Responsável interno: ${S.ia.faqRespNome || ''} (${S.ia.faqRespEmail || ''})\n`;
+    }
   }
 
-  prompt += `\n### POLÍTICA DE SEGURANÇA E FALLBACK\n- Caso não compreenda a solicitação do usuário após ${S.ia.tentativasErro || '3'} tentativas, solicite desculpas e transfira para um atendente humano.\n- NUNCA invente links, telefones ou procedimentos não cadastrados acima.`;
+  prompt += `\n### 10. POLÍTICA DE INATIVIDADE, ERROS E ENCERRAMENTO
+- Tentativas sem entender: Após ${S.ia.tentativasErro || '3'} mensagens sem compreensão, peça desculpas e transfira para o atendente humano na fila de contingência.
+- Inatividade: Após ${S.ia.inatTempo || '10'} minutos sem retorno do cliente, ${S.ia.inatAcao === 'transferir' ? `transfira para a fila ${S.ia.inatFila || 'de espera'}` : 'encerre o atendimento'}.
+${S.ia.msgFinalizacao ? `- Mensagem de encerramento: "${S.ia.msgFinalizacao}"` : ''}
+- NUNCA invente números de protocolo, telefones ou informações fora da base de conhecimento oficial.`;
 
   return prompt;
 }

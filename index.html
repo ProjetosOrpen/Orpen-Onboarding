@@ -1130,6 +1130,45 @@
       }
     }
 
+    /* ---------- Novos Estilos da Aba Assistente de IA ---------- */
+    .flow-card {
+      background: var(--surface-2);
+      border: 1.5px solid var(--line);
+      border-radius: var(--r);
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      transition: border-color .15s;
+    }
+    .flow-card:hover {
+      border-color: #BACDD6;
+    }
+    .step-num-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: var(--signal-soft);
+      color: var(--signal-deep);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11.5px;
+      font-weight: 600;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .file-upload-zone {
+      border: 2px dashed var(--line);
+      border-radius: var(--r);
+      padding: 18px;
+      text-align: center;
+      background: var(--surface-2);
+      cursor: pointer;
+      transition: .15s;
+    }
+    .file-upload-zone:hover {
+      border-color: var(--signal);
+      background: var(--signal-soft);
+    }
+
     @media (prefers-reduced-motion: reduce) {
       * {
         transition: none !important;
@@ -1280,25 +1319,80 @@
         whatsback: false
       },
       ia: {
+        // 1. Alinhamento de Expectativas
+        processoOtimizar: "Atendimento inicial, triagem ágil de agendamentos e esclarecimento de dúvidas frequentes sobre convênios e preparo de exames.",
+        kpis: "Resolução rápida no 1º contato (>40%), redução do tempo médio de espera e dados 100% qualificados antes do transbordo.",
+
+        // 2. Persona
         nome: "Luna",
         extensaoResp: "curta",
         tom: ["Cordial e acolhedor", "Direto e objetivo"],
+        idiomas: ["Português (Brasil)"],
         emojiUso: "moderado",
         emojisPermitidos: "💙, 👋, 🏥, ✅",
+
+        // 3. Contexto do Negócio e Objetivos
+        habilidades: "- Horários de funcionamento e endereços das unidades\n- Relação de convênios atendidos\n- Orientações e preparos básicos de exames\n- Envio de links de agendamento online",
+        assuntosTransbordo: "- Emergências médicas ou risco à vida\n- Negociação financeira complexa ou faturamento de contas\n- Procedimentos cirúrgicos ou autorizações especiais de guias\n- Pedido explícito do cliente para falar com um atendente",
+        restricoes: "- Proibido fornecer diagnóstico médico ou prescrever condutas\n- Não confirmar cobertura sem checagem de plano\n- Não prometer procedimentos cirúrgicos ou horários sem confirmação",
         publicoAlvo: "Pacientes e clientes buscando agendamento, exames e orientações gerais.",
         problema: "Alto tempo de espera no WhatsApp e dúvidas repetitivas sobre preparo e convênios.",
-        kpis: "Resolução rápida no 1º contato (>40%) e redução da fila de espera.",
-        habilidades: "- Horários de funcionamento e endereços das unidades\n- Relação de convênios atendidos\n- Orientações e preparos básicos de exames\n- Envio de links de agendamento online",
-        restricoes: "- Proibido fornecer diagnóstico médico ou prescrever condutas\n- Não confirmar cobertura sem checagem de plano\n- Não prometer procedimentos cirúrgicos",
         foraEscopo: "Política, receitas caseiras, conselhos pessoais não médicos.",
+
+        // 4. Roteamento Inteligente (Smart Jump) e Filas
         smartJump: [],
-        preAtendimento: [],
+
+        // 5. Pré-Atendimento e Coleta Sequencial de Dados (por Fluxo)
+        fluxosPreAtendimento: [
+          {
+            nome: "Consultas e Agendamentos",
+            passos: [
+              "Qual a especialidade desejada ou médico de preferência?",
+              "Qual o nome completo e CPF do paciente?",
+              "Qual o convênio ou prefere atendimento particular?",
+              "Qual a preferência de data e período (manhã/tarde)?"
+            ]
+          },
+          {
+            nome: "Exames e Laudos",
+            passos: [
+              "Qual exame você precisa realizar?",
+              "Você já possui o pedido médico em mãos?",
+              "Qual o convênio para realização do exame?",
+              "Qual a unidade de preferência?"
+            ]
+          },
+          {
+            nome: "Remarcações e Cancelamentos",
+            passos: [
+              "Qual o nome completo e CPF cadastrado?",
+              "Qual consulta ou exame você deseja remarcar ou cancelar?",
+              "Qual a nova data ou horário de sua preferência?"
+            ]
+          }
+        ],
+        filaFallback: "",
         tentativasErro: "3",
+
+        // 6. Inatividade e Encerramento
         inatTempo: "10",
         inatAcao: "finalizar",
         inatFila: "",
+        msgFinalizacao: "Atendimento finalizado por inatividade. Caso precise de mais alguma informação, basta nos enviar uma nova mensagem! Tenha um ótimo dia. 😊",
+
+        // 7. Base de Conhecimento e Governança
         baseUrl: "https://hospitalexemplo.com.br",
+        linksAdicionais: [
+          "https://hospitalexemplo.com.br/convenios",
+          "https://hospitalexemplo.com.br/preparo-de-exames"
+        ],
+        faqTexto: "Horário de Coleta de Exames: Segunda a Sexta, das 06:30 às 11:00. Sábados das 07:00 às 10:30.\nEstacionamento gratuito no local por até 1h para pacientes em atendimento.",
+        arquivos: [
+          { nome: "Guia_de_Preparo_Exames_2026.pdf", tamanho: "1.4 MB" }
+        ],
         faqFreq: "semanal",
+        faqRespNome: "Mariana Souza",
+        faqRespEmail: "mariana.souza@hospitalexemplo.com.br",
         faqResp: ""
       },
       integ: {
@@ -1404,6 +1498,9 @@
     }
     function togCaso(c) { const a = S.integ.casos, i = a.indexOf(c); i < 0 ? a.push(c) : a.splice(i, 1); draw(); }
     function togIaTom(t) { const a = S.ia.tom, i = a.indexOf(t); i < 0 ? a.push(t) : a.splice(i, 1); draw(); }
+    function togIaIdioma(l) { const a = S.ia.idiomas || (S.ia.idiomas = []); const i = a.indexOf(l); i < 0 ? a.push(l) : a.splice(i, 1); draw(); }
+    function addIaIdiomaCustom(v) { v = v.trim(); if (!v) return; const a = S.ia.idiomas || (S.ia.idiomas = []); if (!a.includes(v)) a.push(v); draw(); }
+
     function appendIaField(path, text) {
       const current = get(path) || "";
       const sep = current.trim() ? (current.includes("\n") ? "\n" : ", ") : "";
@@ -1411,8 +1508,75 @@
       draw();
       toast("Sugestão adicionada!");
     }
+
     function addSmartJump() { S.ia.smartJump.push({ categoria: "", gatilhos: "", destino: "" }); draw(); }
-    function addPreAtendimento() { S.ia.preAtendimento.push({ fluxo: "", pergunta: "" }); draw(); }
+
+    // Gerenciamento de Fluxos de Pré-Atendimento
+    function addIaFluxo() {
+      if (!S.ia.fluxosPreAtendimento) S.ia.fluxosPreAtendimento = [];
+      S.ia.fluxosPreAtendimento.push({ nome: `Novo Fluxo ${S.ia.fluxosPreAtendimento.length + 1}`, passos: [""] });
+      draw();
+      toast("Novo fluxo adicionado!");
+    }
+    function delIaFluxo(i) {
+      S.ia.fluxosPreAtendimento.splice(i, 1);
+      draw();
+      toast("Fluxo removido!");
+    }
+    function setIaFluxoNome(i, val) {
+      if (S.ia.fluxosPreAtendimento[i]) {
+        S.ia.fluxosPreAtendimento[i].nome = val;
+        soft();
+      }
+    }
+    function addIaPasso(fi) {
+      if (S.ia.fluxosPreAtendimento[fi]) {
+        S.ia.fluxosPreAtendimento[fi].passos.push("");
+        draw();
+      }
+    }
+    function delIaPasso(fi, pi) {
+      if (S.ia.fluxosPreAtendimento[fi]) {
+        S.ia.fluxosPreAtendimento[fi].passos.splice(pi, 1);
+        draw();
+      }
+    }
+    function setIaPasso(fi, pi, val) {
+      if (S.ia.fluxosPreAtendimento[fi] && S.ia.fluxosPreAtendimento[fi].passos[pi] !== undefined) {
+        S.ia.fluxosPreAtendimento[fi].passos[pi] = val;
+        soft();
+      }
+    }
+
+    // Links Adicionais e Arquivos da Base de Conhecimento
+    function addIaLink() {
+      if (!S.ia.linksAdicionais) S.ia.linksAdicionais = [];
+      S.ia.linksAdicionais.push("");
+      draw();
+    }
+    function delIaLink(i) {
+      S.ia.linksAdicionais.splice(i, 1);
+      draw();
+    }
+    function setIaLink(i, val) {
+      if (S.ia.linksAdicionais) {
+        S.ia.linksAdicionais[i] = val;
+        soft();
+      }
+    }
+    function addIaArquivo(nome, tamanho) {
+      if (!S.ia.arquivos) S.ia.arquivos = [];
+      S.ia.arquivos.push({ nome: nome || "Documento.pdf", tamanho: tamanho || "500 KB" });
+      draw();
+      toast("Arquivo adicionado à Base de Conhecimento!");
+    }
+    function delIaArquivo(i) {
+      if (S.ia.arquivos) {
+        S.ia.arquivos.splice(i, 1);
+        draw();
+        toast("Arquivo removido.");
+      }
+    }
 
     function loadIaTemplates() {
       const defSetor = S.operacao.setores[0]?.nome || "";
@@ -1428,23 +1592,70 @@
     }
 
     function loadPreAtendSaude() {
-      S.ia.preAtendimento = [
-        { fluxo: "Agendamento de Consulta", pergunta: "Qual a especialidade desejada?" },
-        { fluxo: "Agendamento de Consulta", pergunta: "Qual o CPF do paciente?" },
-        { fluxo: "Agendamento de Consulta", pergunta: "Qual o nome completo do paciente?" },
-        { fluxo: "Agendamento de Consulta", pergunta: "Qual a data de nascimento?" },
-        { fluxo: "Agendamento de Consulta", pergunta: "O atendimento é Particular ou por Convênio?" }
+      S.ia.fluxosPreAtendimento = [
+        {
+          nome: "Consultas e Agendamentos",
+          passos: [
+            "Qual a especialidade desejada ou médico de preferência?",
+            "Qual o nome completo e CPF do paciente?",
+            "Qual o convênio ou prefere atendimento particular?",
+            "Qual a preferência de data e período (manhã/tarde)?"
+          ]
+        },
+        {
+          nome: "Exames e Laudos",
+          passos: [
+            "Qual exame você precisa realizar?",
+            "Você já possui o pedido médico em mãos?",
+            "Qual o convênio para realização do exame?",
+            "Qual a unidade de preferência?"
+          ]
+        },
+        {
+          nome: "Remarcações e Cancelamentos",
+          passos: [
+            "Qual o nome completo e CPF cadastrado?",
+            "Qual consulta ou exame você deseja remarcar ou cancelar?",
+            "Qual a nova data ou horário de sua preferência?"
+          ]
+        }
       ];
-      draw(); toast("Roteiro de qualificação de saúde carregado!");
+      draw(); toast("Fluxos de triagem de saúde carregados!");
+    }
+
+    function loadPreAtendComercial() {
+      S.ia.fluxosPreAtendimento = [
+        {
+          nome: "Novo Contrato / Proposta B2B",
+          passos: [
+            "Qual a razão social ou nome da sua empresa?",
+            "Qual o CNPJ da empresa?",
+            "Quantos operadores / atendentes utilizarão a plataforma?",
+            "Qual o seu cargo ou papel na decisão?"
+          ]
+        },
+        {
+          nome: "Demonstração e Dúvidas de Planos",
+          passos: [
+            "Quais canais sua empresa precisa integrar (WhatsApp, Telefonia, E-mail)?",
+            "Você já utiliza algum sistema de atendimento ou CRM hoje?",
+            "Qual o melhor e-mail e telefone para envio da proposta?"
+          ]
+        }
+      ];
+      draw(); toast("Fluxos de qualificação comercial carregados!");
     }
 
     function aplicarPerfilClinica() {
       S.ia.nome = "Ires";
+      S.ia.processoOtimizar = "Agendamento rápido de consultas, esclarecimento de dúvidas sobre convênios/preparos e redução do tempo de espera no WhatsApp.";
+      S.ia.kpis = "Taxa de resolução superior a 50% no 1º contato, CSAT acima de 4.6 e transbordo qualificado com especialidade e exames identificados.";
+      S.ia.idiomas = ["Português (Brasil)"];
       S.ia.publicoAlvo = "Pacientes particulares e conveniados buscando agendamentos, preparos de exames e orientações hospitalares.";
       S.ia.problema = "Tempo de espera elevado na recepção e dúvidas repetitivas sobre convênios e laudos de exames.";
-      S.ia.kpis = "Taxa de resolução superior a 50% no 1º contato e transbordo qualificado com especialidade identificada.";
-      S.ia.habilidades = "- Consulta de unidades, horários e rotas de atendimento\n- Lista de convênios aceitos e orientações de preparo\n- Envio de link seguro para agendamento online";
-      S.ia.restricoes = "- Proibido dar parecer médico, diagnósticos ou interpretar exames\n- Não prometer horários cirúrgicos sem confirmação da regulação";
+      S.ia.habilidades = "- Consulta de unidades, horários e rotas de atendimento\n- Lista de convênios aceitos e orientações de preparo de exames\n- Envio de link seguro para agendamento online e confirmações";
+      S.ia.assuntosTransbordo = "- Casos de dor aguda, sangramento ou emergência médica\n- Autorizações de guias negadas pelo convênio\n- Solicitações de cancelamento com reembolso financeiro\n- Dúvidas de resultados de biópsias ou laudos críticos";
+      S.ia.restricoes = "- Proibido dar parecer médico, diagnósticos ou interpretar resultados de exames\n- Não confirmar cobertura sem consultar a tabela vigente da operadora\n- Não prometer encaixes ou horários cirúrgicos sem confirmação da regulação";
       loadIaTemplates();
       loadPreAtendSaude();
       draw();
@@ -1453,22 +1664,21 @@
 
     function aplicarPerfilComercial() {
       S.ia.nome = "Max";
+      S.ia.processoOtimizar = "Qualificação automática de leads que chegam pelo WhatsApp e agendamento de demonstrações com executivos de vendas.";
+      S.ia.kpis = "Tempo de primeira resposta inferior a 10s, taxa de conversão para reunião > 35% e qualificação de CNPJ/volume em 100% dos leads.";
+      S.ia.idiomas = ["Português (Brasil)", "Inglês"];
       S.ia.publicoAlvo = "Novos clientes e empresas interessadas em contratação e orçamentos B2B.";
       S.ia.problema = "Perda de leads fora do horário comercial e demora na qualificação de propostas.";
-      S.ia.kpis = "Agilidade na resposta (< 10s) e coleta obrigatória de CNPJ, volume de usuários e decisor.";
       S.ia.habilidades = "- Apresentação dos planos e módulos da plataforma\n- Envio de cases de sucesso e catálogo de serviços\n- Agendamento de demonstração com o time comercial";
-      S.ia.restricoes = "- Não conceder descontos acima da tabela padrão sem autorização da diretoria\n- Não firmar contratos sem assinatura jurídica";
+      S.ia.assuntosTransbordo = "- Propostas customizadas acima de 50 licenças (Enterprise)\n- Negociações contratuais com solicitação de minuta jurídica\n- Pedido explícito para falar com um executivo de contas";
+      S.ia.restricoes = "- Não conceder descontos acima da tabela padrão sem autorização da diretoria\n- Não firmar contratos sem assinatura jurídica\n- Não divulgar informações financeiras de outros clientes";
       const defSetor = S.operacao.setores[0]?.nome || "";
       const comSetor = S.operacao.setores.find(s => /comercial|vendas/i.test(s.nome))?.nome || defSetor;
       S.ia.smartJump = [
         { categoria: "Orçamento Grande / Enterprise", gatilhos: "proposta personalizada, mais de 50 agentes, enterprise", destino: comSetor },
         { categoria: "Falar com Consultor", gatilhos: "consultor comercial, vendedor, negociar, proposta", destino: comSetor }
       ];
-      S.ia.preAtendimento = [
-        { fluxo: "Qualificação Comercial", pergunta: "Qual o nome da sua empresa?" },
-        { fluxo: "Qualificação Comercial", pergunta: "Quantos operadores vão utilizar a plataforma?" },
-        { fluxo: "Qualificação Comercial", pergunta: "Qual o seu cargo na empresa?" }
-      ];
+      loadPreAtendComercial();
       draw();
       toast("Modelo Comercial / Vendas aplicado com sucesso!");
     }
@@ -1667,18 +1877,21 @@
       const temInteg = S.contrato.integracao && S.integ.sistema;
       const temApi = S.integ.temApi === 'sim';
       const temCasosComplexos = S.integ.casos.some(c => /marcar|remarcar|laudo|exame/i.test(c));
-      const temSmartJump = S.ia.smartJump.length >= 2;
-      const temPreColeta = S.ia.preAtendimento.length >= 2;
+      const temSmartJump = S.ia.smartJump && S.ia.smartJump.length >= 2;
+      const totalPassosFluxos = (S.ia.fluxosPreAtendimento || []).reduce((acc, f) => acc + (f.passos || []).filter(Boolean).length, 0);
+      const temPreColeta = totalPassosFluxos >= 2;
       const temRestricoes = (S.ia.restricoes || "").length > 20;
-      const temBaseExtensa = (S.ia.habilidades || "").length > 100;
+      const temBaseExtensa = (S.ia.habilidades || "").length > 100 || (S.ia.faqTexto || "").length > 100;
+      const temArquivosOuLinks = (S.ia.arquivos && S.ia.arquivos.length > 0) || (S.ia.linksAdicionais && S.ia.linksAdicionais.length > 0);
 
       let score = 20;
       if (S.ia.nome) score += 5;
-      if (S.ia.tom.length > 1) score += 5;
+      if (S.ia.tom && S.ia.tom.length > 1) score += 5;
+      if (S.ia.idiomas && S.ia.idiomas.length > 1) score += 5;
       if (temRestricoes) score += 10;
       if (temSmartJump) score += 15;
       if (temPreColeta) score += 15;
-      if (temBaseExtensa) score += 10;
+      if (temBaseExtensa || temArquivosOuLinks) score += 10;
       if (temInteg) score += 15;
       if (score > 100) score = 100;
 
@@ -1694,16 +1907,16 @@
         ambiguidades.push({ tipo: "ok", txt: "Limites e regras anti-alucinação bem definidos." });
       }
 
-      if (S.ia.smartJump.length < 2) {
+      if (!temSmartJump) {
         ambiguidades.push({ tipo: "warn", txt: "Transbordo sensível: Poucos gatilhos de Smart Jump cadastrados." });
       } else {
         ambiguidades.push({ tipo: "ok", txt: `${S.ia.smartJump.length} regras de transbordo inteligente ativas.` });
       }
 
-      if (S.ia.preAtendimento.length === 0) {
-        ambiguidades.push({ tipo: "warn", txt: "Sem pré-qualificação: O atendente humano receberá o lead sem triagem prévia." });
+      if (!temPreColeta) {
+        ambiguidades.push({ tipo: "warn", txt: "Sem pré-qualificação: Nenhum passo configurado nos fluxos de triagem." });
       } else {
-        ambiguidades.push({ tipo: "ok", txt: `${S.ia.preAtendimento.length} etapa(s) de qualificação sequencial configurada(s).` });
+        ambiguidades.push({ tipo: "ok", txt: `${(S.ia.fluxosPreAtendimento || []).length} fluxo(s) de pré-atendimento com ${totalPassosFluxos} passo(s) ao todo.` });
       }
 
       if (temInteg && temCasosComplexos && temBaseExtensa && temPreColeta && temSmartJump) {
@@ -1726,7 +1939,7 @@
           desc: "Capacidade transacional com chamadas de ferramentas/APIs, consulta a bancos de dados e roteamento prioritário."
         };
       }
-      if (temBaseExtensa || S.ia.baseUrl || temSmartJump) {
+      if (temBaseExtensa || S.ia.baseUrl || temSmartJump || temArquivosOuLinks) {
         return {
           tier: "Plano Gold",
           badgeClass: "tier-gold",
@@ -1750,52 +1963,90 @@
       const nome = S.ia.nome || "Assistente Virtual";
       const empresa = S.contrato.razaoSocial || "Empresa";
       const tom = (S.ia.tom && S.ia.tom.length) ? S.ia.tom.join(", ") : "Cordial, acolhedor e direto";
+      const idiomas = (S.ia.idiomas && S.ia.idiomas.length) ? S.ia.idiomas.join(", ") : "Português (Brasil)";
       const emoji = S.ia.emojiUso === 'nenhum' ? "Não utilize emojis." : `Utilize emojis com moderação (${S.ia.emojisPermitidos || '💙, 👋, 🏥, ✅'}).`;
-      const extensao = S.ia.extensaoResp === 'curta' ? "Respostas curtas e objetivas (máximo 2 a 3 frases)." : "Respostas estruturadas e concisas.";
+      const extensao = S.ia.extensaoResp === 'curta' ? "Respostas curtas e objetivas (máximo 2 a 3 frases por mensagem)." : (S.ia.extensaoResp === 'media' ? "Respostas médias (4 a 6 linhas estruturadas)." : "Respostas flexíveis e bem contextualizadas.");
 
-      let prompt = `### PERSONA E PAPEL DO ASSISTENTE
+      let prompt = `### 1. PERSONA E PAPEL DO ASSISTENTE
 Você é ${nome}, o assistente virtual oficial de atendimento da empresa ${empresa}.
-Seu objetivo principal é atender clientes no WhatsApp de forma ágil, resolutiva e profissional.
+Seu papel é recepcionar clientes no WhatsApp com excelência, tirar dúvidas frequentes e qualificar a conversa antes de qualquer encaminhamento humano.
 
-### DIRETRIZES DE COMUNICAÇÃO
+### 2. DIRETRIZES DE COMUNICAÇÃO
 - Tom de voz: ${tom}.
-- Formato: ${extensao}
-- Emojis: ${emoji}
-- Linguagem: Português do Brasil, claro, sem termos técnicos desnecessários.
+- Extensão das respostas: ${extensao}
+- Idiomas atendidos: ${idiomas}.
+- Diretrizes de Emojis: ${emoji}
+- Clareza: Use linguagem acolhedora, objetiva e sem jargões técnicos desnecessários.
 
-### CONTEXTO E OBJETIVOS DO NEGÓCIO
-${S.ia.publicoAlvo ? `- Público-alvo: ${S.ia.publicoAlvo}` : '- Público-alvo: Clientes e pacientes em atendimento'}
-${S.ia.problema ? `- Foco de resolução: ${S.ia.problema}` : ''}
-${S.ia.kpis ? `- Métricas prioritárias: ${S.ia.kpis}` : ''}
+### 3. ALINHAMENTO DE EXPECTATIVAS E OBJETIVOS
+${S.ia.processoOtimizar ? `- Processo a otimizar: ${S.ia.processoOtimizar}` : '- Processo: Triagem ágil e redução de espera'}
+${S.ia.kpis ? `- Métricas e KPIs de sucesso: ${S.ia.kpis}` : ''}
+${S.ia.publicoAlvo ? `- Perfil do público-alvo: ${S.ia.publicoAlvo}` : ''}
 
-### ESCOPO E HABILIDADES (AUTONOMIA TOTAL)
-Você está autorizado a resolver diretamente os seguintes tópicos:
-${S.ia.habilidades ? S.ia.habilidades : '- Fornecer informações gerais e tirar dúvidas frequentes da empresa'}
+### 4. ESCOPO E AUTONOMIA TOTAL
+Você tem AUTONOMIA TOTAL para resolver diretamente os seguintes assuntos:
+${S.ia.habilidades ? S.ia.habilidades : '- Fornecer informações institucionais, horários e orientações gerais'}
 
-### RESTRIÇÕES CRÍTICAS (ANTI-ALUCINAÇÃO)
-${S.ia.restricoes ? S.ia.restricoes : '- Não forneça informações fora do escopo institucional da empresa\n- Não prometa prazos ou valores sem confirmação oficial'}
-${S.ia.foraEscopo ? `- Assuntos fora de escopo (recuse educadamente): ${S.ia.foraEscopo}` : ''}
+### 5. GATILHOS DE TRANSBORDO HUMANO
+Transfira o atendimento para um atendente humano quando houver:
+${S.ia.assuntosTransbordo ? S.ia.assuntosTransbordo : '- Solicitação explícita de atendente ou casos complexos fora de escopo'}
+
+### 6. RESTRIÇÕES CRÍTICAS (ANTI-ALUCINAÇÃO & GUARDRAILS)
+${S.ia.restricoes ? S.ia.restricoes : '- NUNCA forneça informações não confirmadas oficialmente pela empresa\n- NUNCA invente procedimentos, prazos ou valores'}
+${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.foraEscopo}` : ''}
 `;
 
       if (S.ia.smartJump && S.ia.smartJump.length > 0) {
-        prompt += `\n### REGRAS DE ROTEAMENTO E TRANSBORDO (SMART JUMP)\nSe o cliente mencionar os seguintes gatilhos, encerre a triagem e transfira IMEDIATAMENTE para a fila humana correspondente:\n`;
+        prompt += `\n### 7. REGRAS DE ROTEAMENTO IMEDIATO (SMART JUMP)\nSe o cliente mencionar algum dos gatilhos abaixo, interrompa a triagem e transfira IMEDIATAMENTE para a fila indicada:\n`;
         S.ia.smartJump.forEach((r, idx) => {
-          prompt += `${idx + 1}. [${r.categoria || 'Geral'}]: Gatilhos ("${r.gatilhos || ''}") -> Transferir para ${r.destino || 'Fila de Atendimento'}\n`;
+          prompt += `${idx + 1}. [${r.categoria || 'Intenção'}]: Gatilhos ("${r.gatilhos || ''}") -> Transferir para Fila: ${r.destino || 'Atendimento Geral'}\n`;
         });
       }
 
-      if (S.ia.preAtendimento && S.ia.preAtendimento.length > 0) {
-        prompt += `\n### ROTEIRO DE QUALIFICAÇÃO PRÉ-TRANSBORDO\nAntes de concluir o agendamento ou transbordo, colete os seguintes dados de forma SEQUENCIAL (uma pergunta por vez):\n`;
-        S.ia.preAtendimento.forEach((p, idx) => {
-          prompt += `Passo ${idx + 1} [${p.fluxo || 'Qualificação'}]: "${p.pergunta || ''}"\n`;
+      if (S.ia.fluxosPreAtendimento && S.ia.fluxosPreAtendimento.length > 0) {
+        prompt += `\n### 8. PRÉ-ATENDIMENTO E COLETA SEQUENCIAL POR FLUXO\nIdentifique o fluxo correspondente à solicitação do cliente e realize a coleta de dados de forma SEQUENCIAL (uma pergunta por vez):\n`;
+        S.ia.fluxosPreAtendimento.forEach((f, idx) => {
+          prompt += `\n▶ FLUXO ${idx + 1}: ${f.nome || 'Geral'}\n`;
+          (f.passos || []).forEach((passo, pIdx) => {
+            if (passo.trim()) {
+              prompt += `   Passo ${pIdx + 1}: "${passo.trim()}"\n`;
+            }
+          });
         });
+        if (S.ia.filaFallback) {
+          prompt += `\n* Se a IA não identificar o fluxo do cliente ou houver falha de compreensão, encaminhar para a Fila de Contingência: ${S.ia.filaFallback}.\n`;
+        }
       }
 
-      if (S.ia.baseUrl) {
-        prompt += `\n### BASE DE CONHECIMENTO E CONSULTA\nFonte oficial de informações: ${S.ia.baseUrl}\n`;
+      if (S.ia.baseUrl || (S.ia.linksAdicionais && S.ia.linksAdicionais.length) || S.ia.faqTexto || (S.ia.arquivos && S.ia.arquivos.length)) {
+        prompt += `\n### 9. BASE DE CONHECIMENTO E GOVERNANÇA\n`;
+        if (S.ia.baseUrl) prompt += `- Site oficial: ${S.ia.baseUrl}\n`;
+        if (S.ia.linksAdicionais && S.ia.linksAdicionais.length) {
+          const validLinks = S.ia.linksAdicionais.filter(Boolean);
+          if (validLinks.length) prompt += `- Links adicionais de consulta: ${validLinks.join(" | ")}\n`;
+        }
+        if (S.ia.faqTexto) {
+          prompt += `- Informações e Procedimentos Oficiais:\n${S.ia.faqTexto}\n`;
+        }
+        if (S.ia.arquivos && S.ia.arquivos.length) {
+          prompt += `- Documentos e Manuais de Referência: ${S.ia.arquivos.map(a => a.nome).join(", ")}\n`;
+        }
+        if (S.ia.faqFreq) {
+          prompt += `- Governança de atualização: Frequência ${S.ia.faqFreq}.\n`;
+        }
+        if (S.ia.faqRespNome || S.ia.faqRespEmail) {
+          prompt += `- Responsável interno: ${S.ia.faqRespNome || ''} (${S.ia.faqRespEmail || ''})\n`;
+        }
       }
 
-      prompt += `\n### POLÍTICA DE SEGURANÇA E FALLBACK\n- Caso não compreenda a solicitação do usuário após ${S.ia.tentativasErro || '3'} tentativas, solicite desculpas e transfira para um atendente humano.\n- NUNCA invente links, telefones ou procedimentos não cadastrados acima.`;
+      prompt += `\n### 10. POLÍTICA DE INATIVIDADE E FALLBACK\n`;
+      prompt += `- Tempo de inatividade limite: ${S.ia.inatTempo || '10'} minutos.\n`;
+      prompt += `- Ação ao esgotar inatividade: ${S.ia.inatAcao === 'transferir' ? `Transferir para ${S.ia.inatFila || 'fila padrão'}` : 'Encerrar conversa'}.\n`;
+      if (S.ia.msgFinalizacao) {
+        prompt += `- Mensagem de encerramento por inatividade: "${S.ia.msgFinalizacao}"\n`;
+      }
+      prompt += `- Caso não compreenda a solicitação após ${S.ia.tentativasErro || '3'} tentativas consecutivas, acione o transbordo para a equipe humana.\n`;
+      prompt += `- NUNCA invente procedimentos, dados de contato ou regras não expressas neste documento.`;
 
       return prompt;
     }
@@ -2166,15 +2417,21 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recuse educadamente): ${S.ia.for
         check() {
           const p = [], a = S.ia;
           if (!a.nome) p.push("Nome do assistente de IA");
-          if (!a.tom.length) p.push("Tom de voz da IA");
+          if (!a.tom || !a.tom.length) p.push("Tom de voz da IA");
           if (!a.habilidades) p.push("Tópicos que a IA resolve sozinha");
-          if (!a.restricoes) p.push("O que a IA está proibida de fazer (Anti-alucinação)");
-          if (!a.smartJump.length) p.push("Ao menos uma regra de prioridade / Smart Jump");
+          if (!a.restricoes) p.push("O que a IA está proibida de fazer (Restrições)");
+          if (!a.smartJump || !a.smartJump.length) p.push("Ao menos uma regra de prioridade / Smart Jump");
+          if (!a.fluxosPreAtendimento || !a.fluxosPreAtendimento.length) p.push("Ao menos um fluxo de pré-atendimento");
           return p;
         },
         render() {
           const a = S.ia;
           const setOpts = v => `<option value="">Escolha a fila / DAC…</option>` + S.operacao.setores.map(s => `<option value="${esc(s.nome)}" ${v === s.nome ? "selected" : ""}>${esc(s.nome)} · DAC ${esc(s.dac)}</option>`).join("");
+          const idi = a.idiomas || ["Português (Brasil)"];
+          const fluxos = a.fluxosPreAtendimento || [];
+          const links = a.linksAdicionais || [];
+          const arquivos = a.arquivos || [];
+
           return `<div class="card">
             <div class="auditor-banner">
               <div class="auditor-avatar">🤖</div>
@@ -2193,9 +2450,27 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recuse educadamente): ${S.ia.for
             <h2>Configuração e regras do Assistente de IA</h2>
             <p class="lede">Estrutura completa para geração determinística do prompt de produção, triagem de filas, limites anti-alucinação e transbordo.</p>
 
-            <div class="sect"><h3>1. Identidade, Persona e Tom de Voz</h3><p>Como o assistente se apresenta e formata as respostas no WhatsApp.</p></div>
+            <!-- SEÇÃO 1: ALINHAMENTO DE EXPECTATIVAS -->
+            <div class="sect"><h3>1. Alinhamento de Expectativas</h3><p>Qual o objetivo central e qual indicador define o sucesso do projeto.</p></div>
+            <div class="f">
+              <label>Qual processo você gostaria de otimizar com a IA?</label>
+              ${fta("ia.processoOtimizar", "Ex.: Atendimento inicial no WhatsApp, esclarecimento de dúvidas repetitivas de convênios/preparo de exames e triagem prévia de agendamento antes de transferir para a equipe humana.")}
+              <div class="navrow" style="margin-top:4px">
+                <span class="hint">Sugestões rápidas:</span>
+                <button class="btn-g" onclick="appendIaField('ia.processoOtimizar','Reduzir o tempo de espera no WhatsApp e triar pacientes')">+ Triagem de Pacientes</button>
+                <button class="btn-g" onclick="appendIaField('ia.processoOtimizar','Qualificar leads comerciais e agendar demonstrações')">+ Qualificação de Leads</button>
+                <button class="btn-g" onclick="appendIaField('ia.processoOtimizar','Atendimento de dúvidas frequentes 24/7 sem sobrecarregar a recepção')">+ Atendimento 24/7</button>
+              </div>
+            </div>
+            <div class="f">
+              <label>Qual métrica de sucesso você deseja atingir com essa implementação?</label>
+              ${fta("ia.kpis", "Ex.: Taxa de resolução no 1º contato acima de 40%, redução do Tempo Médio de Espera (TME) em 50%, nota CSAT/NPS superior a 4.5 e zero transbordos sem qualificação prévia.")}
+            </div>
+
+            <!-- SEÇÃO 2: PERSONA -->
+            <div class="sect"><h3>2. Identidade, Persona e Diretrizes de Comunicação</h3><p>Como o assistente se apresenta, quais idiomas fala e como formata mensagens.</p></div>
             <div class="grid2">
-              ${fi("Nome da IA", "ia.nome", "text", "Ex.: Ires, Sofia, Max")}
+              ${fi("Nome da IA", "ia.nome", "text", "Ex.: Luna, Ires, Sofia, Max")}
               <div class="f"><label>Tamanho médio das respostas <span class="req">*</span></label><div class="opts">
                 ${["curta|Curta (2 a 3 frases)", "media|Média (4 a 6 linhas)", "flexivel|Flexível"].map(x => {
                   const [v, l] = x.split("|");
@@ -2205,8 +2480,18 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recuse educadamente): ${S.ia.for
             </div>
             <div class="f"><label>Tom de Voz <span class="req">*</span></label><div class="opts">
               ${["Cordial e acolhedor", "Formal e institucional", "Direto e objetivo", "Técnico e consultivo"].map(t =>
-                `<button class="opt sm" aria-pressed="${a.tom.includes(t)}" onclick="togIaTom('${t}')">${t}</button>`).join("")}
+                `<button class="opt sm" aria-pressed="${(a.tom || []).includes(t)}" onclick="togIaTom('${t}')">${t}</button>`).join("")}
             </div></div>
+
+            <div class="f">
+              <label>Idiomas falados pela IA</label>
+              <div class="opts" style="margin-bottom:8px">
+                ${["Português (Brasil)", "Inglês", "Espanhol", "Francês"].map(lang =>
+                  `<button class="opt sm" aria-pressed="${idi.includes(lang)}" onclick="togIaIdioma('${lang}')">${lang}</button>`).join("")}
+              </div>
+              <input type="text" placeholder="Outro idioma — digite e pressione Enter para adicionar" onkeydown="if(event.key==='Enter'){event.preventDefault();addIaIdiomaCustom(this.value);this.value=''}">
+            </div>
+
             <div class="grid2">
               <div class="f"><label>Uso de Emojis</label><div class="opts">
                 ${["nenhum|Sem emojis", "moderado|Moderado (máx 1)", "livre|Humanizado / Livre"].map(x => {
@@ -2214,43 +2499,33 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recuse educadamente): ${S.ia.for
                   return `<button class="opt sm" aria-pressed="${a.emojiUso === v}" onclick="S.ia.emojiUso='${v}';draw()">${l}</button>`;
                 }).join("")}
               </div></div>
-              ${a.emojiUso !== "nenhum" ? fi("Emojis permitidos / proibidos", "ia.emojisPermitidos", "text", "Ex.: Permitidos: 💙, 👋, 🏥, ✅ | Proibidos: ❤️, 😂") : ""}
+              ${a.emojiUso !== "nenhum" ? fi("Emojis permitidos / restrições", "ia.emojisPermitidos", "text", "Ex.: Permitidos: 💙, 👋, 🏥, ✅ | Proibidos: ❤️, 😂") : ""}
             </div>
 
-            <div class="sect"><h3>2. Contexto do Negócio e Objetivos</h3><p>Descreva o público-alvo, dores da operação e métricas de validação.</p></div>
-            <div class="f">
-              <label>Com qual parte do público a IA irá trabalhar? (Público-alvo)</label>
-              ${fta("ia.publicoAlvo", "Ex.: Pacientes particulares e de convênios buscando agendamento e informações; acompanhantes de pacientes internados; novos clientes com dúvidas de exames.")}
-              <div class="navrow" style="margin-top:2px">
-                <span class="hint">Sugestões rápidas:</span>
-                <button class="btn-g" onclick="appendIaField('ia.publicoAlvo','Pacientes e clientes finais (B2C)')">+ Pacientes B2C</button>
-                <button class="btn-g" onclick="appendIaField('ia.publicoAlvo','Empresas e fornecedores (B2B)')">+ Empresas B2B</button>
-                <button class="btn-g" onclick="appendIaField('ia.publicoAlvo','Novos leads comerciais')">+ Novos Leads</button>
-              </div>
-            </div>
-
-            <div class="grid2">
-              <div class="f">
-                <label>Qual o problema você deseja solucionar com a IA?</label>
-                ${fta("ia.problema", "Ex.: Alto tempo de espera na recepção, perda de leads fora do horário e sobrecarga da equipe com dúvidas repetitivas sobre preparo e convênios.")}
-              </div>
-              <div class="f">
-                <label>Quais métricas de sucesso (KPIs e taxas) validam a implementação?</label>
-                ${fta("ia.kpis", "Ex.: Taxa de resolução no 1º contato acima de 40%, redução do Tempo Médio de Espera (TME) em 50%, nota CSAT/NPS superior a 4.5 e zero transbordos indevidos.")}
-              </div>
-            </div>
-
-            <div class="sect"><h3>3. Escopo e Restrições de Autonomia</h3><p>O que a IA resolve sozinha e o que ela está terminantemente proibida de fazer.</p></div>
+            <!-- SEÇÃO 3: CONTEXTO DO NEGÓCIO E OBJETIVOS -->
+            <div class="sect"><h3>3. Contexto do Negócio e Objetivos</h3><p>Defina o que a IA resolve com autonomia total, o que deve transbordar e o que ela nunca deve fazer.</p></div>
             <div class="f"><label>Tópicos que a IA resolve sozinha (Autonomia Total) <span class="req">*</span></label>
-              ${fta("ia.habilidades", "Ex.:\n- Endereço e horários de atendimento das unidades\n- Lista de convênios aceitos\n- Orientações e preparos básicos de exames\n- Envio de links de agendamento online")}</div>
-            <div class="grid2">
-              <div class="f"><label>Restrições Críticas (Anti-Alucinação) <span class="req">*</span></label>
-                ${fta("ia.restricoes", "Ex.:\n- Não dar orientação médica ou diagnóstico\n- Não confirmar cobertura de plano sem consultar operadora\n- Não prometer horários vagos sem integração")}
-                <span class="hint">Regra mandatória de segurança da informação.</span></div>
-              <div class="f"><label>Assuntos Fora de Escopo (Filtro Anti-Ruído)</label>
-                ${fta("ia.foraEscopo", "Ex.: Política, futebol, receitas, assuntos pessoais não relacionados à empresa.")}</div>
+              ${fta("ia.habilidades", "Ex.:\n- Endereço e horários de funcionamento das unidades\n- Relação de convênios atendidos e planos aceitos\n- Orientações e preparos básicos de exames\n- Envio de links seguros para agendamento online")}
+              <span class="hint">Assuntos em que a IA responde e conclui a dúvida do cliente sem precisar de atendente.</span>
             </div>
 
+            <div class="f"><label>Quais assuntos ela deve passar ao atendente? (Transbordo Humano)</label>
+              ${fta("ia.assuntosTransbordo", "Ex.:\n- Casos de emergência médica, dor aguda ou risco à vida\n- Negociações financeiras complexas ou faturamento de contas\n- Procedimentos cirúrgicos ou autorizações especiais de guias\n- Pedido explícito do cliente para falar com um atendente")}
+              <span class="hint">Gatilhos que devem acionar a transferência para um operador humano.</span>
+            </div>
+
+            <div class="grid2">
+              <div class="f"><label>O que ela NUNCA deve fazer (Restrições / Anti-Alucinação) <span class="req">*</span></label>
+                ${fta("ia.restricoes", "Ex.:\n- Proibido dar parecer médico, diagnósticos ou interpretar exames\n- Não confirmar cobertura sem consulta à operadora\n- Não prometer procedimentos cirúrgicos ou descontos fora da tabela")}
+                <span class="hint">Regra mandatória de segurança jurídica e operacional.</span>
+              </div>
+              <div class="f"><label>Assuntos Fora de Escopo (Filtro Anti-Ruído)</label>
+                ${fta("ia.foraEscopo", "Ex.: Política, futebol, receitas caseiras, assuntos pessoais não relacionados à instituição.")}
+                <span class="hint">A IA recusa educadamente assuntos sem relação com o negócio.</span>
+              </div>
+            </div>
+
+            <!-- SEÇÃO 4: ROTEAMENTO INTELIGENTE (SMART JUMP) E FILAS -->
             <div class="sect"><h3>4. Roteamento Inteligente (Smart Jump) e Filas</h3><p>Gatilhos imediatos que cortam o menu e transferem para filas específicas.</p></div>
             ${!S.operacao.setores.length ? `<div class="note warn">Cadastre os setores no bloco de Horário e Filas para vinculá-los aqui como destinos de transbordo.</div>` : ""}
             ${a.smartJump.length ? `<table><thead><tr><th style="width:28%">Categoria / Intenção</th><th style="width:42%">Gatilhos (palavras-chave separadas por vírgula)</th><th>Fila / Ação</th><th style="width:36px"></th></tr></thead><tbody>
@@ -2265,18 +2540,49 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recuse educadamente): ${S.ia.for
               <button class="btn-g" onclick="loadIaTemplates()">Carregar regras padrão de transbordo</button>
             </div>
 
-            <div class="sect"><h3>5. Pré-Atendimento e Coleta Sequencial de Dados</h3><p>Campos que a IA deve perguntar (um por vez) para qualificar o cliente antes de passar para o atendente humano.</p></div>
-            ${a.preAtendimento.length ? `<table><thead><tr><th style="width:12%">Ordem</th><th style="width:40%">Fluxo</th><th>Pergunta obrigatória (uma por vez)</th><th style="width:36px"></th></tr></thead><tbody>
-              ${a.preAtendimento.map((p, i) => `<tr>
-                <td class="mono" style="font-weight:600">Passo ${i + 1}</td>
-                <td><input type="text" value="${esc(p.fluxo)}" placeholder="Ex.: Agendamento / Comercial" oninput="S.ia.preAtendimento[${i}].fluxo=this.value;soft()"></td>
-                <td><input type="text" value="${esc(p.pergunta)}" placeholder="Ex.: Qual a especialidade desejada?" oninput="S.ia.preAtendimento[${i}].pergunta=this.value;soft()"></td>
-                <td><button class="rowdel" onclick="S.ia.preAtendimento.splice(${i},1);draw()">×</button></td></tr>`).join("")}
-            </tbody></table>` : ""}
-            <div class="navrow" style="margin-top:8px">
-              <button class="btn btn-s" onclick="addPreAtendimento()">+ Campo de Coleta</button>
-              <button class="btn-g" onclick="loadPreAtendSaude()">Carregar roteiro padrão de coleta</button>
+            <!-- SEÇÃO 5: PRÉ-ATENDIMENTO E COLETA SEQUENCIAL POR FLUXO -->
+            <div class="sect"><h3>5. Pré-Atendimento e Coleta Sequencial de Dados</h3><p>Roteiro de perguntas sequenciais (uma por vez) que a IA realiza para qualificar o atendimento antes de transferir ao atendente, estruturado por cada fluxo.</p></div>
+            
+            <div style="margin-bottom:16px">
+              ${fluxos.map((f, fi) => `
+                <div class="flow-card" style="background:var(--surface-2);border:1.5px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
+                    <div style="display:flex;align-items:center;gap:8px;flex:1">
+                      <span style="font-size:16px">🔀</span>
+                      <input type="text" value="${esc(f.nome)}" placeholder="Nome do Fluxo. Ex.: Consultas, Exames, Remarcações" oninput="setIaFluxoNome(${fi}, this.value)" style="font-weight:600;background:#fff;border:1.5px solid var(--line);font-size:13.5px">
+                    </div>
+                    <button class="rowdel" title="Excluir fluxo inteiro" onclick="delIaFluxo(${fi})" style="font-size:18px">×</button>
+                  </div>
+
+                  <div style="margin-bottom:10px">
+                    ${(f.passos || []).map((step, pi) => `
+                      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                        <span style="width:26px;height:26px;border-radius:6px;background:var(--signal-soft);color:var(--signal-deep);font-family:'IBM Plex Mono';font-size:11.5px;font-weight:600;display:grid;place-items:center;flex-shrink:0">
+                          ${pi + 1}
+                        </span>
+                        <input type="text" value="${esc(step)}" placeholder="Pergunta obrigatória da etapa (ex.: Qual o CPF do paciente?)" oninput="setIaPasso(${fi}, ${pi}, this.value)" style="background:#fff">
+                        <button class="rowdel" title="Remover este passo" onclick="delIaPasso(${fi}, ${pi})">×</button>
+                      </div>
+                    `).join("")}
+                  </div>
+
+                  <button class="btn-g" style="padding:4px 8px;font-size:12px" onclick="addIaPasso(${fi})">+ Adicionar Passo a este fluxo</button>
+                </div>
+              `).join("")}
+
+              <div class="navrow" style="margin-top:10px">
+                <button class="btn btn-s" onclick="addIaFluxo()">+ Adicionar Novo Fluxo</button>
+                <button class="btn-g" onclick="loadPreAtendSaude()">Modelo de Fluxos de Saúde</button>
+                <button class="btn-g" onclick="loadPreAtendComercial()">Modelo de Fluxos Comercial</button>
+              </div>
             </div>
+
+            <div class="f" style="background:#FFF8E8;border:1.5px solid #F5D485;border-radius:8px;padding:14px 16px;margin-top:18px">
+              <label style="color:#7C4A03;font-size:13px">Para qual fila levamos o cliente se a IA não identificar o assunto ou tiver alguma falha? <span class="req">*</span></label>
+              <p style="font-size:12px;color:#855C08;margin:0 0 8px">Fila de transbordo padrão caso o cliente fique fora dos fluxos previstos ou a IA não entenda a solicitação.</p>
+              <select onchange="S.ia.filaFallback=this.value;soft()" style="background:#fff">${setOpts(a.filaFallback)}</select>
+            </div>
+
             <div class="f" style="margin-top:14px"><label>Tentativas sem entender antes de transferir por falha (Catch-All)</label><div class="opts">
               ${["1|1 tentativa (imediato)", "2|2 tentativas", "3|3 tentativas (recomendado)"].map(x => {
                 const [v, l] = x.split("|");
@@ -2284,7 +2590,8 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recuse educadamente): ${S.ia.for
               }).join("")}
             </div></div>
 
-            <div class="sect"><h3>6. Inatividade e Encerramento</h3><p>Controle de tempo para clientes que param de responder.</p></div>
+            <!-- SEÇÃO 6: INATIVIDADE E ENCERRAMENTO -->
+            <div class="sect"><h3>6. Inatividade e Encerramento</h3><p>Controle de tempo e ação quando o cliente para de responder.</p></div>
             <div class="grid3">
               <div class="f"><label>Tempo limite de inatividade</label><div class="opts">
                 ${["5|5 min", "10|10 min", "15|15 min", "30|30 min"].map(x => {
@@ -2300,20 +2607,69 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recuse educadamente): ${S.ia.for
               </div></div>
               ${a.inatAcao === "transferir" ? `<div class="f"><label>Fila de destino</label><select onchange="S.ia.inatFila=this.value;soft()">${setOpts(a.inatFila)}</select></div>` : ""}
             </div>
+            <div class="f" style="margin-top:8px">
+              <label>Mensagem de finalização de atendimento (Opcional)</label>
+              ${fta("ia.msgFinalizacao", "Ex.: Atendimento finalizado por inatividade. Caso precise de mais alguma informação, basta nos enviar uma nova mensagem! Tenha um ótimo dia. 😊")}
+              <span class="hint">Enviada automaticamente caso o atendimento seja encerrado pela IA.</span>
+            </div>
 
-            <div class="sect"><h3>7. Base de Conhecimento e Governança</h3><p>Fonte da verdade para atualização contínua do bot.</p></div>
+            <!-- SEÇÃO 7: BASE DE CONHECIMENTO E GOVERNANÇA -->
+            <div class="sect"><h3>7. Base de Conhecimento e Governança</h3><p>Fontes de dados oficiais, procedimentos, arquivos anexos e responsáveis de contato.</p></div>
+            
             <div class="grid2">
-              ${fi("Site institucional ou portal oficial", "ia.baseUrl", "text", "https://...")}
-              <div class="f"><label>Frequência de alteração das informações</label><div class="opts">
-                ${["semanal|Semanal / Mensal", "raramente|Raramente (Trimestral/Anual)", "api|Tempo Real (via API)"].map(x => {
+              ${fi("Site ou página com as informações oficiais", "ia.baseUrl", "text", "https://suaempresa.com.br")}
+              <div class="f"><label>Qual a frequência de atualização da FAQ?</label><div class="opts">
+                ${["diaria|Diária", "semanal|Semanal / Quinzenal", "mensal|Mensal", "demanda|Sob Demanda", "api|Tempo Real (API)"].map(x => {
                   const [v, l] = x.split("|");
                   return `<button class="opt sm" aria-pressed="${a.faqFreq === v}" onclick="S.ia.faqFreq='${v}';draw()">${l}</button>`;
                 }).join("")}
               </div></div>
             </div>
-            <div class="f">${fi("Responsável interno para dúvidas de FAQ (Nome / E-mail)", "ia.faqResp", "text", "Ex.: Mariana Souza - mariana@empresa.com.br")}</div>
 
-            <div class="navrow" style="margin-top:16px">
+            <div class="f">
+              <label>Links adicionais de consulta</label>
+              ${links.map((l, li) => `
+                <div style="display:flex;gap:8px;margin-bottom:6px">
+                  <input type="text" value="${esc(l)}" placeholder="https://suaempresa.com.br/preparo-de-exames" oninput="setIaLink(${li}, this.value)">
+                  <button class="rowdel" title="Remover link" onclick="delIaLink(${li})">×</button>
+                </div>
+              `).join("")}
+              <button class="btn-g" onclick="addIaLink()">+ Adicionar Link Adicional</button>
+            </div>
+
+            <div class="f">
+              <label>Texto escrito / Procedimentos e FAQ Manual</label>
+              ${fta("ia.faqTexto", "Insira aqui textos informativos, listas de exames, tabelas de valores particulares, rotinas de preparo ou respostas prontas para perguntas frequentes...")}
+              <span class="hint">Textos inseridos aqui são incorporados diretamente ao conhecimento da IA.</span>
+            </div>
+
+            <div class="f">
+              <label>Upload de arquivos (Documentos, Manuais, Tabelas e PDFs)</label>
+              <div class="file-upload-zone" onclick="document.getElementById('ia_file_upload_input').click()" style="border:2px dashed var(--line);border-radius:var(--r);padding:18px;text-align:center;background:var(--surface-2);cursor:pointer;transition:.15s">
+                <input type="file" id="ia_file_upload_input" style="display:none" onchange="if(this.files[0]){addIaArquivo(this.files[0].name, Math.round(this.files[0].size/1024)+' KB');this.value=''}">
+                <span style="font-size:24px;display:block;margin-bottom:4px">📁</span>
+                <b>Clique para selecionar arquivos</b> (PDFs, Tabelas, Manuais, Documentos)
+                <span class="hint">Suporta arquivos PDF, DOCX, XLSX ou TXT para treinamento e consulta do assistente</span>
+              </div>
+              ${arquivos.length ? `
+                <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
+                  ${arquivos.map((arq, ai) => `
+                    <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid var(--line);border-radius:6px;padding:6px 12px;font-size:12.5px">
+                      <span>📄 <b>${esc(arq.nome)}</b> <small style="color:var(--muted)">(${esc(arq.tamanho)})</small></span>
+                      <button class="rowdel" title="Remover arquivo" onclick="delIaArquivo(${ai})">×</button>
+                    </div>
+                  `).join("")}
+                </div>
+              ` : ""}
+            </div>
+
+            <div class="sect"><h3>Responsável interno para dúvidas de FAQ</h3><p>Pessoa de contato na sua empresa caso o time da ORPEN precise tirar dúvidas sobre as respostas da IA.</p></div>
+            <div class="grid2">
+              ${fi("Nome do Responsável", "ia.faqRespNome", "text", "Ex.: Mariana Souza")}
+              ${fi("E-mail do Responsável", "ia.faqRespEmail", "email", "Ex.: mariana.souza@hospitalexemplo.com.br")}
+            </div>
+
+            <div class="navrow" style="margin-top:20px">
               <button class="btn btn-p" onclick="abrirModalPromptFinal()">👁️ Visualizar System Prompt Compilado</button>
             </div>
 
@@ -2539,8 +2895,9 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recuse educadamente): ${S.ia.for
         </div>
 
         ${line("Nome do Agente", S.ia.nome || "—", !S.ia.nome)}
-        ${line("Gatilhos Smart Jump", `${S.ia.smartJump.length} cadastrado(s)`, !S.ia.smartJump.length)}
-        ${line("Pré-Qualificação", `${S.ia.preAtendimento.length} etapa(s)`, !S.ia.preAtendimento.length)}
+        ${line("Gatilhos Smart Jump", `${(S.ia.smartJump || []).length} cadastrado(s)`, !(S.ia.smartJump && S.ia.smartJump.length))}
+        ${line("Fluxos de Triagem", `${(S.ia.fluxosPreAtendimento || []).length} fluxo(s) · ${(S.ia.fluxosPreAtendimento || []).reduce((acc, f) => acc + (f.passos || []).filter(Boolean).length, 0)} passo(s)`, !(S.ia.fluxosPreAtendimento && S.ia.fluxosPreAtendimento.length))}
+        ${line("Base de Conhecimento", `${(S.ia.arquivos || []).length} arquivo(s) · ${(S.ia.linksAdicionais || []).length} link(s)`, !(S.ia.baseUrl || (S.ia.arquivos && S.ia.arquivos.length)))}
         ${line("Integração de Sistema", S.contrato.integracao ? (S.integ.sistema || "Aguardando") : "Não contratado", !S.integ.sistema)}
 
         <button class="btn btn-p" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#0C7A83,#075158);border:0;display:flex;align-items:center;justify-content:center;gap:6px" onclick="abrirModalPromptFinal()">

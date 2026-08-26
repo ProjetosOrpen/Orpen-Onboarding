@@ -74,25 +74,80 @@ const S = {
     whatsback: false
   },
   ia: {
+    // 1. Alinhamento de Expectativas
+    processoOtimizar: "Atendimento inicial, triagem ágil de agendamentos e esclarecimento de dúvidas frequentes sobre convênios e preparo de exames.",
+    kpis: "Resolução rápida no 1º contato (>40%), redução do tempo médio de espera e dados 100% qualificados antes do transbordo.",
+
+    // 2. Persona
     nome: "Luna",
     extensaoResp: "curta",
     tom: ["Cordial e acolhedor", "Direto e objetivo"],
+    idiomas: ["Português (Brasil)"],
     emojiUso: "moderado",
     emojisPermitidos: "💙, 👋, 🏥, ✅",
+
+    // 3. Contexto do Negócio e Objetivos
+    habilidades: "- Horários de funcionamento e endereços das unidades\n- Relação de convênios atendidos\n- Orientações e preparos básicos de exames\n- Envio de links de agendamento online",
+    assuntosTransbordo: "- Emergências médicas ou risco à vida\n- Negociação financeira complexa ou faturamento de contas\n- Procedimentos cirúrgicos ou autorizações especiais de guias\n- Pedido explícito do cliente para falar com um atendente",
+    restricoes: "- Proibido fornecer diagnóstico médico ou prescrever condutas\n- Não confirmar cobertura sem checagem de plano\n- Não prometer procedimentos cirúrgicos ou horários sem confirmação",
     publicoAlvo: "Pacientes e clientes buscando agendamento, exames e orientações gerais.",
     problema: "Alto tempo de espera no WhatsApp e dúvidas repetitivas sobre preparo e convênios.",
-    kpis: "Resolução rápida no 1º contato (>40%) e redução da fila de espera.",
-    habilidades: "- Horários de funcionamento e endereços das unidades\n- Relação de convênios atendidos\n- Orientações e preparos básicos de exames\n- Envio de links de agendamento online",
-    restricoes: "- Proibido fornecer diagnóstico médico ou prescrever condutas\n- Não confirmar cobertura sem checagem de plano\n- Não prometer procedimentos cirúrgicos",
     foraEscopo: "Política, receitas caseiras, conselhos pessoais não médicos.",
+
+    // 4. Roteamento Inteligente (Smart Jump) e Filas
     smartJump: [],
-    preAtendimento: [],
+
+    // 5. Pré-Atendimento e Coleta Sequencial de Dados (por Fluxo)
+    fluxosPreAtendimento: [
+      {
+        nome: "Consultas e Agendamentos",
+        passos: [
+          "Qual a especialidade desejada ou médico de preferência?",
+          "Qual o nome completo e CPF do paciente?",
+          "Qual o convênio ou prefere atendimento particular?",
+          "Qual a preferência de data e período (manhã/tarde)?"
+        ]
+      },
+      {
+        nome: "Exames e Laudos",
+        passos: [
+          "Qual exame você precisa realizar?",
+          "Você já possui o pedido médico em mãos?",
+          "Qual o convênio para realização do exame?",
+          "Qual a unidade de preferência?"
+        ]
+      },
+      {
+        nome: "Remarcações e Cancelamentos",
+        passos: [
+          "Qual o nome completo e CPF cadastrado?",
+          "Qual consulta ou exame você deseja remarcar ou cancelar?",
+          "Qual a nova data ou horário de sua preferência?"
+        ]
+      }
+    ],
+    filaFallback: "",
     tentativasErro: "3",
+
+    // 6. Inatividade e Encerramento
     inatTempo: "10",
     inatAcao: "finalizar",
     inatFila: "",
+    msgFinalizacao: "Atendimento finalizado por inatividade. Caso precise de mais alguma informação, basta nos enviar uma nova mensagem! Tenha um ótimo dia. 😊",
+
+    // 7. Base de Conhecimento e Governança
     baseUrl: "https://hospitalexemplo.com.br",
+    linksAdicionais: [
+      "https://hospitalexemplo.com.br/convenios",
+      "https://hospitalexemplo.com.br/preparo-de-exames"
+    ],
+    faqTexto: "Horário de Coleta de Exames: Segunda a Sexta, das 06:30 às 11:00. Sábados das 07:00 às 10:30.\nEstacionamento gratuito no local por até 1h para pacientes em atendimento.",
+    arquivos: [
+      { nome: "Guia_de_Preparo_Exames_2026.pdf", tamanho: "1.4 MB" }
+    ],
     faqFreq: "semanal",
+    faqRespNome: "Mariana Souza",
+    faqRespEmail: "mariana.souza@hospitalexemplo.com.br",
     faqResp: ""
   },
   integ: {
@@ -201,6 +256,9 @@ function sugerirM02() {
 function togCaso(c) { const a = S.integ.casos, i = a.indexOf(c); i < 0 ? a.push(c) : a.splice(i, 1); draw(); }
 
 function togIaTom(t) { const a = S.ia.tom, i = a.indexOf(t); i < 0 ? a.push(t) : a.splice(i, 1); draw(); }
+function togIaIdioma(l) { const a = S.ia.idiomas || (S.ia.idiomas = []); const i = a.indexOf(l); i < 0 ? a.push(l) : a.splice(i, 1); draw(); }
+function addIaIdiomaCustom(v) { v = v.trim(); if (!v) return; const a = S.ia.idiomas || (S.ia.idiomas = []); if (!a.includes(v)) a.push(v); draw(); }
+
 function appendIaField(path, text) {
   const current = get(path) || "";
   const sep = current.trim() ? (current.includes("\n") ? "\n" : ", ") : "";
@@ -208,8 +266,75 @@ function appendIaField(path, text) {
   draw();
   toast("Sugestão adicionada!");
 }
+
 function addSmartJump() { S.ia.smartJump.push({ categoria: "", gatilhos: "", destino: "" }); draw(); }
-function addPreAtendimento() { S.ia.preAtendimento.push({ fluxo: "", pergunta: "" }); draw(); }
+
+// Gerenciamento de Fluxos de Pré-Atendimento
+function addIaFluxo() {
+  if (!S.ia.fluxosPreAtendimento) S.ia.fluxosPreAtendimento = [];
+  S.ia.fluxosPreAtendimento.push({ nome: `Novo Fluxo ${S.ia.fluxosPreAtendimento.length + 1}`, passos: [""] });
+  draw();
+  toast("Novo fluxo adicionado!");
+}
+function delIaFluxo(i) {
+  S.ia.fluxosPreAtendimento.splice(i, 1);
+  draw();
+  toast("Fluxo removido!");
+}
+function setIaFluxoNome(i, val) {
+  if (S.ia.fluxosPreAtendimento[i]) {
+    S.ia.fluxosPreAtendimento[i].nome = val;
+    soft();
+  }
+}
+function addIaPasso(fi) {
+  if (S.ia.fluxosPreAtendimento[fi]) {
+    S.ia.fluxosPreAtendimento[fi].passos.push("");
+    draw();
+  }
+}
+function delIaPasso(fi, pi) {
+  if (S.ia.fluxosPreAtendimento[fi]) {
+    S.ia.fluxosPreAtendimento[fi].passos.splice(pi, 1);
+    draw();
+  }
+}
+function setIaPasso(fi, pi, val) {
+  if (S.ia.fluxosPreAtendimento[fi] && S.ia.fluxosPreAtendimento[fi].passos[pi] !== undefined) {
+    S.ia.fluxosPreAtendimento[fi].passos[pi] = val;
+    soft();
+  }
+}
+
+// Links Adicionais e Arquivos da Base de Conhecimento
+function addIaLink() {
+  if (!S.ia.linksAdicionais) S.ia.linksAdicionais = [];
+  S.ia.linksAdicionais.push("");
+  draw();
+}
+function delIaLink(i) {
+  S.ia.linksAdicionais.splice(i, 1);
+  draw();
+}
+function setIaLink(i, val) {
+  if (S.ia.linksAdicionais) {
+    S.ia.linksAdicionais[i] = val;
+    soft();
+  }
+}
+function addIaArquivo(nome, tamanho) {
+  if (!S.ia.arquivos) S.ia.arquivos = [];
+  S.ia.arquivos.push({ nome: nome || "Documento.pdf", tamanho: tamanho || "500 KB" });
+  draw();
+  toast("Arquivo adicionado à Base de Conhecimento!");
+}
+function delIaArquivo(i) {
+  if (S.ia.arquivos) {
+    S.ia.arquivos.splice(i, 1);
+    draw();
+    toast("Arquivo removido.");
+  }
+}
 
 function loadIaTemplates() {
   const defSetor = S.operacao.setores[0]?.nome || "";
@@ -225,23 +350,70 @@ function loadIaTemplates() {
 }
 
 function loadPreAtendSaude() {
-  S.ia.preAtendimento = [
-    { fluxo: "Agendamento de Consulta", pergunta: "Qual a especialidade desejada?" },
-    { fluxo: "Agendamento de Consulta", pergunta: "Qual o CPF do paciente?" },
-    { fluxo: "Agendamento de Consulta", pergunta: "Qual o nome completo do paciente?" },
-    { fluxo: "Agendamento de Consulta", pergunta: "Qual a data de nascimento?" },
-    { fluxo: "Agendamento de Consulta", pergunta: "O atendimento é Particular ou por Convênio?" }
+  S.ia.fluxosPreAtendimento = [
+    {
+      nome: "Consultas e Agendamentos",
+      passos: [
+        "Qual a especialidade desejada ou médico de preferência?",
+        "Qual o nome completo e CPF do paciente?",
+        "Qual o convênio ou prefere atendimento particular?",
+        "Qual a preferência de data e período (manhã/tarde)?"
+      ]
+    },
+    {
+      nome: "Exames e Laudos",
+      passos: [
+        "Qual exame você precisa realizar?",
+        "Você já possui o pedido médico em mãos?",
+        "Qual o convênio para realização do exame?",
+        "Qual a unidade de preferência?"
+      ]
+    },
+    {
+      nome: "Remarcações e Cancelamentos",
+      passos: [
+        "Qual o nome completo e CPF cadastrado?",
+        "Qual consulta ou exame você deseja remarcar ou cancelar?",
+        "Qual a nova data ou horário de sua preferência?"
+      ]
+    }
   ];
-  draw(); toast("Roteiro de qualificação de saúde carregado!");
+  draw(); toast("Fluxos de triagem de saúde carregados!");
+}
+
+function loadPreAtendComercial() {
+  S.ia.fluxosPreAtendimento = [
+    {
+      nome: "Novo Contrato / Proposta B2B",
+      passos: [
+        "Qual a razão social ou nome da sua empresa?",
+        "Qual o CNPJ da empresa?",
+        "Quantos operadores / atendentes utilizarão a plataforma?",
+        "Qual o seu cargo ou papel na decisão?"
+      ]
+    },
+    {
+      nome: "Demonstração e Dúvidas de Planos",
+      passos: [
+        "Quais canais sua empresa precisa integrar (WhatsApp, Telefonia, E-mail)?",
+        "Você já utiliza algum sistema de atendimento ou CRM hoje?",
+        "Qual o melhor e-mail e telefone para envio da proposta?"
+      ]
+    }
+  ];
+  draw(); toast("Fluxos de qualificação comercial carregados!");
 }
 
 function aplicarPerfilClinica() {
   S.ia.nome = "Ires";
+  S.ia.processoOtimizar = "Agendamento rápido de consultas, esclarecimento de dúvidas sobre convênios/preparos e redução do tempo de espera no WhatsApp.";
+  S.ia.kpis = "Taxa de resolução superior a 50% no 1º contato, CSAT acima de 4.6 e transbordo qualificado com especialidade e exames identificados.";
+  S.ia.idiomas = ["Português (Brasil)"];
   S.ia.publicoAlvo = "Pacientes particulares e conveniados buscando agendamentos, preparos de exames e orientações hospitalares.";
   S.ia.problema = "Tempo de espera elevado na recepção e dúvidas repetitivas sobre convênios e laudos de exames.";
-  S.ia.kpis = "Taxa de resolução superior a 50% no 1º contato e transbordo qualificado com especialidade identificada.";
-  S.ia.habilidades = "- Consulta de unidades, horários e rotas de atendimento\n- Lista de convênios aceitos e orientações de preparo\n- Envio de link seguro para agendamento online";
-  S.ia.restricoes = "- Proibido dar parecer médico, diagnósticos ou interpretar exames\n- Não prometer horários cirúrgicos sem confirmação da regulação";
+  S.ia.habilidades = "- Consulta de unidades, horários e rotas de atendimento\n- Lista de convênios aceitos e orientações de preparo de exames\n- Envio de link seguro para agendamento online e confirmações";
+  S.ia.assuntosTransbordo = "- Casos de dor aguda, sangramento ou emergência médica\n- Autorizações de guias negadas pelo convênio\n- Solicitações de cancelamento com reembolso financeiro\n- Dúvidas de resultados de biópsias ou laudos críticos";
+  S.ia.restricoes = "- Proibido dar parecer médico, diagnósticos ou interpretar resultados de exames\n- Não confirmar cobertura sem consultar a tabela vigente da operadora\n- Não prometer encaixes ou horários cirúrgicos sem confirmação da regulação";
   loadIaTemplates();
   loadPreAtendSaude();
   draw();
@@ -250,22 +422,21 @@ function aplicarPerfilClinica() {
 
 function aplicarPerfilComercial() {
   S.ia.nome = "Max";
+  S.ia.processoOtimizar = "Qualificação automática de leads que chegam pelo WhatsApp e agendamento de demonstrações com executivos de vendas.";
+  S.ia.kpis = "Tempo de primeira resposta inferior a 10s, taxa de conversão para reunião > 35% e qualificação de CNPJ/volume em 100% dos leads.";
+  S.ia.idiomas = ["Português (Brasil)", "Inglês"];
   S.ia.publicoAlvo = "Novos clientes e empresas interessadas em contratação e orçamentos B2B.";
   S.ia.problema = "Perda de leads fora do horário comercial e demora na qualificação de propostas.";
-  S.ia.kpis = "Agilidade na resposta (< 10s) e coleta obrigatória de CNPJ, volume de usuários e decisor.";
   S.ia.habilidades = "- Apresentação dos planos e módulos da plataforma\n- Envio de cases de sucesso e catálogo de serviços\n- Agendamento de demonstração com o time comercial";
-  S.ia.restricoes = "- Não conceder descontos acima da tabela padrão sem autorização da diretoria\n- Não firmar contratos sem assinatura jurídica";
+  S.ia.assuntosTransbordo = "- Propostas customizadas acima de 50 licenças (Enterprise)\n- Negociações contratuais com solicitação de minuta jurídica\n- Pedido explícito para falar com um executivo de contas";
+  S.ia.restricoes = "- Não conceder descontos acima da tabela padrão sem autorização da diretoria\n- Não firmar contratos sem assinatura jurídica\n- Não divulgar informações financeiras de outros clientes";
   const defSetor = S.operacao.setores[0]?.nome || "";
   const comSetor = S.operacao.setores.find(s => /comercial|vendas/i.test(s.nome))?.nome || defSetor;
   S.ia.smartJump = [
     { categoria: "Orçamento Grande / Enterprise", gatilhos: "proposta personalizada, mais de 50 agentes, enterprise", destino: comSetor },
     { categoria: "Falar com Consultor", gatilhos: "consultor comercial, vendedor, negociar, proposta", destino: comSetor }
   ];
-  S.ia.preAtendimento = [
-    { fluxo: "Qualificação Comercial", pergunta: "Qual o nome da sua empresa?" },
-    { fluxo: "Qualificação Comercial", pergunta: "Quantos operadores vão utilizar a plataforma?" },
-    { fluxo: "Qualificação Comercial", pergunta: "Qual o seu cargo na empresa?" }
-  ];
+  loadPreAtendComercial();
   draw();
   toast("Modelo Comercial / Vendas aplicado com sucesso!");
 }

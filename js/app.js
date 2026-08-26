@@ -70,6 +70,8 @@ function drawSum() {
   const pend = allPending();
   const diag = avaliarTierIa();
   const line = (k, v, dim) => `<div class="sline"><span class="k">${k}</span><span class="v ${dim ? "dim" : ""}">${esc(v)}</span></div>`;
+  const totalFluxos = (S.ia.fluxosPreAtendimento || []).length;
+  const totalPassos = (S.ia.fluxosPreAtendimento || []).reduce((acc, f) => acc + (f.passos || []).filter(Boolean).length, 0);
 
   sumEl.innerHTML = `
     <h3>IA Auditora (OpenAI 5.6 Sol)</h3>
@@ -91,7 +93,7 @@ function drawSum() {
       </div>
       <div style="font-size:11px;color:#5F818B;display:flex;justify-content:space-between">
         <span>Densidade: ${S.ia.habilidades.length > 120 ? 'Alta' : 'Moderada'}</span>
-        <span>Transbordo: ${S.ia.smartJump.length} regras</span>
+        <span>Transbordo: ${(S.ia.smartJump || []).length} regras</span>
       </div>
     </div>
 
@@ -107,8 +109,9 @@ function drawSum() {
     </div>
 
     ${line("Nome do Agente", S.ia.nome || "—", !S.ia.nome)}
-    ${line("Gatilhos Smart Jump", `${S.ia.smartJump.length} cadastrado(s)`, !S.ia.smartJump.length)}
-    ${line("Pré-Qualificação", `${S.ia.preAtendimento.length} etapa(s)`, !S.ia.preAtendimento.length)}
+    ${line("Gatilhos Smart Jump", `${(S.ia.smartJump || []).length} cadastrado(s)`, !(S.ia.smartJump || []).length)}
+    ${line("Fluxos de Triagem", `${totalFluxos} fluxo(s) · ${totalPassos} passo(s)`, !totalPassos)}
+    ${line("Base Conhecimento", S.ia.baseUrl ? "Vinculada" : "Pendente", !S.ia.baseUrl)}
     ${line("Integração de Sistema", S.contrato.integracao ? (S.integ.sistema || "Aguardando") : "Não contratado", !S.integ.sistema)}
 
     <button class="btn btn-p" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#0C7A83,#075158);border:0;display:flex;align-items:center;justify-content:center;gap:6px" onclick="abrirModalPromptFinal()">
