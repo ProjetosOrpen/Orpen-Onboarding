@@ -362,11 +362,6 @@ const BLOCKS = [
 
       if (etapa === 1) {
         contentHtml = `
-          <!-- SEÇÃO 1: ALINHAMENTO DE EXPECTATIVAS -->
-          <div class="sect" style="margin-top:0;padding-top:0;border-top:0">
-            <h3>1. Alinhamento de Expectativas</h3>
-            <p>${curStep.desc}</p>
-          </div>
           <div class="f">
             <label>Qual processo você gostaria de otimizar com a IA? <span class="req">*</span></label>
             ${fta("ia.processoOtimizar", "Ex.: Atendimento inicial no WhatsApp, esclarecimento de dúvidas repetitivas de convênios/preparo de exames e triagem prévia de agendamento antes de transferir para a equipe humana.")}
@@ -390,11 +385,6 @@ const BLOCKS = [
         `;
       } else if (etapa === 2) {
         contentHtml = `
-          <!-- SEÇÃO 2: PERSONA -->
-          <div class="sect" style="margin-top:0;padding-top:0;border-top:0">
-            <h3>2. Identidade, Persona e Diretrizes de Comunicação</h3>
-            <p>${curStep.desc}</p>
-          </div>
           <div class="grid2">
             ${fi("Nome da IA", "ia.nome", "text", "Ex.: Luna, Ires, Sofia, Max")}
             <div class="f"><label>Tamanho médio das respostas <span class="req">*</span></label><div class="opts">
@@ -436,11 +426,6 @@ const BLOCKS = [
         `;
       } else if (etapa === 3) {
         contentHtml = `
-          <!-- SEÇÃO 3: CONTEXTO DO NEGÓCIO E OBJETIVOS -->
-          <div class="sect" style="margin-top:0;padding-top:0;border-top:0">
-            <h3>3. Contexto do Negócio e Objetivos</h3>
-            <p>${curStep.desc}</p>
-          </div>
           <div class="f"><label>Tópicos que a IA resolve sozinha (Autonomia Total) <span class="req">*</span></label>
             ${fta("ia.habilidades", "Ex.:\n- Endereço e horários de funcionamento das unidades\n- Relação de convênios atendidos e planos aceitos\n- Orientações e preparos básicos de exames\n- Envio de links seguros para agendamento online")}
             <span class="hint">Assuntos em que a IA responde e conclui a dúvida do cliente sem precisar de atendente.</span>
@@ -470,11 +455,6 @@ const BLOCKS = [
         `;
       } else if (etapa === 4) {
         contentHtml = `
-          <!-- SEÇÃO 4: ROTEAMENTO INTELIGENTE (SMART JUMP) E FILAS -->
-          <div class="sect" style="margin-top:0;padding-top:0;border-top:0">
-            <h3>4. Roteamento Inteligente (Smart Jump) e Filas</h3>
-            <p>${curStep.desc}</p>
-          </div>
           ${!S.operacao.setores.length ? `<div class="note warn">Cadastre os setores no bloco de Horário e Filas para vinculá-los aqui como destinos de transbordo.</div>` : ""}
           ${a.smartJump.length ? `<table><thead><tr><th style="width:28%">Categoria / Intenção</th><th style="width:42%">Gatilhos (palavras-chave separadas por vírgula)</th><th>Fila / Ação</th><th style="width:36px"></th></tr></thead><tbody>
             ${a.smartJump.map((r, i) => `<tr>
@@ -496,12 +476,6 @@ const BLOCKS = [
         `;
       } else if (etapa === 5) {
         contentHtml = `
-          <!-- SEÇÃO 5: PRÉ-ATENDIMENTO E COLETA SEQUENCIAL POR FLUXO -->
-          <div class="sect" style="margin-top:0;padding-top:0;border-top:0">
-            <h3>5. Pré-Atendimento e Coleta Sequencial de Dados</h3>
-            <p>${curStep.desc}</p>
-          </div>
-          
           <div style="margin-bottom:20px">
             ${fluxos.map((f, fi) => `
               <div class="flow-card">
@@ -566,11 +540,6 @@ const BLOCKS = [
         `;
       } else if (etapa === 6) {
         contentHtml = `
-          <!-- SEÇÃO 6: INATIVIDADE E ENCERRAMENTO -->
-          <div class="sect" style="margin-top:0;padding-top:0;border-top:0">
-            <h3>6. Inatividade, Encerramento e Contingência</h3>
-            <p>${curStep.desc}</p>
-          </div>
           <div class="grid3">
             <div class="f"><label>Tempo limite de inatividade</label><div class="opts">
               ${["5|5 min", "10|10 min", "15|15 min", "30|30 min"].map(x => {
@@ -600,12 +569,6 @@ const BLOCKS = [
         `;
       } else if (etapa === 7) {
         contentHtml = `
-          <!-- SEÇÃO 7: BASE DE CONHECIMENTO E GOVERNANÇA -->
-          <div class="sect" style="margin-top:0;padding-top:0;border-top:0">
-            <h3>7. Base de Conhecimento e Governança</h3>
-            <p>${curStep.desc}</p>
-          </div>
-          
           <div class="grid2">
             ${fi("Site ou página com as informações oficiais", "ia.baseUrl", "text", "https://suaempresa.com.br")}
             <div class="f"><label>Qual a frequência de atualização da FAQ?</label><div class="opts">
@@ -668,27 +631,31 @@ const BLOCKS = [
       }
 
       return `<div class="card">
-        <p class="eyebrow">Inteligência Artificial · Etapa ${etapa} de 7</p>
-        <h2>Configuração do Assistente de IA</h2>
-        <p class="lede">Preencha cada uma das 7 etapas sequenciais para calibrar a persona, limites de transbordo e a base de conhecimento.</p>
+        <div class="ia-step-header">
+          <div class="ia-step-header-top">
+            <div class="ia-step-badge-group">
+              <span class="ia-step-tag">Etapa ${etapa} de 7</span>
+              <h2 class="ia-step-title-text">${curStep.full}</h2>
+            </div>
+            <div class="ia-step-progress-container" title="${Math.round((etapa / 7) * 100)}% concluído">
+              <div class="ia-step-line-track">
+                <div class="ia-step-line-fill" style="width: ${Math.round((etapa / 7) * 100)}%"></div>
+              </div>
+              <span class="ia-step-pct-val">${Math.round((etapa / 7) * 100)}%</span>
+            </div>
+          </div>
 
-        <div class="ia-stepper-wrap">
-          <div class="ia-stepper-head">
-            <span class="ia-stepper-title">${curStep.full}</span>
-            <span class="ia-stepper-pct">Etapa ${etapa} de 7 (${Math.round((etapa / 7) * 100)}%)</span>
-          </div>
-          <div class="ia-stepper-bar">
-            <div class="ia-stepper-bar-fill" style="width: ${Math.round((etapa / 7) * 100)}%"></div>
-          </div>
-          <div class="ia-stepper">
+          <div class="ia-mini-steps">
             ${subSteps.map(s => `
-              <button class="ia-step-btn ${etapa === s.n ? 'active' : ''} ${isIaStepDone(s.n) ? 'done' : ''}" onclick="setIaSubStep(${s.n})" title="${esc(s.full)}">
-                <span class="ia-step-num">${isIaStepDone(s.n) ? '✓' : s.n}</span>
-                <span class="ia-step-lbl">${esc(s.lbl)}</span>
+              <button type="button" class="ia-mini-step-btn ${etapa === s.n ? 'active' : ''} ${isIaStepDone(s.n) ? 'done' : ''}" onclick="setIaSubStep(${s.n})" title="${esc(s.full)}">
+                <span class="ia-mini-step-dot">${isIaStepDone(s.n) ? '✓' : s.n}</span>
+                <span class="ia-mini-step-name">${esc(s.lbl.replace(/^\d+\.\s*/, ''))}</span>
               </button>
             `).join("")}
           </div>
         </div>
+
+        <p class="lede" style="margin-top:-6px;margin-bottom:18px;font-size:13px">${curStep.desc}</p>
 
         ${contentHtml}
       </div>`;

@@ -834,118 +834,147 @@ td input, td select {
   }
 }
 
-/* ---------- Novos Estilos da Aba Assistente de IA ---------- */
-.ia-stepper-wrap {
-  margin-bottom: 22px;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  padding: 14px 16px;
+/* ---------- Header Compacto da Aba Assistente de IA ---------- */
+.ia-step-header {
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1.5px solid var(--line);
 }
-.ia-stepper-head {
+
+.ia-step-header-top {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
 }
-.ia-stepper-title {
-  font-size: 12px;
+
+.ia-step-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ia-step-tag {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
   font-weight: 700;
   color: var(--signal-deep);
-  letter-spacing: .05em;
+  background: var(--signal-soft);
+  padding: 4px 9px;
+  border-radius: 6px;
+  letter-spacing: .04em;
   text-transform: uppercase;
 }
-.ia-stepper-pct {
-  font-size: 11.5px;
-  font-family: 'IBM Plex Mono', monospace;
-  color: var(--muted);
-  font-weight: 600;
+
+.ia-step-title-text {
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
 }
-.ia-stepper-bar {
-  width: 100%;
+
+.ia-step-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 170px;
+  flex: 0 1 230px;
+}
+
+.ia-step-line-track {
+  flex: 1;
   height: 6px;
   background: #E5E0F2;
   border-radius: 99px;
   overflow: hidden;
-  margin-bottom: 12px;
 }
-.ia-stepper-bar-fill {
+
+.ia-step-line-fill {
   height: 100%;
   background: linear-gradient(90deg, #9333EA, #7C3AED);
   border-radius: 99px;
   transition: width .3s ease;
 }
-.ia-stepper {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-}
-.ia-step-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 4px;
-  background: #fff;
-  border: 1.5px solid var(--line);
-  border-radius: 8px;
-  padding: 8px 4px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--ink-2);
-  cursor: pointer;
-  transition: all .15s;
-}
-.ia-step-btn:hover {
-  border-color: var(--signal);
-  background: var(--signal-soft);
-}
-.ia-step-btn.active {
-  background: #EDE9FE;
-  border-color: var(--signal);
+
+.ia-step-pct-val {
+  font-size: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
   color: var(--signal-deep);
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
+  min-width: 36px;
+  text-align: right;
 }
-.ia-step-num {
-  width: 22px;
-  height: 22px;
+
+.ia-mini-steps {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.ia-mini-steps::-webkit-scrollbar {
+  display: none;
+}
+
+.ia-mini-step-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s ease;
+}
+
+.ia-mini-step-btn:hover {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+
+.ia-mini-step-btn.active {
+  background: var(--signal-soft);
+  color: var(--signal-deep);
+  font-weight: 600;
+  border-color: #DDD6FE;
+}
+
+.ia-mini-step-btn.done {
+  color: var(--ink-2);
+}
+
+.ia-mini-step-dot {
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  background: #F0ECF8;
+  background: #E5E0F2;
   color: var(--muted);
   display: grid;
   place-items: center;
-  font-size: 11px;
+  font-size: 9.5px;
   font-family: 'IBM Plex Mono', monospace;
   font-weight: 700;
-  transition: all .15s;
 }
-.ia-step-btn.active .ia-step-num {
+
+.ia-mini-step-btn.active .ia-mini-step-dot {
   background: var(--signal);
   color: #fff;
 }
-.ia-step-btn.done .ia-step-num {
+
+.ia-mini-step-btn.done .ia-mini-step-dot {
   background: #10B981;
   color: #fff;
-}
-.ia-step-lbl {
-  line-height: 1.2;
-  font-size: 10.5px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-@media (max-width: 900px) {
-  .ia-stepper {
-    display: flex;
-    overflow-x: auto;
-    padding-bottom: 4px;
-  }
-  .ia-step-btn {
-    min-width: 95px;
-    flex-shrink: 0;
-  }
 }
 
 /* ---------- Interactive Chips & Quick Templates ---------- */
