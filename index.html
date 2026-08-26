@@ -2433,19 +2433,6 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
           const arquivos = a.arquivos || [];
 
           return `<div class="card">
-            <div class="auditor-banner">
-              <div class="auditor-avatar">🤖</div>
-              <div class="auditor-content">
-                <h4>IA Auditora ORPEN (OpenAI 5.6 Sol) Ativa</h4>
-                <p>Estou analisando a construção do seu assistente em tempo real. Avalio ambiguidades nas regras de atendimento, densidade de contexto e determino o plano ideal para sua operação.</p>
-                <div class="auditor-actions">
-                  <button class="auditor-chip" onclick="aplicarPerfilClinica()">🏥 Modelo Clínicas / Saúde</button>
-                  <button class="auditor-chip" onclick="aplicarPerfilComercial()">💼 Modelo Comercial / Vendas</button>
-                  <button class="auditor-chip" onclick="otimizarIaAuditora()">✨ Otimizar Prompt com IA Auditora</button>
-                </div>
-              </div>
-            </div>
-
             <p class="eyebrow">Inteligência Artificial</p>
             <h2>Configuração e regras do Assistente de IA</h2>
             <p class="lede">Estrutura completa para geração determinística do prompt de produção, triagem de filas, limites anti-alucinação e transbordo.</p>
@@ -2667,64 +2654,6 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
             <div class="grid2">
               ${fi("Nome do Responsável", "ia.faqRespNome", "text", "Ex.: Mariana Souza")}
               ${fi("E-mail do Responsável", "ia.faqRespEmail", "email", "Ex.: mariana.souza@hospitalexemplo.com.br")}
-            </div>
-
-            <div class="navrow" style="margin-top:20px">
-              <button class="btn btn-p" onclick="abrirModalPromptFinal()">👁️ Visualizar System Prompt Compilado</button>
-            </div>
-
-            ${nav()}
-          </div>`;
-        }
-      },
-
-      {
-        id: "ia_chat", nome: "IA Conversacional 100% (5.6 Sol)", when: () => S.contrato.ia,
-        check() {
-          const p = [];
-          if (!S.ia.nome || !S.ia.habilidades) p.push("Concluir conversa com a IA Auditora");
-          return p;
-        },
-        render() {
-          return `<div class="card">
-            <div class="auditor-banner">
-              <div class="auditor-avatar">🤖</div>
-              <div class="auditor-content">
-                <h4>Auditoria Conversacional 100% Guiada (OpenAI 5.6 Sol)</h4>
-                <p>Neste modo, você não precisa preencher campos manuais. A IA Auditora conversa com você, tira dúvidas, elimina ambiguidades e vai preenchendo as configurações do seu assistente em tempo real.</p>
-              </div>
-            </div>
-
-            <div class="chat-container">
-              <div class="chat-cfg-bar">
-                <div style="display:flex;align-items:center;gap:8px">
-                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ADE80"></span>
-                  <b>Motor: OpenAI 5.6 Sol</b>
-                </div>
-                <div style="display:flex;align-items:center;gap:8px">
-                  <label style="color:#A4C4CE;font-size:11.5px">Chave OpenAI (sk-...):</label>
-                  <input type="password" id="sk_key_input" placeholder="sk-proj-..." value="${esc(getOpenAIKey())}" oninput="salvarOpenAIKey(this.value)" title="Insira sua chave sk da OpenAI para chamadas em tempo real">
-                </div>
-              </div>
-
-              <div class="chat-stream" id="chat_stream">
-                ${renderChatMessages()}
-              </div>
-
-              <div class="chat-quick-chips" id="chat_quick_chips">
-                ${renderChatQuickChips()}
-              </div>
-
-              <div class="chat-input-row">
-                <textarea id="chat_user_input" placeholder="Digite sua resposta para a IA Auditora... (Pressione Enter para enviar)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarChatUser()}"></textarea>
-                <button class="btn btn-p" style="padding:10px 18px" onclick="enviarChatUser()">Enviar</button>
-              </div>
-            </div>
-
-            <div class="navrow" style="margin-top:16px">
-              <button class="btn btn-s" onclick="reiniciarChatAuditora()">↺ Reiniciar Conversa</button>
-              <button class="btn btn-p" onclick="abrirModalPromptFinal()">👁️ Visualizar Prompt Final da IA</button>
-              <span class="hint sp">O painel lateral direito é atualizado automaticamente a cada resposta.</span>
             </div>
 
             ${nav()}
