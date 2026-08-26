@@ -74,6 +74,8 @@ const S = {
     whatsback: false
   },
   ia: {
+    _etapa: 1, // Sub-etapa ativa (1 a 7)
+
     // 1. Alinhamento de Expectativas
     processoOtimizar: "Atendimento inicial, triagem ágil de agendamentos e esclarecimento de dúvidas frequentes sobre convênios e preparo de exames.",
     kpis: "Resolução rápida no 1º contato (>40%), redução do tempo médio de espera e dados 100% qualificados antes do transbordo.",
@@ -253,7 +255,23 @@ function sugerirM01() {
 function sugerirM02() {
   S.whats.m02 = `Olá! Nosso atendimento funciona ${S.operacao.diasSem ? "de segunda a sexta, das " + S.operacao.diasSem : "em horário comercial"}.\nDeixe sua mensagem que retornamos no próximo dia útil.`; draw();
 }
-function togCaso(c) { const a = S.integ.casos, i = a.indexOf(c); i < 0 ? a.push(c) : a.splice(i, 1); draw(); }
+function setIaSubStep(n) {
+  S.ia._etapa = Math.max(1, Math.min(7, n));
+  draw();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function isIaStepDone(n) {
+  const a = S.ia;
+  if (n === 1) return !!(a.processoOtimizar && a.processoOtimizar.trim() && a.kpis && a.kpis.trim());
+  if (n === 2) return !!(a.nome && a.nome.trim() && a.tom && a.tom.length && a.extensaoResp);
+  if (n === 3) return !!(a.habilidades && a.habilidades.trim() && a.restricoes && a.restricoes.trim());
+  if (n === 4) return !!(a.smartJump && a.smartJump.length);
+  if (n === 5) return !!(a.fluxosPreAtendimento && a.fluxosPreAtendimento.length && a.filaFallback);
+  if (n === 6) return !!(a.inatTempo && a.inatAcao);
+  if (n === 7) return !!(a.baseUrl || (a.arquivos && a.arquivos.length) || (a.faqTexto && a.faqTexto.trim()) || a.faqRespNome);
+  return false;
+}
 
 function togIaTom(t) { const a = S.ia.tom, i = a.indexOf(t); i < 0 ? a.push(t) : a.splice(i, 1); draw(); }
 function togIaIdioma(l) { const a = S.ia.idiomas || (S.ia.idiomas = []); const i = a.indexOf(l); i < 0 ? a.push(l) : a.splice(i, 1); draw(); }

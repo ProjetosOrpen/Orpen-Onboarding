@@ -340,237 +340,357 @@ const BLOCKS = [
     },
     render() {
       const a = S.ia;
+      const etapa = a._etapa || 1;
       const setOpts = v => `<option value="">Escolha a fila / DAC…</option>` + S.operacao.setores.map(s => `<option value="${esc(s.nome)}" ${v === s.nome ? "selected" : ""}>${esc(s.nome)} · DAC ${esc(s.dac)}</option>`).join("");
       const idi = a.idiomas || ["Português (Brasil)"];
       const fluxos = a.fluxosPreAtendimento || [];
       const links = a.linksAdicionais || [];
       const arquivos = a.arquivos || [];
 
-      return `<div class="card">
-        <p class="eyebrow">Inteligência Artificial</p>
-        <h2>Configuração e regras do Assistente de IA</h2>
-        <p class="lede">Estrutura completa para geração determinística do prompt de produção, triagem de filas, limites anti-alucinação e transbordo.</p>
+      const subSteps = [
+        { n: 1, lbl: "1. Expectativas", full: "1. Alinhamento de Expectativas", desc: "Qual o objetivo central e qual indicador define o sucesso do projeto." },
+        { n: 2, lbl: "2. Persona", full: "2. Identidade, Persona e Diretrizes de Comunicação", desc: "Como o assistente se apresenta, quais idiomas fala e como formata mensagens." },
+        { n: 3, lbl: "3. Contexto & Regras", full: "3. Contexto do Negócio e Objetivos", desc: "Defina o que a IA resolve com autonomia total, o que deve transbordar e o que ela nunca deve fazer." },
+        { n: 4, lbl: "4. Smart Jump", full: "4. Roteamento Inteligente (Smart Jump) e Filas", desc: "Gatilhos imediatos que cortam o menu e transferem para filas específicas." },
+        { n: 5, lbl: "5. Pré-Atendimento", full: "5. Pré-Atendimento e Coleta Sequencial de Dados", desc: "Roteiro de perguntas sequenciais (uma por vez) que a IA realiza para qualificar o atendimento antes de transferir ao atendente, estruturado por cada fluxo." },
+        { n: 6, lbl: "6. Inatividade", full: "6. Inatividade, Encerramento e Contingência", desc: "Controle de tempo e ação quando o cliente para de responder." },
+        { n: 7, lbl: "7. Conhecimento", full: "7. Base de Conhecimento e Governança", desc: "Fontes de dados oficiais, procedimentos, arquivos anexos e responsáveis de contato." }
+      ];
+      const curStep = subSteps[etapa - 1] || subSteps[0];
 
-        <!-- SEÇÃO 1: ALINHAMENTO DE EXPECTATIVAS -->
-        <div class="sect"><h3>1. Alinhamento de Expectativas</h3><p>Qual o objetivo central e qual indicador define o sucesso do projeto.</p></div>
-        <div class="f">
-          <label>Qual processo você gostaria de otimizar com a IA?</label>
-          ${fta("ia.processoOtimizar", "Ex.: Atendimento inicial no WhatsApp, esclarecimento de dúvidas repetitivas de convênios/preparo de exames e triagem prévia de agendamento antes de transferir para a equipe humana.")}
-          <div class="navrow" style="margin-top:4px">
-            <span class="hint">Sugestões rápidas:</span>
-            <button class="btn-g" onclick="appendIaField('ia.processoOtimizar','Reduzir o tempo de espera no WhatsApp e triar pacientes')">+ Triagem de Pacientes</button>
-            <button class="btn-g" onclick="appendIaField('ia.processoOtimizar','Qualificar leads comerciais e agendar demonstrações')">+ Qualificação de Leads</button>
-            <button class="btn-g" onclick="appendIaField('ia.processoOtimizar','Atendimento de dúvidas frequentes 24/7 sem sobrecarregar a recepção')">+ Atendimento 24/7</button>
+      let contentHtml = "";
+
+      if (etapa === 1) {
+        contentHtml = `
+          <!-- SEÇÃO 1: ALINHAMENTO DE EXPECTATIVAS -->
+          <div class="sect" style="margin-top:0;padding-top:0;border-top:0">
+            <h3>1. Alinhamento de Expectativas</h3>
+            <p>${curStep.desc}</p>
           </div>
-        </div>
-        <div class="f">
-          <label>Qual métrica de sucesso você deseja atingir com essa implementação?</label>
-          ${fta("ia.kpis", "Ex.: Taxa de resolução no 1º contato acima de 40%, redução do Tempo Médio de Espera (TME) em 50%, nota CSAT/NPS superior a 4.5 e zero transbordos sem qualificação prévia.")}
-        </div>
+          <div class="f">
+            <label>Qual processo você gostaria de otimizar com a IA? <span class="req">*</span></label>
+            ${fta("ia.processoOtimizar", "Ex.: Atendimento inicial no WhatsApp, esclarecimento de dúvidas repetitivas de convênios/preparo de exames e triagem prévia de agendamento antes de transferir para a equipe humana.")}
+            <div class="chip-row">
+              <span class="chip-label">Sugestões rápidas:</span>
+              <button type="button" class="btn-chip" onclick="appendIaField('ia.processoOtimizar','Reduzir o tempo de espera no WhatsApp e triar pacientes')">💡 Triagem de Pacientes</button>
+              <button type="button" class="btn-chip" onclick="appendIaField('ia.processoOtimizar','Qualificar leads comerciais e agendar demonstrações')">💡 Qualificação de Leads</button>
+              <button type="button" class="btn-chip" onclick="appendIaField('ia.processoOtimizar','Atendimento de dúvidas frequentes 24/7 sem sobrecarregar a recepção')">💡 Atendimento 24/7</button>
+            </div>
+          </div>
+          <div class="f">
+            <label>Qual métrica de sucesso você deseja atingir com essa implementação? <span class="req">*</span></label>
+            ${fta("ia.kpis", "Ex.: Taxa de resolução no 1º contato acima de 40%, redução do Tempo Médio de Espera (TME) em 50%, nota CSAT/NPS superior a 4.5 e zero transbordos sem qualificação prévia.")}
+          </div>
 
-        <!-- SEÇÃO 2: PERSONA -->
-        <div class="sect"><h3>2. Identidade, Persona e Diretrizes de Comunicação</h3><p>Como o assistente se apresenta, quais idiomas fala e como formata mensagens.</p></div>
-        <div class="grid2">
-          ${fi("Nome da IA", "ia.nome", "text", "Ex.: Luna, Ires, Sofia, Max")}
-          <div class="f"><label>Tamanho médio das respostas <span class="req">*</span></label><div class="opts">
-            ${["curta|Curta (2 a 3 frases)", "media|Média (4 a 6 linhas)", "flexivel|Flexível"].map(x => {
-              const [v, l] = x.split("|");
-              return `<button class="opt sm" aria-pressed="${a.extensaoResp === v}" onclick="S.ia.extensaoResp='${v}';draw()">${l}</button>`;
-            }).join("")}
+          <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
+            <button class="btn btn-s" onclick="prev()">← Bloco Anterior</button>
+            <div class="sp"></div>
+            <button class="btn btn-p" onclick="setIaSubStep(2)">Continuar: 2. Persona & Diretrizes →</button>
+          </div>
+        `;
+      } else if (etapa === 2) {
+        contentHtml = `
+          <!-- SEÇÃO 2: PERSONA -->
+          <div class="sect" style="margin-top:0;padding-top:0;border-top:0">
+            <h3>2. Identidade, Persona e Diretrizes de Comunicação</h3>
+            <p>${curStep.desc}</p>
+          </div>
+          <div class="grid2">
+            ${fi("Nome da IA", "ia.nome", "text", "Ex.: Luna, Ires, Sofia, Max")}
+            <div class="f"><label>Tamanho médio das respostas <span class="req">*</span></label><div class="opts">
+              ${["curta|Curta (2 a 3 frases)", "media|Média (4 a 6 linhas)", "flexivel|Flexível"].map(x => {
+                const [v, l] = x.split("|");
+                return `<button class="opt sm" aria-pressed="${a.extensaoResp === v}" onclick="S.ia.extensaoResp='${v}';draw()">${l}</button>`;
+              }).join("")}
+            </div></div>
+          </div>
+          <div class="f"><label>Tom de Voz <span class="req">*</span></label><div class="opts">
+            ${["Cordial e acolhedor", "Formal e institucional", "Direto e objetivo", "Técnico e consultivo"].map(t =>
+              `<button class="opt sm" aria-pressed="${(a.tom || []).includes(t)}" onclick="togIaTom('${t}')">${t}</button>`).join("")}
           </div></div>
-        </div>
-        <div class="f"><label>Tom de Voz <span class="req">*</span></label><div class="opts">
-          ${["Cordial e acolhedor", "Formal e institucional", "Direto e objetivo", "Técnico e consultivo"].map(t =>
-            `<button class="opt sm" aria-pressed="${(a.tom || []).includes(t)}" onclick="togIaTom('${t}')">${t}</button>`).join("")}
-        </div></div>
 
-        <div class="f">
-          <label>Idiomas falados pela IA</label>
-          <div class="opts" style="margin-bottom:8px">
-            ${["Português (Brasil)", "Inglês", "Espanhol", "Francês"].map(lang =>
-              `<button class="opt sm" aria-pressed="${idi.includes(lang)}" onclick="togIaIdioma('${lang}')">${lang}</button>`).join("")}
+          <div class="f">
+            <label>Idiomas falados pela IA</label>
+            <div class="opts" style="margin-bottom:8px">
+              ${["Português (Brasil)", "Inglês", "Espanhol", "Francês"].map(lang =>
+                `<button class="opt sm" aria-pressed="${idi.includes(lang)}" onclick="togIaIdioma('${lang}')">${lang}</button>`).join("")}
+            </div>
+            <input type="text" placeholder="Outro idioma — digite e pressione Enter para adicionar" onkeydown="if(event.key==='Enter'){event.preventDefault();addIaIdiomaCustom(this.value);this.value=''}">
           </div>
-          <input type="text" placeholder="Outro idioma — digite e pressione Enter para adicionar" onkeydown="if(event.key==='Enter'){event.preventDefault();addIaIdiomaCustom(this.value);this.value=''}">
-        </div>
 
-        <div class="grid2">
-          <div class="f"><label>Uso de Emojis</label><div class="opts">
-            ${["nenhum|Sem emojis", "moderado|Moderado (máx 1)", "livre|Humanizado / Livre"].map(x => {
-              const [v, l] = x.split("|");
-              return `<button class="opt sm" aria-pressed="${a.emojiUso === v}" onclick="S.ia.emojiUso='${v}';draw()">${l}</button>`;
-            }).join("")}
-          </div></div>
-          ${a.emojiUso !== "nenhum" ? fi("Emojis permitidos / restrições", "ia.emojisPermitidos", "text", "Ex.: Permitidos: 💙, 👋, 🏥, ✅ | Proibidos: ❤️, 😂") : ""}
-        </div>
-
-        <!-- SEÇÃO 3: CONTEXTO DO NEGÓCIO E OBJETIVOS -->
-        <div class="sect"><h3>3. Contexto do Negócio e Objetivos</h3><p>Defina o que a IA resolve com autonomia total, o que deve transbordar e o que ela nunca deve fazer.</p></div>
-        <div class="f"><label>Tópicos que a IA resolve sozinha (Autonomia Total) <span class="req">*</span></label>
-          ${fta("ia.habilidades", "Ex.:\n- Endereço e horários de funcionamento das unidades\n- Relação de convênios atendidos e planos aceitos\n- Orientações e preparos básicos de exames\n- Envio de links seguros para agendamento online")}
-          <span class="hint">Assuntos em que a IA responde e conclui a dúvida do cliente sem precisar de atendente.</span>
-        </div>
-
-        <div class="f"><label>Quais assuntos ela deve passar ao atendente? (Transbordo Humano)</label>
-          ${fta("ia.assuntosTransbordo", "Ex.:\n- Casos de emergência médica, dor aguda ou risco à vida\n- Negociações financeiras complexas ou faturamento de contas\n- Procedimentos cirúrgicos ou autorizações especiais de guias\n- Pedido explícito do cliente para falar com um atendente")}
-          <span class="hint">Gatilhos que devem acionar a transferência para um operador humano.</span>
-        </div>
-
-        <div class="grid2">
-          <div class="f"><label>O que ela NUNCA deve fazer (Restrições / Anti-Alucinação) <span class="req">*</span></label>
-            ${fta("ia.restricoes", "Ex.:\n- Proibido dar parecer médico, diagnósticos ou interpretar exames\n- Não confirmar cobertura sem consulta à operadora\n- Não prometer procedimentos cirúrgicos ou descontos fora da tabela")}
-            <span class="hint">Regra mandatória de segurança jurídica e operacional.</span>
+          <div class="grid2">
+            <div class="f"><label>Uso de Emojis</label><div class="opts">
+              ${["nenhum|Sem emojis", "moderado|Moderado (máx 1)", "livre|Humanizado / Livre"].map(x => {
+                const [v, l] = x.split("|");
+                return `<button class="opt sm" aria-pressed="${a.emojiUso === v}" onclick="S.ia.emojiUso='${v}';draw()">${l}</button>`;
+              }).join("")}
+            </div></div>
+            ${a.emojiUso !== "nenhum" ? fi("Emojis permitidos / restrições", "ia.emojisPermitidos", "text", "Ex.: Permitidos: 💙, 👋, 🏥, ✅ | Proibidos: ❤️, 😂") : ""}
           </div>
-          <div class="f"><label>Assuntos Fora de Escopo (Filtro Anti-Ruído)</label>
-            ${fta("ia.foraEscopo", "Ex.: Política, futebol, receitas caseiras, assuntos pessoais não relacionados à instituição.")}
-            <span class="hint">A IA recusa educadamente assuntos sem relação com o negócio.</span>
+
+          <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
+            <button class="btn btn-s" onclick="setIaSubStep(1)">← 1. Expectativas</button>
+            <div class="sp"></div>
+            <button class="btn btn-p" onclick="setIaSubStep(3)">Continuar: 3. Contexto & Regras →</button>
           </div>
-        </div>
+        `;
+      } else if (etapa === 3) {
+        contentHtml = `
+          <!-- SEÇÃO 3: CONTEXTO DO NEGÓCIO E OBJETIVOS -->
+          <div class="sect" style="margin-top:0;padding-top:0;border-top:0">
+            <h3>3. Contexto do Negócio e Objetivos</h3>
+            <p>${curStep.desc}</p>
+          </div>
+          <div class="f"><label>Tópicos que a IA resolve sozinha (Autonomia Total) <span class="req">*</span></label>
+            ${fta("ia.habilidades", "Ex.:\n- Endereço e horários de funcionamento das unidades\n- Relação de convênios atendidos e planos aceitos\n- Orientações e preparos básicos de exames\n- Envio de links seguros para agendamento online")}
+            <span class="hint">Assuntos em que a IA responde e conclui a dúvida do cliente sem precisar de atendente.</span>
+          </div>
 
-        <!-- SEÇÃO 4: ROTEAMENTO INTELIGENTE (SMART JUMP) E FILAS -->
-        <div class="sect"><h3>4. Roteamento Inteligente (Smart Jump) e Filas</h3><p>Gatilhos imediatos que cortam o menu e transferem para filas específicas.</p></div>
-        ${!S.operacao.setores.length ? `<div class="note warn">Cadastre os setores no bloco de Horário e Filas para vinculá-los aqui como destinos de transbordo.</div>` : ""}
-        ${a.smartJump.length ? `<table><thead><tr><th style="width:28%">Categoria / Intenção</th><th style="width:42%">Gatilhos (palavras-chave separadas por vírgula)</th><th>Fila / Ação</th><th style="width:36px"></th></tr></thead><tbody>
-          ${a.smartJump.map((r, i) => `<tr>
-            <td><input type="text" value="${esc(r.categoria)}" placeholder="Ex.: Emergência Médica" oninput="S.ia.smartJump[${i}].categoria=this.value;soft()"></td>
-            <td><input type="text" value="${esc(r.gatilhos)}" placeholder="Ex.: dor, sangramento, urgência" oninput="S.ia.smartJump[${i}].gatilhos=this.value;soft()"></td>
-            <td><select onchange="S.ia.smartJump[${i}].destino=this.value;soft()">${setOpts(r.destino)}</select></td>
-            <td><button class="rowdel" onclick="S.ia.smartJump.splice(${i},1);draw()">×</button></td></tr>`).join("")}
-        </tbody></table>` : `<div class="note info">Nenhuma regra de Smart Jump cadastrada. Clique abaixo para adicionar ou carregar o modelo.</div>`}
-        <div class="navrow" style="margin-top:10px">
-          <button class="btn btn-s" onclick="addSmartJump()">+ Regra Smart Jump</button>
-          <button class="btn-g" onclick="loadIaTemplates()">Carregar regras padrão de transbordo</button>
-        </div>
+          <div class="f"><label>Quais assuntos ela deve passar ao atendente? (Transbordo Humano)</label>
+            ${fta("ia.assuntosTransbordo", "Ex.:\n- Casos de emergência médica, dor aguda ou risco à vida\n- Negociações financeiras complexas ou faturamento de contas\n- Procedimentos cirúrgicos ou autorizações especiais de guias\n- Pedido explícito do cliente para falar com um atendente")}
+            <span class="hint">Gatilhos que devem acionar a transferência para um operador humano.</span>
+          </div>
 
-        <!-- SEÇÃO 5: PRÉ-ATENDIMENTO E COLETA SEQUENCIAL POR FLUXO -->
-        <div class="sect"><h3>5. Pré-Atendimento e Coleta Sequencial de Dados</h3><p>Roteiro de perguntas sequenciais (uma por vez) que a IA realiza para qualificar o atendimento antes de transferir ao atendente, estruturado por cada fluxo.</p></div>
-        
-        <div style="margin-bottom:16px">
-          ${fluxos.map((f, fi) => `
-            <div class="flow-card" style="background:var(--surface-2);border:1.5px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-bottom:14px">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
-                <div style="display:flex;align-items:center;gap:8px;flex:1">
-                  <span style="font-size:16px">🔀</span>
-                  <input type="text" value="${esc(f.nome)}" placeholder="Nome do Fluxo. Ex.: Consultas, Exames, Remarcações" oninput="setIaFluxoNome(${fi}, this.value)" style="font-weight:600;background:#fff;border:1.5px solid var(--line);font-size:13.5px">
+          <div class="grid2">
+            <div class="f"><label>O que ela NUNCA deve fazer (Restrições / Anti-Alucinação) <span class="req">*</span></label>
+              ${fta("ia.restricoes", "Ex.:\n- Proibido dar parecer médico, diagnósticos ou interpretar exames\n- Não confirmar cobertura sem consulta à operadora\n- Não prometer procedimentos cirúrgicos ou descontos fora da tabela")}
+              <span class="hint">Regra mandatória de segurança jurídica e operacional.</span>
+            </div>
+            <div class="f"><label>Assuntos Fora de Escopo (Filtro Anti-Ruído)</label>
+              ${fta("ia.foraEscopo", "Ex.: Política, futebol, receitas caseiras, assuntos pessoais não relacionados à instituição.")}
+              <span class="hint">A IA recusa educadamente assuntos sem relação com o negócio.</span>
+            </div>
+          </div>
+
+          <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
+            <button class="btn btn-s" onclick="setIaSubStep(2)">← 2. Persona</button>
+            <div class="sp"></div>
+            <button class="btn btn-p" onclick="setIaSubStep(4)">Continuar: 4. Smart Jump & Filas →</button>
+          </div>
+        `;
+      } else if (etapa === 4) {
+        contentHtml = `
+          <!-- SEÇÃO 4: ROTEAMENTO INTELIGENTE (SMART JUMP) E FILAS -->
+          <div class="sect" style="margin-top:0;padding-top:0;border-top:0">
+            <h3>4. Roteamento Inteligente (Smart Jump) e Filas</h3>
+            <p>${curStep.desc}</p>
+          </div>
+          ${!S.operacao.setores.length ? `<div class="note warn">Cadastre os setores no bloco de Horário e Filas para vinculá-los aqui como destinos de transbordo.</div>` : ""}
+          ${a.smartJump.length ? `<table><thead><tr><th style="width:28%">Categoria / Intenção</th><th style="width:42%">Gatilhos (palavras-chave separadas por vírgula)</th><th>Fila / Ação</th><th style="width:36px"></th></tr></thead><tbody>
+            ${a.smartJump.map((r, i) => `<tr>
+              <td><input type="text" value="${esc(r.categoria)}" placeholder="Ex.: Emergência Médica" oninput="S.ia.smartJump[${i}].categoria=this.value;soft()"></td>
+              <td><input type="text" value="${esc(r.gatilhos)}" placeholder="Ex.: dor, sangramento, urgência" oninput="S.ia.smartJump[${i}].gatilhos=this.value;soft()"></td>
+              <td><select onchange="S.ia.smartJump[${i}].destino=this.value;soft()">${setOpts(r.destino)}</select></td>
+              <td><button class="rowdel" onclick="S.ia.smartJump.splice(${i},1);draw()">×</button></td></tr>`).join("")}
+          </tbody></table>` : `<div class="note info">Nenhuma regra de Smart Jump cadastrada. Clique abaixo para adicionar ou carregar o modelo.</div>`}
+          <div class="navrow" style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+            <button type="button" class="btn btn-s" onclick="addSmartJump()">➕ Adicionar Regra Smart Jump</button>
+            <button type="button" class="btn-chip template" onclick="loadIaTemplates()">✨ Carregar Regras Padrão de Transbordo</button>
+          </div>
+
+          <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
+            <button class="btn btn-s" onclick="setIaSubStep(3)">← 3. Contexto & Regras</button>
+            <div class="sp"></div>
+            <button class="btn btn-p" onclick="setIaSubStep(5)">Continuar: 5. Pré-Atendimento →</button>
+          </div>
+        `;
+      } else if (etapa === 5) {
+        contentHtml = `
+          <!-- SEÇÃO 5: PRÉ-ATENDIMENTO E COLETA SEQUENCIAL POR FLUXO -->
+          <div class="sect" style="margin-top:0;padding-top:0;border-top:0">
+            <h3>5. Pré-Atendimento e Coleta Sequencial de Dados</h3>
+            <p>${curStep.desc}</p>
+          </div>
+          
+          <div style="margin-bottom:20px">
+            ${fluxos.map((f, fi) => `
+              <div class="flow-card">
+                <div class="flow-card-head">
+                  <div style="display:flex;align-items:center;gap:10px;flex:1">
+                    <span style="font-size:18px;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:var(--signal-soft);color:var(--signal-deep);flex-shrink:0">🔀</span>
+                    <div style="flex:1">
+                      <label style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin-bottom:2px;display:block">Nome do Fluxo ${fi + 1}</label>
+                      <input type="text" class="flow-title-input" value="${esc(f.nome)}" placeholder="Ex.: Consultas, Exames, Remarcações, Financeiro" oninput="setIaFluxoNome(${fi}, this.value)">
+                    </div>
+                  </div>
+                  <button class="rowdel" title="Excluir fluxo inteiro" onclick="delIaFluxo(${fi})" style="font-size:18px;margin-top:14px">×</button>
                 </div>
-                <button class="rowdel" title="Excluir fluxo inteiro" onclick="delIaFluxo(${fi})" style="font-size:18px">×</button>
-              </div>
 
-              <div style="margin-bottom:10px">
-                ${(f.passos || []).map((step, pi) => `
-                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-                    <span style="width:26px;height:26px;border-radius:6px;background:var(--signal-soft);color:var(--signal-deep);font-family:'IBM Plex Mono';font-size:11.5px;font-weight:600;display:grid;place-items:center;flex-shrink:0">
-                      ${pi + 1}
-                    </span>
-                    <input type="text" value="${esc(step)}" placeholder="Pergunta obrigatória da etapa (ex.: Qual o CPF do paciente?)" oninput="setIaPasso(${fi}, ${pi}, this.value)" style="background:#fff">
-                    <button class="rowdel" title="Remover este passo" onclick="delIaPasso(${fi}, ${pi})">×</button>
+                <div style="margin-bottom:12px">
+                  <label style="font-size:11.5px;font-weight:600;color:var(--ink-2);margin-bottom:6px;display:block">Perguntas Sequenciais (coletadas uma a uma pela IA antes do transbordo):</label>
+                  ${(f.passos || []).map((step, pi) => `
+                    <div class="step-item">
+                      <span class="step-num-badge">${pi + 1}</span>
+                      <input type="text" value="${esc(step)}" placeholder="Ex.: Qual o CPF do paciente? / Qual o convênio?" oninput="setIaPasso(${fi}, ${pi}, this.value)">
+                      <button class="rowdel" title="Remover este passo" onclick="delIaPasso(${fi}, ${pi})">×</button>
+                    </div>
+                  `).join("")}
+                </div>
+
+                <button type="button" class="btn-add-step" onclick="addIaPasso(${fi})">
+                  <span>➕</span> Adicionar Passo a este fluxo
+                </button>
+              </div>
+            `).join("")}
+
+            <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding:12px 14px;background:#fff;border:1.5px solid var(--line);border-radius:8px">
+              <button type="button" class="btn btn-s" onclick="addIaFluxo()" style="font-weight:600">
+                <span>➕</span> Adicionar Novo Fluxo
+              </button>
+              <div class="chip-row" style="margin-top:0">
+                <span class="chip-label">Modelos Prontos:</span>
+                <button type="button" class="btn-chip template" onclick="loadPreAtendSaude()">✨ Modelo de Saúde (Clínica/Hospital)</button>
+                <button type="button" class="btn-chip template" onclick="loadPreAtendComercial()">✨ Modelo Comercial / Vendas</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="f" style="background:#FFF8E8;border:1.5px solid #F5D485;border-radius:8px;padding:14px 16px;margin-top:18px">
+            <label style="color:#7C4A03;font-size:13px">Para qual fila levamos o cliente se a IA não identificar o assunto ou tiver alguma falha? <span class="req">*</span></label>
+            <p style="font-size:12px;color:#855C08;margin:0 0 8px">Fila de transbordo padrão caso o cliente fique fora dos fluxos previstos ou a IA não entenda a solicitação.</p>
+            <select onchange="S.ia.filaFallback=this.value;soft()" style="background:#fff">${setOpts(a.filaFallback)}</select>
+          </div>
+
+          <div class="f" style="margin-top:14px"><label>Tentativas sem entender antes de transferir por falha (Catch-All)</label><div class="opts">
+            ${["1|1 tentativa (imediato)", "2|2 tentativas", "3|3 tentativas (recomendado)"].map(x => {
+              const [v, l] = x.split("|");
+              return `<button class="opt sm" aria-pressed="${a.tentativasErro === v}" onclick="S.ia.tentativasErro='${v}';draw()">${l}</button>`;
+            }).join("")}
+          </div></div>
+
+          <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
+            <button class="btn btn-s" onclick="setIaSubStep(4)">← 4. Smart Jump</button>
+            <div class="sp"></div>
+            <button class="btn btn-p" onclick="setIaSubStep(6)">Continuar: 6. Inatividade & Encerramento →</button>
+          </div>
+        `;
+      } else if (etapa === 6) {
+        contentHtml = `
+          <!-- SEÇÃO 6: INATIVIDADE E ENCERRAMENTO -->
+          <div class="sect" style="margin-top:0;padding-top:0;border-top:0">
+            <h3>6. Inatividade, Encerramento e Contingência</h3>
+            <p>${curStep.desc}</p>
+          </div>
+          <div class="grid3">
+            <div class="f"><label>Tempo limite de inatividade</label><div class="opts">
+              ${["5|5 min", "10|10 min", "15|15 min", "30|30 min"].map(x => {
+                const [v, l] = x.split("|");
+                return `<button class="opt sm" aria-pressed="${a.inatTempo === v}" onclick="S.ia.inatTempo='${v}';draw()">${l}</button>`;
+              }).join("")}
+            </div></div>
+            <div class="f"><label>Ação ao esgotar o tempo</label><div class="opts">
+              ${["finalizar|Encerrar atendimento", "transferir|Transferir para fila"].map(x => {
+                const [v, l] = x.split("|");
+                return `<button class="opt sm" aria-pressed="${a.inatAcao === v}" onclick="S.ia.inatAcao='${v}';draw()">${l}</button>`;
+              }).join("")}
+            </div></div>
+            ${a.inatAcao === "transferir" ? `<div class="f"><label>Fila de destino</label><select onchange="S.ia.inatFila=this.value;soft()">${setOpts(a.inatFila)}</select></div>` : ""}
+          </div>
+          <div class="f" style="margin-top:8px">
+            <label>Mensagem de finalização de atendimento (Opcional)</label>
+            ${fta("ia.msgFinalizacao", "Ex.: Atendimento finalizado por inatividade. Caso precise de mais alguma informação, basta nos enviar uma nova mensagem! Tenha um ótimo dia. 😊")}
+            <span class="hint">Enviada automaticamente caso o atendimento seja encerrado pela IA.</span>
+          </div>
+
+          <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
+            <button class="btn btn-s" onclick="setIaSubStep(5)">← 5. Pré-Atendimento</button>
+            <div class="sp"></div>
+            <button class="btn btn-p" onclick="setIaSubStep(7)">Continuar: 7. Base de Conhecimento →</button>
+          </div>
+        `;
+      } else if (etapa === 7) {
+        contentHtml = `
+          <!-- SEÇÃO 7: BASE DE CONHECIMENTO E GOVERNANÇA -->
+          <div class="sect" style="margin-top:0;padding-top:0;border-top:0">
+            <h3>7. Base de Conhecimento e Governança</h3>
+            <p>${curStep.desc}</p>
+          </div>
+          
+          <div class="grid2">
+            ${fi("Site ou página com as informações oficiais", "ia.baseUrl", "text", "https://suaempresa.com.br")}
+            <div class="f"><label>Qual a frequência de atualização da FAQ?</label><div class="opts">
+              ${["diaria|Diária", "semanal|Semanal / Quinzenal", "mensal|Mensal", "demanda|Sob Demanda", "api|Tempo Real (API)"].map(x => {
+                const [v, l] = x.split("|");
+                return `<button class="opt sm" aria-pressed="${a.faqFreq === v}" onclick="S.ia.faqFreq='${v}';draw()">${l}</button>`;
+              }).join("")}
+            </div></div>
+          </div>
+
+          <div class="f">
+            <label>Links adicionais de consulta</label>
+            ${links.map((l, li) => `
+              <div style="display:flex;gap:8px;margin-bottom:6px">
+                <input type="text" value="${esc(l)}" placeholder="https://suaempresa.com.br/preparo-de-exames" oninput="setIaLink(${li}, this.value)">
+                <button class="rowdel" title="Remover link" onclick="delIaLink(${li})">×</button>
+              </div>
+            `).join("")}
+            <button type="button" class="btn-chip" style="margin-top:4px" onclick="addIaLink()">➕ Adicionar Link Adicional</button>
+          </div>
+
+          <div class="f">
+            <label>Texto escrito / Procedimentos e FAQ Manual</label>
+            ${fta("ia.faqTexto", "Insira aqui textos informativos, listas de exames, tabelas de valores particulares, rotinas de preparo ou respostas prontas para perguntas frequentes...")}
+            <span class="hint">Textos inseridos aqui são incorporados diretamente ao conhecimento da IA.</span>
+          </div>
+
+          <div class="f">
+            <label>Upload de arquivos (Documentos, Manuais, Tabelas e PDFs)</label>
+            <div class="file-upload-zone" onclick="document.getElementById('ia_file_upload_input').click()">
+              <input type="file" id="ia_file_upload_input" style="display:none" onchange="if(this.files[0]){addIaArquivo(this.files[0].name, Math.round(this.files[0].size/1024)+' KB');this.value=''}">
+              <span style="font-size:24px;display:block;margin-bottom:4px">📁</span>
+              <b>Clique para selecionar arquivos</b> (PDFs, Tabelas, Manuais, Documentos)
+              <span class="hint">Suporta arquivos PDF, DOCX, XLSX ou TXT para treinamento e consulta do assistente</span>
+            </div>
+            ${arquivos.length ? `
+              <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
+                ${arquivos.map((arq, ai) => `
+                  <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid var(--line);border-radius:6px;padding:6px 12px;font-size:12.5px">
+                    <span>📄 <b>${esc(arq.nome)}</b> <small style="color:var(--muted)">(${esc(arq.tamanho)})</small></span>
+                    <button class="rowdel" title="Remover arquivo" onclick="delIaArquivo(${ai})">×</button>
                   </div>
                 `).join("")}
               </div>
+            ` : ""}
+          </div>
 
-              <button class="btn-g" style="padding:4px 8px;font-size:12px" onclick="addIaPasso(${fi})">+ Adicionar Passo a este fluxo</button>
-            </div>
-          `).join("")}
+          <div class="sect"><h3>Responsável interno para dúvidas de FAQ</h3><p>Pessoa de contato na sua empresa caso o time da ORPEN precise tirar dúvidas sobre as respostas da IA.</p></div>
+          <div class="grid2">
+            ${fi("Nome do Responsável", "ia.faqRespNome", "text", "Ex.: Mariana Souza")}
+            ${fi("E-mail do Responsável", "ia.faqRespEmail", "email", "Ex.: mariana.souza@hospitalexemplo.com.br")}
+          </div>
 
-          <div class="navrow" style="margin-top:10px">
-            <button class="btn btn-s" onclick="addIaFluxo()">+ Adicionar Novo Fluxo</button>
-            <button class="btn-g" onclick="loadPreAtendSaude()">Modelo de Fluxos de Saúde</button>
-            <button class="btn-g" onclick="loadPreAtendComercial()">Modelo de Fluxos Comercial</button>
+          <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
+            <button class="btn btn-s" onclick="setIaSubStep(6)">← 6. Inatividade</button>
+            <div class="sp"></div>
+            <button class="btn btn-p" onclick="next()">Concluir Assistente de IA e Avançar →</button>
+          </div>
+        `;
+      }
+
+      return `<div class="card">
+        <p class="eyebrow">Inteligência Artificial · Etapa ${etapa} de 7</p>
+        <h2>Configuração do Assistente de IA</h2>
+        <p class="lede">Preencha cada uma das 7 etapas sequenciais para calibrar a persona, limites de transbordo e a base de conhecimento.</p>
+
+        <div class="ia-stepper-wrap">
+          <div class="ia-stepper-head">
+            <span class="ia-stepper-title">${curStep.full}</span>
+            <span class="ia-stepper-pct">Etapa ${etapa} de 7 (${Math.round((etapa / 7) * 100)}%)</span>
+          </div>
+          <div class="ia-stepper-bar">
+            <div class="ia-stepper-bar-fill" style="width: ${Math.round((etapa / 7) * 100)}%"></div>
+          </div>
+          <div class="ia-stepper">
+            ${subSteps.map(s => `
+              <button class="ia-step-btn ${etapa === s.n ? 'active' : ''} ${isIaStepDone(s.n) ? 'done' : ''}" onclick="setIaSubStep(${s.n})" title="${esc(s.full)}">
+                <span class="ia-step-num">${isIaStepDone(s.n) ? '✓' : s.n}</span>
+                <span class="ia-step-lbl">${esc(s.lbl)}</span>
+              </button>
+            `).join("")}
           </div>
         </div>
 
-        <div class="f" style="background:#FFF8E8;border:1.5px solid #F5D485;border-radius:8px;padding:14px 16px;margin-top:18px">
-          <label style="color:#7C4A03;font-size:13px">Para qual fila levamos o cliente se a IA não identificar o assunto ou tiver alguma falha? <span class="req">*</span></label>
-          <p style="font-size:12px;color:#855C08;margin:0 0 8px">Fila de transbordo padrão caso o cliente fique fora dos fluxos previstos ou a IA não entenda a solicitação.</p>
-          <select onchange="S.ia.filaFallback=this.value;soft()" style="background:#fff">${setOpts(a.filaFallback)}</select>
-        </div>
-
-        <div class="f" style="margin-top:14px"><label>Tentativas sem entender antes de transferir por falha (Catch-All)</label><div class="opts">
-          ${["1|1 tentativa (imediato)", "2|2 tentativas", "3|3 tentativas (recomendado)"].map(x => {
-            const [v, l] = x.split("|");
-            return `<button class="opt sm" aria-pressed="${a.tentativasErro === v}" onclick="S.ia.tentativasErro='${v}';draw()">${l}</button>`;
-          }).join("")}
-        </div></div>
-
-        <!-- SEÇÃO 6: INATIVIDADE E ENCERRAMENTO -->
-        <div class="sect"><h3>6. Inatividade e Encerramento</h3><p>Controle de tempo e ação quando o cliente para de responder.</p></div>
-        <div class="grid3">
-          <div class="f"><label>Tempo limite de inatividade</label><div class="opts">
-            ${["5|5 min", "10|10 min", "15|15 min", "30|30 min"].map(x => {
-              const [v, l] = x.split("|");
-              return `<button class="opt sm" aria-pressed="${a.inatTempo === v}" onclick="S.ia.inatTempo='${v}';draw()">${l}</button>`;
-            }).join("")}
-          </div></div>
-          <div class="f"><label>Ação ao esgotar o tempo</label><div class="opts">
-            ${["finalizar|Encerrar atendimento", "transferir|Transferir para fila"].map(x => {
-              const [v, l] = x.split("|");
-              return `<button class="opt sm" aria-pressed="${a.inatAcao === v}" onclick="S.ia.inatAcao='${v}';draw()">${l}</button>`;
-            }).join("")}
-          </div></div>
-          ${a.inatAcao === "transferir" ? `<div class="f"><label>Fila de destino</label><select onchange="S.ia.inatFila=this.value;soft()">${setOpts(a.inatFila)}</select></div>` : ""}
-        </div>
-        <div class="f" style="margin-top:8px">
-          <label>Mensagem de finalização de atendimento (Opcional)</label>
-          ${fta("ia.msgFinalizacao", "Ex.: Atendimento finalizado por inatividade. Caso precise de mais alguma informação, basta nos enviar uma nova mensagem! Tenha um ótimo dia. 😊")}
-          <span class="hint">Enviada automaticamente caso o atendimento seja encerrado pela IA.</span>
-        </div>
-
-        <!-- SEÇÃO 7: BASE DE CONHECIMENTO E GOVERNANÇA -->
-        <div class="sect"><h3>7. Base de Conhecimento e Governança</h3><p>Fontes de dados oficiais, procedimentos, arquivos anexos e responsáveis de contato.</p></div>
-        
-        <div class="grid2">
-          ${fi("Site ou página com as informações oficiais", "ia.baseUrl", "text", "https://suaempresa.com.br")}
-          <div class="f"><label>Qual a frequência de atualização da FAQ?</label><div class="opts">
-            ${["diaria|Diária", "semanal|Semanal / Quinzenal", "mensal|Mensal", "demanda|Sob Demanda", "api|Tempo Real (API)"].map(x => {
-              const [v, l] = x.split("|");
-              return `<button class="opt sm" aria-pressed="${a.faqFreq === v}" onclick="S.ia.faqFreq='${v}';draw()">${l}</button>`;
-            }).join("")}
-          </div></div>
-        </div>
-
-        <div class="f">
-          <label>Links adicionais de consulta</label>
-          ${links.map((l, li) => `
-            <div style="display:flex;gap:8px;margin-bottom:6px">
-              <input type="text" value="${esc(l)}" placeholder="https://suaempresa.com.br/preparo-de-exames" oninput="setIaLink(${li}, this.value)">
-              <button class="rowdel" title="Remover link" onclick="delIaLink(${li})">×</button>
-            </div>
-          `).join("")}
-          <button class="btn-g" onclick="addIaLink()">+ Adicionar Link Adicional</button>
-        </div>
-
-        <div class="f">
-          <label>Texto escrito / Procedimentos e FAQ Manual</label>
-          ${fta("ia.faqTexto", "Insira aqui textos informativos, listas de exames, tabelas de valores particulares, rotinas de preparo ou respostas prontas para perguntas frequentes...")}
-          <span class="hint">Textos inseridos aqui são incorporados diretamente ao conhecimento da IA.</span>
-        </div>
-
-        <div class="f">
-          <label>Upload de arquivos (Documentos, Manuais, Tabelas e PDFs)</label>
-          <div class="file-upload-zone" onclick="document.getElementById('ia_file_upload_input').click()" style="border:2px dashed var(--line);border-radius:var(--r);padding:18px;text-align:center;background:var(--surface-2);cursor:pointer;transition:.15s">
-            <input type="file" id="ia_file_upload_input" style="display:none" onchange="if(this.files[0]){addIaArquivo(this.files[0].name, Math.round(this.files[0].size/1024)+' KB');this.value=''}">
-            <span style="font-size:24px;display:block;margin-bottom:4px">📁</span>
-            <b>Clique para selecionar arquivos</b> (PDFs, Tabelas, Manuais, Documentos)
-            <span class="hint">Suporta arquivos PDF, DOCX, XLSX ou TXT para treinamento e consulta do assistente</span>
-          </div>
-          ${arquivos.length ? `
-            <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
-              ${arquivos.map((arq, ai) => `
-                <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid var(--line);border-radius:6px;padding:6px 12px;font-size:12.5px">
-                  <span>📄 <b>${esc(arq.nome)}</b> <small style="color:var(--muted)">(${esc(arq.tamanho)})</small></span>
-                  <button class="rowdel" title="Remover arquivo" onclick="delIaArquivo(${ai})">×</button>
-                </div>
-              `).join("")}
-            </div>
-          ` : ""}
-        </div>
-
-        <div class="sect"><h3>Responsável interno para dúvidas de FAQ</h3><p>Pessoa de contato na sua empresa caso o time da ORPEN precise tirar dúvidas sobre as respostas da IA.</p></div>
-        <div class="grid2">
-          ${fi("Nome do Responsável", "ia.faqRespNome", "text", "Ex.: Mariana Souza")}
-          ${fi("E-mail do Responsável", "ia.faqRespEmail", "email", "Ex.: mariana.souza@hospitalexemplo.com.br")}
-        </div>
-
-        ${nav()}
+        ${contentHtml}
       </div>`;
     }
   },

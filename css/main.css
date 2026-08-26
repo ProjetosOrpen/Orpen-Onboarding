@@ -835,30 +835,290 @@ td input, td select {
 }
 
 /* ---------- Novos Estilos da Aba Assistente de IA ---------- */
+.ia-stepper-wrap {
+  margin-bottom: 22px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 14px 16px;
+}
+.ia-stepper-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.ia-stepper-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--signal-deep);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.ia-stepper-pct {
+  font-size: 11.5px;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--muted);
+  font-weight: 600;
+}
+.ia-stepper-bar {
+  width: 100%;
+  height: 6px;
+  background: #E5E0F2;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.ia-stepper-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #9333EA, #7C3AED);
+  border-radius: 99px;
+  transition: width .3s ease;
+}
+.ia-stepper {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.ia-step-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all .15s;
+}
+.ia-step-btn:hover {
+  border-color: var(--signal);
+  background: var(--signal-soft);
+}
+.ia-step-btn.active {
+  background: #EDE9FE;
+  border-color: var(--signal);
+  color: var(--signal-deep);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
+}
+.ia-step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #F0ECF8;
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  transition: all .15s;
+}
+.ia-step-btn.active .ia-step-num {
+  background: var(--signal);
+  color: #fff;
+}
+.ia-step-btn.done .ia-step-num {
+  background: #10B981;
+  color: #fff;
+}
+.ia-step-lbl {
+  line-height: 1.2;
+  font-size: 10.5px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .ia-stepper {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .ia-step-btn {
+    min-width: 95px;
+    flex-shrink: 0;
+  }
+}
+
+/* ---------- Interactive Chips & Quick Templates ---------- */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.chip-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.btn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--signal-deep);
+  background: var(--surface);
+  border: 1.5px solid #DDD6FE;
+  border-radius: 99px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all .15s ease;
+  box-shadow: 0 1px 3px rgba(124, 58, 237, 0.04);
+}
+
+.btn-chip:hover {
+  background: var(--signal-soft);
+  border-color: var(--signal);
+  color: var(--signal-deep);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.12);
+}
+
+.btn-chip:active {
+  transform: scale(0.98);
+}
+
+.btn-chip.template {
+  background: #FAF5FF;
+  border-color: #C084FC;
+  color: #6B21A8;
+  font-weight: 600;
+}
+
+.btn-chip.template:hover {
+  background: #F3E8FF;
+  border-color: #9333EA;
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.18);
+}
+
+/* ---------- Add Step & Flow Action Buttons ---------- */
+.btn-add-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 14px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--signal-deep);
+  background: #fff;
+  border: 1.5px dashed #C4B5FD;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.btn-add-step:hover {
+  background: var(--signal-soft);
+  border-color: var(--signal);
+  color: var(--signal-deep);
+  border-style: solid;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.12);
+}
+
+.btn-add-step:active {
+  transform: scale(0.99);
+}
+
 .flow-card {
   background: #FAF8FE;
-  border: 1.5px solid var(--line);
+  border: 1.5px solid #E5E0F2;
   border-radius: var(--r);
-  padding: 16px 18px;
-  margin-bottom: 14px;
-  transition: border-color .15s;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  transition: border-color .15s, box-shadow .15s;
 }
+
 .flow-card:hover {
   border-color: #C4B5FD;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.06);
 }
+
+.flow-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ECE7F6;
+}
+
+.flow-title-input {
+  font-weight: 700 !important;
+  background: #fff !important;
+  border: 1.5px solid #DDD6FE !important;
+  border-radius: 7px !important;
+  font-size: 13.5px !important;
+  color: var(--ink) !important;
+  padding: 7px 12px !important;
+  width: 100%;
+}
+
+.flow-title-input:focus {
+  border-color: var(--signal) !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15) !important;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  background: #fff;
+  border: 1.5px solid #E5E0F2;
+  border-radius: 8px;
+  padding: 5px 10px 5px 8px;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.step-item:focus-within {
+  border-color: var(--signal);
+  box-shadow: 0 0 0 2.5px rgba(124, 58, 237, 0.12);
+}
+
+.step-item input {
+  border: 0 !important;
+  background: transparent !important;
+  padding: 5px 6px !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  flex: 1;
+}
+
 .step-num-badge {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 6px;
   background: var(--signal-soft);
   color: var(--signal-deep);
   font-family: "IBM Plex Mono", monospace;
   font-size: 11.5px;
-  font-weight: 600;
+  font-weight: 700;
   display: grid;
   place-items: center;
   flex-shrink: 0;
 }
+
 .file-upload-zone {
   border: 2px dashed #C4B5FD;
   border-radius: var(--r);
@@ -879,3 +1139,4 @@ td input, td select {
     animation: none !important;
   }
 }
+
