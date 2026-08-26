@@ -12,21 +12,22 @@
   
   <style>
     :root {
-      --ink: #0F212C;
-      --ink-2: #284450;
-      --muted: #5D7079;
-      --line: #D6E0E4;
-      --canvas: #EAEFF1;
+      --ink: #180D2E;
+      --ink-2: #3E2963;
+      --muted: #6B5B88;
+      --line: #E5E0F2;
+      --canvas: #F8F6FC;
       --surface: #FFFFFF;
-      --surface-2: #F5F8F9;
-      --signal: #0C7A83;
-      --signal-soft: #E2F2F2;
-      --signal-deep: #075158;
-      --amber: #B0740B;
-      --amber-soft: #FBF0DC;
-      --rose: #A62B22;
-      --rose-soft: #FBE9E7;
-      --ok: #1D7A4F;
+      --surface-2: #F6F4FB;
+      --signal: #7C3AED;
+      --signal-soft: #EDE9FE;
+      --signal-deep: #5B21B6;
+      --amber: #D97706;
+      --amber-soft: #FEF3C7;
+      --rose: #DC2626;
+      --rose-soft: #FEE2E2;
+      --ok: #10B981;
+      --ok-soft: #D1FAE5;
       --r: 10px;
     }
 
@@ -62,25 +63,30 @@
       position: sticky;
       top: 0;
       z-index: 40;
-      background: var(--ink);
+      background: #1B0D38;
       color: #fff;
       display: flex;
       align-items: center;
       gap: 18px;
       padding: 12px 22px;
+      border-bottom: 1px solid rgba(139, 92, 246, 0.22);
     }
 
     .brand {
-      font-family: "Archivo";
-      font-weight: 700;
-      font-size: 16px;
-      letter-spacing: .14em;
+      display: flex;
+      align-items: center;
+    }
+
+    .brand img {
+      height: 32px;
+      width: auto;
+      display: block;
     }
 
     .top .who {
       font-size: 13px;
-      color: #9FB6BE;
-      border-left: 1px solid #2C4652;
+      color: #C4B5FD;
+      border-left: 1px solid #361E63;
       padding-left: 18px;
     }
 
@@ -98,7 +104,7 @@
 
     .saved {
       font-size: 12px;
-      color: #8FC9C4;
+      color: #DDD6FE;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -108,14 +114,15 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: #4FBFA0;
+      background: #10B981;
       display: inline-block;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
     }
 
     .pbar {
       width: 150px;
       height: 6px;
-      background: #25404B;
+      background: #341B64;
       border-radius: 99px;
       overflow: hidden;
     }
@@ -123,7 +130,7 @@
     .pbar i {
       display: block;
       height: 100%;
-      background: #4FC4C9;
+      background: linear-gradient(90deg, #C084FC, #8B5CF6, #6366F1);
       width: 0;
       transition: width .4s cubic-bezier(.2, .8, .2, 1);
     }
@@ -131,7 +138,7 @@
     .ppct {
       font-family: "IBM Plex Mono";
       font-size: 12px;
-      color: #CFE6E6;
+      color: #EDE9FE;
       min-width: 38px;
       text-align: right;
     }
@@ -179,13 +186,14 @@
     }
 
     .step:hover {
-      background: #E1E8EA;
+      background: var(--signal-soft);
     }
 
     .step.on {
       background: var(--surface);
-      box-shadow: 0 1px 2px rgba(15, 33, 44, .09);
-      color: var(--ink);
+      box-shadow: 0 2px 8px rgba(124, 58, 237, .08);
+      border-left: 3px solid var(--signal);
+      color: var(--signal-deep);
       font-weight: 600;
     }
 
@@ -231,7 +239,8 @@
     .card {
       background: var(--surface);
       border-radius: var(--r);
-      box-shadow: 0 1px 2px rgba(15, 33, 44, .08);
+      box-shadow: 0 2px 12px rgba(27, 13, 56, .05);
+      border: 1px solid var(--line);
       padding: 26px 28px;
       margin-bottom: 18px;
     }
@@ -239,9 +248,10 @@
     .eyebrow {
       font-family: "IBM Plex Mono";
       font-size: 11px;
-      letter-spacing: .1em;
+      letter-spacing: .12em;
       text-transform: uppercase;
       color: var(--signal);
+      font-weight: 700;
       margin: 0 0 4px;
     }
 
@@ -249,6 +259,7 @@
       font-size: 21px;
       margin: 0 0 6px;
       font-weight: 700;
+      color: var(--ink);
     }
 
     .lede {
@@ -304,7 +315,7 @@
       border-radius: 7px;
       padding: 8px 11px;
       outline: none;
-      transition: border-color .15s;
+      transition: border-color .15s, box-shadow .15s;
     }
 
     input:focus, textarea:focus, select:focus {
@@ -361,7 +372,8 @@
     }
 
     .opt:hover {
-      border-color: #B0C4CC;
+      border-color: var(--signal-deep);
+      background: #F3EEFB;
     }
 
     .opt[aria-pressed=true] {
@@ -391,12 +403,14 @@
     }
 
     .btn-p {
-      background: var(--signal);
+      background: linear-gradient(135deg, #7C3AED, #6D28D9);
       color: #fff;
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
     }
 
     .btn-p:hover {
-      background: var(--signal-deep);
+      background: linear-gradient(135deg, #6D28D9, #5B21B6);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
     }
 
     .btn-s {
@@ -406,7 +420,8 @@
     }
 
     .btn-s:hover {
-      border-color: #B0C4CC;
+      border-color: #C4B5FD;
+      background: #F3EEFB;
     }
 
     .btn-g {
@@ -421,6 +436,7 @@
 
     .btn-g:hover {
       text-decoration: underline;
+      color: var(--signal-deep);
     }
 
     .navrow {
@@ -450,6 +466,7 @@
       padding: 4px 9px;
       border-radius: 6px;
       font-size: 12.5px;
+      color: var(--ink-2);
     }
 
     .tag button {
@@ -487,7 +504,7 @@
 
     td {
       padding: 6px;
-      border-bottom: 1px solid #E8EFF2;
+      border-bottom: 1px solid #F0ECF8;
       vertical-align: middle;
     }
 
@@ -526,7 +543,7 @@
     .note.warn {
       background: var(--amber-soft);
       border-left: 3px solid var(--amber);
-      color: #6E4904;
+      color: #78350F;
     }
 
     /* ---------- side summary ---------- */
@@ -534,36 +551,119 @@
       position: sticky;
       top: 74px;
       align-self: start;
-      background: var(--ink);
+      background: #1B0D38;
       color: #fff;
       border-radius: var(--r);
       padding: 20px 18px;
       font-size: 13px;
+      border: 1px solid #331A61;
+      box-shadow: 0 4px 20px rgba(27, 13, 56, .12);
     }
 
     .sum h3 {
       font-size: 14px;
       margin: 0 0 2px;
-      color: #CFE6E6;
+      color: #EDE9FE;
       font-weight: 700;
     }
 
     .sum .cli {
       font-size: 12px;
-      color: #78A5AC;
+      color: #C4B5FD;
       margin: 0 0 14px;
+    }
+
+    .tier-box {
+      background: #281452;
+      border: 1px solid #3D1F75;
+      border-radius: 8px;
+      padding: 12px 13px;
+      margin-bottom: 12px;
+    }
+
+    .tier-box p {
+      margin: 0;
+      font-size: 12px;
+      color: #C4B5FD;
+      line-height: 1.4;
+    }
+
+    .tier-badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 5px;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      margin-bottom: 6px;
+      font-family: "IBM Plex Mono";
+    }
+
+    .tier-prata {
+      background: #E2E8F0;
+      color: #1E293B;
+    }
+
+    .tier-gold {
+      background: #FEF3C7;
+      color: #92400E;
+    }
+
+    .tier-diamante {
+      background: #EDE9FE;
+      color: #5B21B6;
+    }
+
+    .tier-consultor {
+      background: linear-gradient(135deg, #9333EA, #4F46E5);
+      color: #fff;
+    }
+
+    .meter-track {
+      width: 100%;
+      height: 6px;
+      background: #341B64;
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 6px 0;
+    }
+
+    .meter-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #C084FC, #8B5CF6);
+      border-radius: 99px;
+      transition: width .4s ease;
+    }
+
+    .ambig-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12px;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    .ambig-ok {
+      color: #34D399;
+      font-weight: bold;
+    }
+
+    .ambig-warn {
+      color: #FBBF24;
+      font-weight: bold;
     }
 
     .sline {
       display: flex;
       justify-content: space-between;
       padding: 6px 0;
-      border-bottom: 1px solid #1E3743;
+      border-bottom: 1px solid #2B1652;
       font-size: 12px;
     }
 
     .sline .k {
-      color: #8EAAB2;
+      color: #A78BFA;
     }
 
     .sline .v {
@@ -573,15 +673,16 @@
     }
 
     .sline .v.dim {
-      color: #557884;
+      color: #7C689E;
       font-weight: 400;
     }
 
     .pend {
       margin-top: 14px;
-      background: #18303C;
+      background: #281452;
       border-radius: 8px;
       padding: 10px 12px;
+      border: 1px solid #3D1F75;
     }
 
     .pend h4 {
@@ -589,7 +690,7 @@
       font-size: 11.5px;
       letter-spacing: .08em;
       text-transform: uppercase;
-      color: #E6B566;
+      color: #FBBF24;
       font-weight: 700;
     }
 
@@ -597,7 +698,7 @@
       display: block;
       background: none;
       border: 0;
-      color: #F0D9AC;
+      color: #FDE68A;
       font: inherit;
       font-size: 12.5px;
       text-align: left;
@@ -612,12 +713,13 @@
     }
 
     .done-box {
-      background: #12312A;
+      background: #143026;
       border-radius: 8px;
       padding: 12px 13px;
       margin-top: 14px;
-      color: #8FD8B4;
+      color: #6EE7B7;
       font-size: 12.5px;
+      border: 1px solid #1E5C47;
     }
 
     .toast {
@@ -625,7 +727,7 @@
       left: 50%;
       bottom: 26px;
       transform: translateX(-50%) translateY(20px);
-      background: var(--ink);
+      background: #1B0D38;
       color: #fff;
       padding: 12px 20px;
       border-radius: 9px;
@@ -634,7 +736,8 @@
       pointer-events: none;
       transition: .28s;
       z-index: 60;
-      box-shadow: 0 8px 24px rgba(15, 33, 44, .3);
+      border: 1px solid #4C1D95;
+      box-shadow: 0 8px 24px rgba(27, 13, 56, .4);
     }
 
     .toast.on {
@@ -660,7 +763,7 @@
 
     .keycap {
       font-family: "IBM Plex Mono";
-      background: var(--ink);
+      background: #1B0D38;
       color: #fff;
       font-size: 11px;
       font-weight: 600;
@@ -687,6 +790,7 @@
 
     .pre input[type=checkbox] {
       margin-top: 3px;
+      accent-color: var(--signal);
     }
 
     .pre p {
@@ -707,286 +811,6 @@
       padding: 4px 8px;
     }
 
-    /* ---------- IA Auditora & Complexidade ---------- */
-    .auditor-banner {
-      background: linear-gradient(135deg, #1E144F, #2C1F75);
-      color: #fff;
-      border-radius: var(--r);
-      padding: 18px 20px;
-      margin-bottom: 20px;
-      display: flex;
-      gap: 14px;
-      align-items: flex-start;
-    }
-
-    .auditor-avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #6C5CE7, #A855F7);
-      display: grid;
-      place-items: center;
-      flex-shrink: 0;
-      font-size: 18px;
-    }
-
-    .auditor-content h4 {
-      margin: 0 0 4px;
-      font-size: 14.5px;
-      color: #fff;
-      font-weight: 700;
-    }
-
-    .auditor-content p {
-      margin: 0;
-      font-size: 13px;
-      color: #CBD5E1;
-      line-height: 1.45;
-    }
-
-    .auditor-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .auditor-chip {
-      background: rgba(255, 255, 255, 0.15);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      color: #fff;
-      border-radius: 99px;
-      padding: 4px 11px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: .15s;
-    }
-
-    .auditor-chip:hover {
-      background: #6C5CE7;
-      border-color: #6C5CE7;
-    }
-
-    .meter-track {
-      height: 7px;
-      background: #25404B;
-      border-radius: 99px;
-      overflow: hidden;
-      margin: 8px 0 6px;
-    }
-
-    .meter-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #4ADE80, #FBBF24, #818CF8);
-      width: 45%;
-      transition: width .4s ease;
-    }
-
-    .ambig-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 7px;
-      font-size: 12px;
-      margin-bottom: 6px;
-      line-height: 1.35;
-    }
-
-    .ambig-warn {
-      color: #FCD34D;
-    }
-
-    .ambig-ok {
-      color: #4ADE80;
-    }
-
-    .tier-box {
-      background: #18303C;
-      border-radius: 8px;
-      padding: 12px 14px;
-      margin-bottom: 12px;
-    }
-
-    .tier-box p {
-      margin: 0;
-      font-size: 12px;
-      color: #9FB6BE;
-      line-height: 1.4;
-    }
-
-    .tier-badge {
-      display: inline-block;
-      padding: 3px 9px;
-      border-radius: 5px;
-      font-size: 11.5px;
-      font-weight: 700;
-      letter-spacing: .04em;
-      margin-bottom: 6px;
-      font-family: "IBM Plex Mono";
-    }
-
-    .tier-prata {
-      background: #334E5A;
-      color: #E2EFF2;
-    }
-
-    .tier-gold {
-      background: #855C08;
-      color: #FDF3D6;
-    }
-
-    .tier-diamante {
-      background: #1E3A5F;
-      color: #93C5FD;
-    }
-
-    .tier-consultor {
-      background: #5B21B6;
-      color: #DDD6FE;
-    }
-
-    /* ---------- IA Conversacional Chat Box ---------- */
-    .chat-container {
-      border: 1.5px solid var(--line);
-      border-radius: 12px;
-      overflow: hidden;
-      background: var(--surface);
-      display: flex;
-      flex-direction: column;
-      min-height: 500px;
-    }
-
-    .chat-cfg-bar {
-      background: #11222C;
-      color: #CFE6E6;
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      font-size: 12px;
-      border-bottom: 1px solid #233D48;
-    }
-
-    .chat-cfg-bar input {
-      background: #1B3440;
-      border: 1px solid #2D5060;
-      color: #fff;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 11.5px;
-      padding: 4px 10px;
-      border-radius: 6px;
-      width: 260px;
-    }
-
-    .chat-stream {
-      flex: 1;
-      padding: 18px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      background: #F9FBFC;
-      max-height: 460px;
-    }
-
-    .chat-bubble {
-      display: flex;
-      gap: 10px;
-      max-width: 88%;
-    }
-
-    .chat-bubble.bot {
-      align-self: flex-start;
-    }
-
-    .chat-bubble.user {
-      align-self: flex-end;
-      flex-direction: row-reverse;
-    }
-
-    .chat-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #1E144F;
-      color: #fff;
-      display: grid;
-      place-items: center;
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-
-    .chat-bubble.user .chat-avatar {
-      background: var(--signal);
-    }
-
-    .chat-text {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 12px 15px;
-      font-size: 13.5px;
-      line-height: 1.45;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-      color: var(--ink);
-    }
-
-    .chat-bubble.bot .chat-text {
-      background: #FFFFFF;
-      border-color: #D2DFE4;
-      border-top-left-radius: 2px;
-    }
-
-    .chat-bubble.user .chat-text {
-      background: var(--signal);
-      color: #fff;
-      border-color: var(--signal-deep);
-      border-top-right-radius: 2px;
-    }
-
-    .chat-input-row {
-      padding: 12px 16px;
-      background: #fff;
-      border-top: 1px solid var(--line);
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .chat-input-row textarea {
-      min-height: 44px;
-      height: 44px;
-      resize: none;
-      padding: 9px 12px;
-      font-size: 13.5px;
-    }
-
-    .chat-quick-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 0 16px 12px;
-      background: #fff;
-    }
-
-    .c-chip {
-      background: var(--surface-2);
-      border: 1px solid var(--line);
-      border-radius: 99px;
-      padding: 4px 11px;
-      font-size: 12px;
-      cursor: pointer;
-      color: var(--ink-2);
-      transition: .15s;
-    }
-
-    .c-chip:hover {
-      background: var(--signal-soft);
-      border-color: var(--signal);
-      color: var(--signal-deep);
-    }
-
     /* ---------- Modal de Prompt Final ---------- */
     .prompt-modal-backdrop {
       position: fixed !important;
@@ -996,7 +820,7 @@
       bottom: 0 !important;
       width: 100vw !important;
       height: 100vh !important;
-      background: rgba(15, 33, 44, .75) !important;
+      background: rgba(27, 13, 56, .75) !important;
       backdrop-filter: blur(4px);
       z-index: 9999 !important;
       display: none !important;
@@ -1017,7 +841,7 @@
       max-height: 88vh;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, .4);
+      box-shadow: 0 24px 60px rgba(27, 13, 56, .45);
       overflow: hidden;
       animation: modalPop .2s ease-out;
     }
@@ -1028,12 +852,13 @@
     }
 
     .prompt-modal-header {
-      background: #1E144F;
+      background: #1B0D38;
       color: #fff;
       padding: 16px 22px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      border-bottom: 1px solid #361E63;
     }
 
     .prompt-modal-header h3 {
@@ -1050,19 +875,19 @@
       padding: 20px 22px;
       overflow-y: auto;
       flex: 1;
-      background: #F8FAFC;
+      background: #F9F8FD;
     }
 
     .prompt-box-code {
-      background: #0F172A;
-      color: #E2E8F0;
+      background: #0F0720;
+      color: #E9D5FF;
       font-family: 'IBM Plex Mono', monospace;
       font-size: 12px;
       line-height: 1.6;
       padding: 16px 18px;
       border-radius: 8px;
       white-space: pre-wrap;
-      border: 1px solid #1E293B;
+      border: 1px solid #281452;
       max-height: 440px;
       overflow-y: auto;
       margin: 0;
@@ -1078,12 +903,12 @@
     }
 
     .badge-prompt-stat {
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.12);
       padding: 3px 8px;
       border-radius: 4px;
       font-size: 11.5px;
       font-family: 'IBM Plex Mono', monospace;
-      color: #A5B4FC;
+      color: #DDD6FE;
     }
 
     @media (max-width:1080px) {
@@ -1132,7 +957,7 @@
 
     /* ---------- Novos Estilos da Aba Assistente de IA ---------- */
     .flow-card {
-      background: var(--surface-2);
+      background: #FAF8FE;
       border: 1.5px solid var(--line);
       border-radius: var(--r);
       padding: 16px 18px;
@@ -1140,7 +965,7 @@
       transition: border-color .15s;
     }
     .flow-card:hover {
-      border-color: #BACDD6;
+      border-color: #C4B5FD;
     }
     .step-num-badge {
       width: 26px;
@@ -1156,11 +981,11 @@
       flex-shrink: 0;
     }
     .file-upload-zone {
-      border: 2px dashed var(--line);
+      border: 2px dashed #C4B5FD;
       border-radius: var(--r);
       padding: 18px;
       text-align: center;
-      background: var(--surface-2);
+      background: #FAF8FE;
       cursor: pointer;
       transition: .15s;
     }
@@ -1182,14 +1007,7 @@
   <!-- Barra Superior Oficial ORPEN -->
   <header class="top">
     <div class="brand" style="display:flex;align-items:center;gap:10px">
-      <svg width="84" height="22" viewBox="0 0 160 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M21 42C32.598 42 42 32.598 42 21C42 9.40202 32.598 0 21 0C9.40202 0 0 9.40202 0 21C0 32.598 9.40202 42 21 42Z" fill="#0C7A83"/>
-        <path d="M21 33C27.6274 33 33 27.6274 33 21C33 14.3726 27.6274 9 21 9C14.3726 9 9 14.3726 9 21C9 27.6274 14.3726 33 21 33Z" fill="#0F212C"/>
-        <path d="M56 29.5V12.5H62.5C66.5 12.5 69.5 15.5 69.5 19.5C69.5 23.5 66.5 26.5 62.5 26.5H59.5V29.5H56ZM59.5 23.5H62.5C64.7 23.5 66.5 21.7 66.5 19.5C66.5 17.3 64.7 15.5 62.5 15.5H59.5V23.5Z" fill="#FFFFFF"/>
-        <path d="M74 29.5V12.5H81C83.5 12.5 85.5 13.5 86.7 15.2C87.9 16.9 88.5 19.2 88.5 21.8C88.5 24.4 87.9 26.7 86.7 28.4C85.5 29.2 83.5 29.5 81 29.5H74ZM77.5 26.5H81C84.5 26.5 85.5 23.5 85.5 21C85.5 18.5 84.5 15.5 81 15.5H77.5V26.5Z" fill="#FFFFFF"/>
-        <path d="M93 29.5V12.5H103.5V15.5H96.5V19.5H102.5V22.5H96.5V26.5H103.5V29.5H93Z" fill="#FFFFFF"/>
-        <path d="M108 29.5V12.5H111.5L120.5 24.5V12.5H124V29.5H120.5L111.5 17.5V29.5H108Z" fill="#FFFFFF"/>
-      </svg>
+      <img src="assets/orpen-logo.png" alt="ORPEN" style="height:32px;width:auto;display:block" onerror="this.onerror=null;this.src='data:image/png;base64,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'">
     </div>
     <div class="who">Setup do ambiente · <b id="topcli">—</b></div>
     <div class="right">
@@ -2793,34 +2611,34 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
         <p class="cli">${esc(c.razaoSocial)}</p>
 
         <div class="tier-box">
-          <span style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#78A5AC;font-weight:700;display:block;margin-bottom:4px">Plano Compreendido</span>
+          <span style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#C4B5FD;font-weight:700;display:block;margin-bottom:4px">Plano Compreendido</span>
           <span class="tier-badge ${diag.badgeClass}">${diag.tier}</span>
           <p style="margin-top:4px">${diag.desc}</p>
         </div>
 
-        <div style="background:#18303C;border:1px solid #284450;border-radius:8px;padding:11px 12px;margin:10px 0">
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:#8EAAB2;font-weight:600">
+        <div style="background:#281452;border:1px solid #3D1F75;border-radius:8px;padding:11px 12px;margin:10px 0">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#C4B5FD;font-weight:600">
             <span>Complexidade do Prompt</span>
-            <span style="color:#6FD3D6">${diag.complexidadeNivel} · ${diag.score}/100</span>
+            <span style="color:#C084FC">${diag.complexidadeNivel} · ${diag.score}/100</span>
           </div>
           <div class="meter-track">
             <div class="meter-fill" style="width:${diag.score}%"></div>
           </div>
-          <div style="font-size:11px;color:#5F818B;display:flex;justify-content:space-between">
+          <div style="font-size:11px;color:#A78BFA;display:flex;justify-content:space-between">
             <span>Densidade: ${S.ia.habilidades.length > 120 ? 'Alta' : 'Moderada'}</span>
-            <span>Transbordo: ${S.ia.smartJump.length} regras</span>
+            <span>Transbordo: ${(S.ia.smartJump || []).length} regras</span>
           </div>
         </div>
 
-        <div style="background:#142731;border-radius:8px;padding:11px 12px;margin:10px 0">
-          <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#78A5AC;font-weight:700;margin-bottom:6px">Diagnóstico de Ambiguidades</div>
+        <div style="background:#221045;border:1px solid #361B66;border-radius:8px;padding:11px 12px;margin:10px 0">
+          <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#C4B5FD;font-weight:700;margin-bottom:6px">Diagnóstico de Ambiguidades</div>
           ${diag.ambiguidades.map(a => `
             <div class="ambig-item">
               <span class="${a.tipo === 'ok' ? 'ambig-ok' : 'ambig-warn'}">${a.tipo === 'ok' ? '✓' : '⚠'}</span>
-              <span style="color:${a.tipo === 'ok' ? '#DCE9EC' : '#FDE68A'}">${esc(a.txt)}</span>
+              <span style="color:${a.tipo === 'ok' ? '#EDE9FE' : '#FDE68A'}">${esc(a.txt)}</span>
             </div>
           `).join("")}
-          <button class="btn-g" style="color:#6FD3D6;font-size:12px;margin-top:6px;padding:0" onclick="otimizarIaAuditora()">✨ Otimizar regras com a Auditora</button>
+          <button class="btn-g" style="color:#C084FC;font-size:12px;margin-top:6px;padding:0" onclick="otimizarIaAuditora()">✨ Otimizar regras com a Auditora</button>
         </div>
 
         ${line("Nome do Agente", S.ia.nome || "—", !S.ia.nome)}
@@ -2829,7 +2647,7 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
         ${line("Base de Conhecimento", `${(S.ia.arquivos || []).length} arquivo(s) · ${(S.ia.linksAdicionais || []).length} link(s)`, !(S.ia.baseUrl || (S.ia.arquivos && S.ia.arquivos.length)))}
         ${line("Integração de Sistema", S.contrato.integracao ? (S.integ.sistema || "Aguardando") : "Não contratado", !S.integ.sistema)}
 
-        <button class="btn btn-p" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#0C7A83,#075158);border:0;display:flex;align-items:center;justify-content:center;gap:6px" onclick="abrirModalPromptFinal()">
+        <button class="btn btn-p" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#9333EA,#7C3AED);border:0;display:flex;align-items:center;justify-content:center;gap:6px" onclick="abrirModalPromptFinal()">
           👁️ Visualizar Prompt Final da IA
         </button>
 

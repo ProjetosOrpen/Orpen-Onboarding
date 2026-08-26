@@ -78,34 +78,34 @@ function drawSum() {
     <p class="cli">${esc(c.razaoSocial)}</p>
 
     <div class="tier-box">
-      <span style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#78A5AC;font-weight:700;display:block;margin-bottom:4px">Plano Compreendido</span>
+      <span style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#C4B5FD;font-weight:700;display:block;margin-bottom:4px">Plano Compreendido</span>
       <span class="tier-badge ${diag.badgeClass}">${diag.tier}</span>
       <p style="margin-top:4px">${diag.desc}</p>
     </div>
 
-    <div style="background:#18303C;border:1px solid #284450;border-radius:8px;padding:11px 12px;margin:10px 0">
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:#8EAAB2;font-weight:600">
+    <div style="background:#281452;border:1px solid #3D1F75;border-radius:8px;padding:11px 12px;margin:10px 0">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#C4B5FD;font-weight:600">
         <span>Complexidade do Prompt</span>
-        <span style="color:#6FD3D6">${diag.complexidadeNivel} · ${diag.score}/100</span>
+        <span style="color:#C084FC">${diag.complexidadeNivel} · ${diag.score}/100</span>
       </div>
       <div class="meter-track">
         <div class="meter-fill" style="width:${diag.score}%"></div>
       </div>
-      <div style="font-size:11px;color:#5F818B;display:flex;justify-content:space-between">
+      <div style="font-size:11px;color:#A78BFA;display:flex;justify-content:space-between">
         <span>Densidade: ${S.ia.habilidades.length > 120 ? 'Alta' : 'Moderada'}</span>
         <span>Transbordo: ${(S.ia.smartJump || []).length} regras</span>
       </div>
     </div>
 
-    <div style="background:#142731;border-radius:8px;padding:11px 12px;margin:10px 0">
-      <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#78A5AC;font-weight:700;margin-bottom:6px">Diagnóstico de Ambiguidades</div>
+    <div style="background:#221045;border:1px solid #361B66;border-radius:8px;padding:11px 12px;margin:10px 0">
+      <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#C4B5FD;font-weight:700;margin-bottom:6px">Diagnóstico de Ambiguidades</div>
       ${diag.ambiguidades.map(a => `
         <div class="ambig-item">
           <span class="${a.tipo === 'ok' ? 'ambig-ok' : 'ambig-warn'}">${a.tipo === 'ok' ? '✓' : '⚠'}</span>
-          <span style="color:${a.tipo === 'ok' ? '#DCE9EC' : '#FDE68A'}">${esc(a.txt)}</span>
+          <span style="color:${a.tipo === 'ok' ? '#EDE9FE' : '#FDE68A'}">${esc(a.txt)}</span>
         </div>
       `).join("")}
-      <button class="btn-g" style="color:#6FD3D6;font-size:12px;margin-top:6px;padding:0" onclick="otimizarIaAuditora()">✨ Otimizar regras com a Auditora</button>
+      <button class="btn-g" style="color:#C084FC;font-size:12px;margin-top:6px;padding:0" onclick="otimizarIaAuditora()">✨ Otimizar regras com a Auditora</button>
     </div>
 
     ${line("Nome do Agente", S.ia.nome || "—", !S.ia.nome)}
@@ -114,7 +114,7 @@ function drawSum() {
     ${line("Base Conhecimento", S.ia.baseUrl ? "Vinculada" : "Pendente", !S.ia.baseUrl)}
     ${line("Integração de Sistema", S.contrato.integracao ? (S.integ.sistema || "Aguardando") : "Não contratado", !S.integ.sistema)}
 
-    <button class="btn btn-p" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#0C7A83,#075158);border:0;display:flex;align-items:center;justify-content:center;gap:6px" onclick="abrirModalPromptFinal()">
+    <button class="btn btn-p" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#9333EA,#7C3AED);border:0;display:flex;align-items:center;justify-content:center;gap:6px" onclick="abrirModalPromptFinal()">
       👁️ Visualizar Prompt Final da IA
     </button>
 
