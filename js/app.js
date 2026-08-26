@@ -70,8 +70,8 @@ function drawSum() {
   const pend = allPending();
   const line = (k, v, dim) => `<div class="sline"><span class="k">${k}</span><span class="v ${dim ? "dim" : ""}">${esc(v)}</span></div>`;
 
-  if (c.ia) {
-    // Assistente de IA selecionado -> Exibe os diagnósticos e métricas da IA
+  if (cur === "ia" && c.ia) {
+    // Exibe a auditoria completa da IA SOMENTE quando o usuário está na aba Assistente de IA
     const diag = avaliarTierIa();
     const totalFluxos = (S.ia.fluxosPreAtendimento || []).length;
     const totalPassos = (S.ia.fluxosPreAtendimento || []).reduce((acc, f) => acc + (f.passos || []).filter(Boolean).length, 0);
@@ -122,7 +122,7 @@ function drawSum() {
       </button>
 
       ${pend.length ? `
-        <div class="pend">
+        <div class="pend" style="margin-top:14px">
           <h4>Falta preencher (${pend.length})</h4>
           ${pend.slice(0, 5).map(p => `<button onclick="go('${p.id}')">→ ${esc(p.txt)}</button>`).join("")}
           ${pend.length > 5 ? `<button onclick="go('revisao')">→ e mais ${pend.length - 5}…</button>` : ""}
@@ -132,23 +132,13 @@ function drawSum() {
       `}
     `;
   } else {
-    // Assistente de IA NÃO contratado -> Mostra apenas o resumo dos módulos e o feedback do que falta preencher
-    const modulos = [];
-    if (c.whats) modulos.push("WhatsApp");
-    if (c.voz) modulos.push("Voz / Telefonia");
-    if (c.integracao) modulos.push("Integração");
-
+    // Em todas as outras etapas -> Mostra APENAS o feedback do que falta preencher
     sumEl.innerHTML = `
       <h3>Resumo do Onboarding</h3>
-      <p class="cli">${esc(c.razaoSocial || "Cliente ORPEN")}</p>
-
-      ${line("Módulos Ativos", modulos.length ? modulos.join(", ") : "Nenhum selecionado", !modulos.length)}
-      ${c.whats ? line("WhatsApp", S.whats.wabaTipo === 'cloud' ? 'Cloud API' : 'On-Premises', false) : ""}
-      ${c.voz ? line("Voz / Telefonia", S.voz.ura === 'sim' ? 'Com URA' : 'Sem URA', false) : ""}
-      ${c.integracao ? line("Integração", S.integ.sistema || "Aguardando", !S.integ.sistema) : ""}
+      <p class="cli">${esc(c.razaoSocial || "Hospital Exemplo Ltda.")}</p>
 
       ${pend.length ? `
-        <div class="pend">
+        <div class="pend" style="margin-top:0">
           <h4>Falta preencher (${pend.length})</h4>
           ${pend.slice(0, 5).map(p => `<button onclick="go('${p.id}')">→ ${esc(p.txt)}</button>`).join("")}
           ${pend.length > 5 ? `<button onclick="go('revisao')">→ e mais ${pend.length - 5}…</button>` : ""}
