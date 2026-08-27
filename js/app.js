@@ -68,20 +68,19 @@ function drawSum() {
 
   const c = S.contrato;
   const pend = allPending();
+  const pc = progress();
   const line = (k, v, dim) => `<div class="sline"><span class="k">${k}</span><span class="v ${dim ? "dim" : ""}">${esc(v)}</span></div>`;
 
+  let contextCardHtml = "";
+
   if (cur === "ia" && c.ia) {
-    // Exibe a auditoria completa da IA SOMENTE quando o usuário está na aba Assistente de IA
     const diag = avaliarTierIa();
     const totalFluxos = (S.ia.fluxosPreAtendimento || []).length;
     const totalPassos = (S.ia.fluxosPreAtendimento || []).reduce((acc, f) => acc + (f.passos || []).filter(Boolean).length, 0);
 
-    sumEl.innerHTML = `
-      <h3>Assistente de IA</h3>
-      <p class="cli">${esc(c.razaoSocial || "Cliente ORPEN")}</p>
-
+    contextCardHtml = `
       <div class="tier-box">
-        <span style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#C4B5FD;font-weight:700;display:block;margin-bottom:4px">Plano Compreendido</span>
+        <span class="side-context-kicker">Plano Compreendido</span>
         <span class="tier-badge ${diag.badgeClass}">${diag.tier}</span>
         <p style="margin-top:4px">${diag.desc}</p>
       </div>
@@ -115,39 +114,136 @@ function drawSum() {
       ${line("Assuntos de Transbordo", `${(S.ia.topicosTransbordo || []).length} cadastrado(s)`, !(S.ia.topicosTransbordo && S.ia.topicosTransbordo.length))}
       ${line("Fluxos de Atendimento", `${totalFluxos} fluxo(s) · ${totalPassos} passo(s)`, !totalPassos)}
       ${line("Base Conhecimento", S.ia.baseUrl ? "Vinculada" : "Pendente", !S.ia.baseUrl)}
-      ${line("Integração de Sistema", S.contrato.integracao ? (S.integ.sistema || "Aguardando") : "Não contratado", !S.integ.sistema)}
+      ${line("Integração", S.contrato.integracao ? (S.integ.sistema || "Aguardando") : "Não contratado", !S.integ.sistema)}
 
       <button class="btn btn-p" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#9333EA,#7C3AED);border:0;display:flex;align-items:center;justify-content:center;gap:6px" onclick="abrirModalPromptFinal()">
         👁️ Visualizar Prompt Final da IA
       </button>
-
-      ${pend.length ? `
-        <div class="pend" style="margin-top:14px">
-          <h4>Falta preencher (${pend.length})</h4>
-          ${pend.slice(0, 5).map(p => `<button onclick="go('${p.id}')">→ ${esc(p.txt)}</button>`).join("")}
-          ${pend.length > 5 ? `<button onclick="go('revisao')">→ e mais ${pend.length - 5}…</button>` : ""}
-        </div>
-      ` : `
-        <div class="done-box">Tudo pronto! Setup 100% preenchido.</div>
-      `}
     `;
-  } else {
-    // Em todas as outras etapas -> Mostra APENAS o feedback do que falta preencher
-    sumEl.innerHTML = `
-      <h3>Resumo do Onboarding</h3>
-      <p class="cli">${esc(c.razaoSocial || "Hospital Exemplo Ltda.")}</p>
-
-      ${pend.length ? `
-        <div class="pend" style="margin-top:0">
-          <h4>Falta preencher (${pend.length})</h4>
-          ${pend.slice(0, 5).map(p => `<button onclick="go('${p.id}')">→ ${esc(p.txt)}</button>`).join("")}
-          ${pend.length > 5 ? `<button onclick="go('revisao')">→ e mais ${pend.length - 5}…</button>` : ""}
-        </div>
-      ` : `
-        <div class="done-box">Tudo pronto! Setup 100% preenchido.</div>
-      `}
+  } else if (cur === "contrato") {
+    contextCardHtml = `
+      <div class="side-context-card">
+        <span class="side-context-kicker">Resumo do Contrato</span>
+        ${line("Canais", c.canais.join(" · "))}
+        ${line("Licenças Agente", c.licAgente)}
+        ${line("Licenças Gestor", c.licGestor)}
+        ${line("WhatsApp", `${c.numerosWhats} número(s)`)}
+        ${line("Status", c.confirmado ? "Confirmado ✓" : "Aguardando confirmação", !c.confirmado)}
+      </div>
+    `;
+  } else if (cur === "contatos") {
+    const preenchidos = [S.contatos.projNome, S.contatos.finNome, S.contatos.legNome, (has("Voz")||c.integracao ? S.contatos.tiNome : true)].filter(Boolean).length;
+    const total = has("Voz") || c.integracao ? 4 : 3;
+    contextCardHtml = `
+      <div class="side-context-card">
+        <span class="side-context-kicker">Responsáveis do Projeto</span>
+        ${line("Contatos Definidos", `${preenchidos} de ${total}`)}
+        ${line("Projeto", S.contatos.projNome || "Pendente", !S.contatos.projNome)}
+        ${line("Financeiro", S.contatos.finNome || "Pendente", !S.contatos.finNome)}
+        ${line("Assinatura", S.contatos.legNome || "Pendente", !S.contatos.legNome)}
+        ${has("Voz") || c.integracao ? line("TI / Redes", S.contatos.tiNome || "Pendente", !S.contatos.tiNome) : ""}
+      </div>
+    `;
+  } else if (cur === "operacao") {
+    contextCardHtml = `
+      <div class="side-context-card">
+        <span class="side-context-kicker">Estrutura de Filas</span>
+        ${line("Jornada", S.operacao.jornada === '24x7' ? '24 Horas' : (S.operacao.jornada === 'estendido' ? 'Seg a Sáb' : 'Comercial'))}
+        ${line("Filas / DACs", `${S.operacao.setores.length} cadastrada(s)`)}
+        ${line("Horário Úteis", S.operacao.diasSem || "Pendente", !S.operacao.diasSem)}
+      </div>
+    `;
+  } else if (cur === "equipe") {
+    contextCardHtml = `
+      <div class="side-context-card">
+        <span class="side-context-kicker">Dimensionamento de Equipe</span>
+        ${line("Agentes", `${S.equipe.agentes.length} / ${c.licAgente} licença(s)`)}
+        ${line("Gestores", `${S.equipe.gestores.length} / ${c.licGestor} licença(s)`)}
+        ${line("Identificação", S.equipe.nomeVisivel ? "Nome Visível" : "Anônimo")}
+      </div>
+    `;
+  } else if (cur === "classif") {
+    contextCardHtml = `
+      <div class="side-context-card">
+        <span class="side-context-kicker">Qualidade & Encerramento</span>
+        ${line("Tabulações", `${S.classif.tabulacoes.length} criada(s)`)}
+        ${line("Pausas", `${S.classif.pausas.length} criada(s)`)}
+        ${line("Pesquisa CSAT", S.classif.pesquisa ? "Ativa" : "Desativada")}
+      </div>
+    `;
+  } else if (cur === "whats") {
+    contextCardHtml = `
+      <div class="side-context-card">
+        <span class="side-context-kicker">Canal WhatsApp</span>
+        ${line("Número", S.whats.numero || "Pendente", !S.whats.numero)}
+        ${line("Status Atual", S.whats.emUso === 'sim' ? 'Em uso (Virada)' : (S.whats.emUso === 'nao' ? 'Número Novo' : 'Pendente'))}
+        ${line("Recepção M01", S.whats.m01 ? "Configurada ✓" : "Pendente", !S.whats.m01)}
+        ${line("Fora Horário M02", S.whats.m02 ? "Configurada ✓" : "Pendente", !S.whats.m02)}
+      </div>
+    `;
+  } else if (cur === "bot") {
+    contextCardHtml = `
+      <div class="side-context-card">
+        <span class="side-context-kicker">Autoatendimento (Bot)</span>
+        ${line("Opções do Menu", `${S.bot.opcoes.length} configurada(s)`)}
+        ${line("Destinos DAC", `${S.bot.opcoes.filter(o => o.acao === 'transferir').length} transferências`)}
+      </div>
+    `;
+  } else if (cur === "voz") {
+    contextCardHtml = `
+      <div class="side-context-card">
+        <span class="side-context-kicker">Telefonia & Voz</span>
+        ${line("Operadora", S.voz.operadora || "Pendente", !S.voz.operadora)}
+        ${line("Entroncamento", S.voz.entroncamento === 'sip' ? 'SIP Direto' : (S.voz.entroncamento === 'legada' ? 'Central Legada' : 'Apoio ORPEN'))}
+        ${line("Agentes Voz", S.voz.agentesWeb || "—")}
+        ${line("URA de Voz", S.voz.ura === 'sim' ? `${S.voz.uraNiveis || 1} nível(is)` : "Sem URA")}
+      </div>
+    `;
+  } else if (cur === "integ") {
+    contextCardHtml = `
+      <div class="side-context-card">
+        <span class="side-context-kicker">Integração de Sistemas</span>
+        ${line("Software", S.integ.sistema || "Pendente", !S.integ.sistema)}
+        ${line("Suporte a API", S.integ.temApi === 'sim' ? 'Disponível' : (S.integ.temApi === 'nao' ? 'Sem API' : 'Não informado'))}
+        ${line("Casos de Uso", `${S.integ.casos.length} selecionado(s)`)}
+      </div>
+    `;
+  } else if (cur === "revisao") {
+    contextCardHtml = `
+      <div class="side-context-card">
+        <span class="side-context-kicker">Status de Envio</span>
+        ${line("Conclusão Geral", `${pc}%`)}
+        ${line("Pendências", `${pend.length} item(ns)`)}
+      </div>
     `;
   }
+
+  sumEl.innerHTML = `
+    <h3>Resumo do Setup</h3>
+    <p class="cli">${esc(c.razaoSocial || "Hospital Exemplo Ltda.")}</p>
+
+    <div style="background:#281452;border:1px solid #3D1F75;border-radius:8px;padding:10px 12px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#C4B5FD;font-weight:600;margin-bottom:4px">
+        <span>Progresso Geral</span>
+        <span style="color:#10B981;font-weight:700">${pc}%</span>
+      </div>
+      <div class="meter-track" style="margin:2px 0 0">
+        <div class="meter-fill" style="width:${pc}%"></div>
+      </div>
+    </div>
+
+    ${contextCardHtml}
+
+    ${pend.length ? `
+      <div class="pend" style="margin-top:10px">
+        <h4>Falta preencher (${pend.length})</h4>
+        ${pend.slice(0, 5).map(p => `<button onclick="go('${p.id}')">→ ${esc(p.txt)}</button>`).join("")}
+        ${pend.length > 5 ? `<button onclick="go('revisao')">→ e mais ${pend.length - 5}…</button>` : ""}
+      </div>
+    ` : `
+      <div class="done-box">Tudo pronto! Setup 100% preenchido.</div>
+    `}
+  `;
 }
 
 function toast(m) {
