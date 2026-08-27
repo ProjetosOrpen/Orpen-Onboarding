@@ -336,6 +336,8 @@ const BLOCKS = [
       if (!a.topicosTransbordo || !a.topicosTransbordo.length) p.push("Assuntos de transbordo humano");
       if (!a.restricoes) p.push("O que a IA está proibida de fazer (Restrições)");
       if (!a.fluxosPreAtendimento || !a.fluxosPreAtendimento.length) p.push("Ao menos um fluxo de atendimento");
+      if ((a.fluxosPreAtendimento || []).some(f => !f.destino)) p.push("Fila de transferência de todos os fluxos");
+      if (!a.filaFallback) p.push("Fila de transbordo / contingência da IA");
       return p;
     },
     render() {
@@ -479,6 +481,7 @@ const BLOCKS = [
         `;
       } else if (etapa === 4) {
         contentHtml = `
+          ${!S.operacao.setores.length ? `<div class="note warn" style="margin-bottom:14px">Cadastre os setores no bloco de Horário e Filas para vinculá-los aqui como destinos de transbordo.</div>` : ""}
           <div style="margin-bottom:20px">
             ${fluxos.map((f, fi) => `
               <div class="flow-card">
@@ -507,6 +510,22 @@ const BLOCKS = [
                 <button type="button" class="btn-add-step" onclick="addIaPasso(${fi})">
                   <span>➕</span> Adicionar Passo a este fluxo
                 </button>
+
+                <div style="margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--line);background:#FBFBFE;margin-left:-16px;margin-right:-16px;margin-bottom:-16px;padding:14px 16px;border-bottom-left-radius:8px;border-bottom-right-radius:8px">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+                    <label style="font-size:12px;font-weight:700;color:var(--signal-deep);display:flex;align-items:center;gap:6px;margin:0">
+                      <span>🎯</span> Fila de Destino da Transferência <span class="req">*</span>
+                    </label>
+                    ${f.destino ? `<span style="font-size:11px;font-weight:600;color:var(--signal-deep);background:var(--signal-soft);padding:2px 8px;border-radius:12px">Fila: ${esc(f.destino)}</span>` : `<span style="font-size:11px;font-weight:600;color:var(--amber);background:#FEF3C7;padding:2px 8px;border-radius:12px">Obrigatório</span>`}
+                  </div>
+                  <p style="font-size:11.5px;color:var(--muted);margin:0 0 8px">
+                    Para qual setor / fila humana o cliente será transferido automaticamente após responder às perguntas deste fluxo?
+                  </p>
+                  <select onchange="setIaFluxoDestino(${fi}, this.value)" style="background:#fff;border:1.5px solid ${f.destino ? 'var(--line)' : 'var(--amber)'}">
+                    ${setOpts(f.destino)}
+                  </select>
+                  ${!f.destino ? `<span style="font-size:11.5px;color:var(--amber);margin-top:4px;display:block;font-weight:600">⚠ Selecione a fila de transbordo para este fluxo para avançar.</span>` : ""}
+                </div>
               </div>
             `).join("")}
 

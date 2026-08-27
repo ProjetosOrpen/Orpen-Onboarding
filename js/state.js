@@ -110,7 +110,8 @@ const S = {
           "Qual o nome completo e CPF do paciente?",
           "Qual o convênio ou prefere atendimento particular?",
           "Qual a preferência de data e período (manhã/tarde)?"
-        ]
+        ],
+        destino: "Recepção / Agendamento"
       },
       {
         nome: "Exames e Laudos",
@@ -119,7 +120,8 @@ const S = {
           "Você já possui o pedido médico em mãos?",
           "Qual o convênio para realização do exame?",
           "Qual a unidade de preferência?"
-        ]
+        ],
+        destino: "Recepção / Agendamento"
       },
       {
         nome: "Remarcações e Cancelamentos",
@@ -127,13 +129,23 @@ const S = {
           "Qual o nome completo e CPF cadastrado?",
           "Qual consulta ou exame você deseja remarcar ou cancelar?",
           "Qual a nova data ou horário de sua preferência?"
-        ]
+        ],
+        destino: "Recepção / Agendamento"
+      },
+      {
+        nome: "Financeiro e Faturamento",
+        passos: [
+          "Qual o número da fatura, guia ou boleto?",
+          "Qual o nome e CPF do titular responsável?",
+          "Qual a dúvida ou solicitação sobre o pagamento?"
+        ],
+        destino: "Financeiro"
       }
     ],
-    filaFallback: "",
+    filaFallback: "Recepção / Agendamento",
     tentativasErro: "3",
 
-    // 6. Inatividade e Encerramento
+    // 5. Inatividade e Encerramento
     inatTempo: "10",
     inatAcao: "finalizar",
     inatFila: "",
@@ -268,7 +280,7 @@ function isIaStepDone(n) {
   if (n === 1) return !!(a.processoOtimizar && a.processoOtimizar.trim() && a.kpis && a.kpis.trim());
   if (n === 2) return !!(a.nome && a.nome.trim() && a.tom && a.tom.length && a.extensaoResp);
   if (n === 3) return !!(a.habilidades && a.habilidades.trim() && (a.topicosTransbordo && a.topicosTransbordo.length) && a.restricoes && a.restricoes.trim());
-  if (n === 4) return !!(a.fluxosPreAtendimento && a.fluxosPreAtendimento.length && a.filaFallback);
+  if (n === 4) return !!(a.fluxosPreAtendimento && a.fluxosPreAtendimento.length && a.fluxosPreAtendimento.every(f => f.destino) && a.filaFallback);
   if (n === 5) return !!(a.inatTempo && a.inatAcao);
   if (n === 6) return !!(a.baseUrl || (a.arquivos && a.arquivos.length) || (a.faqTexto && a.faqTexto.trim()) || a.faqRespNome);
   return false;
@@ -286,13 +298,15 @@ function addIaTopicoTransbordo(nome) {
   if (!S.ia.fluxosPreAtendimento) S.ia.fluxosPreAtendimento = [];
   const jaExiste = S.ia.fluxosPreAtendimento.some(f => f.nome.toLowerCase() === limpo.toLowerCase());
   if (!jaExiste) {
+    const defSetor = S.operacao.setores[0]?.nome || "";
     S.ia.fluxosPreAtendimento.push({
       nome: limpo,
       passos: [
         "Qual o seu nome completo e CPF do paciente?",
         "Qual o convênio ou particular?",
         "Qual a especialidade ou procedimento desejado?"
-      ]
+      ],
+      destino: defSetor
     });
   }
   draw();
@@ -335,7 +349,8 @@ function appendIaField(path, text) {
 // Gerenciamento de Fluxos de Pré-Atendimento
 function addIaFluxo() {
   if (!S.ia.fluxosPreAtendimento) S.ia.fluxosPreAtendimento = [];
-  S.ia.fluxosPreAtendimento.push({ nome: `Novo Fluxo ${S.ia.fluxosPreAtendimento.length + 1}`, passos: [""] });
+  const defSetor = S.operacao.setores[0]?.nome || "";
+  S.ia.fluxosPreAtendimento.push({ nome: `Novo Fluxo ${S.ia.fluxosPreAtendimento.length + 1}`, passos: [""], destino: defSetor });
   draw();
   toast("Novo fluxo adicionado!");
 }
@@ -347,6 +362,12 @@ function delIaFluxo(i) {
 function setIaFluxoNome(i, val) {
   if (S.ia.fluxosPreAtendimento[i]) {
     S.ia.fluxosPreAtendimento[i].nome = val;
+    soft();
+  }
+}
+function setIaFluxoDestino(i, val) {
+  if (S.ia.fluxosPreAtendimento[i]) {
+    S.ia.fluxosPreAtendimento[i].destino = val;
     soft();
   }
 }
@@ -413,6 +434,7 @@ function loadIaTemplates() {
 }
 
 function loadPreAtendSaude() {
+  const defSetor = S.operacao.setores[0]?.nome || "";
   S.ia.fluxosPreAtendimento = [
     {
       nome: "Consultas e Agendamentos",
@@ -421,7 +443,8 @@ function loadPreAtendSaude() {
         "Qual o nome completo e CPF do paciente?",
         "Qual o convênio ou prefere atendimento particular?",
         "Qual a preferência de data e período (manhã/tarde)?"
-      ]
+      ],
+      destino: S.operacao.setores.find(s => /agend|recep/i.test(s.nome))?.nome || defSetor
     },
     {
       nome: "Exames e Laudos",
@@ -430,7 +453,8 @@ function loadPreAtendSaude() {
         "Você já possui o pedido médico em mãos?",
         "Qual o convênio para realização do exame?",
         "Qual a unidade de preferência?"
-      ]
+      ],
+      destino: S.operacao.setores.find(s => /exame|recep/i.test(s.nome))?.nome || defSetor
     },
     {
       nome: "Remarcações e Cancelamentos",
@@ -438,13 +462,16 @@ function loadPreAtendSaude() {
         "Qual o nome completo e CPF cadastrado?",
         "Qual consulta ou exame você deseja remarcar ou cancelar?",
         "Qual a nova data ou horário de sua preferência?"
-      ]
+      ],
+      destino: S.operacao.setores.find(s => /agend|recep/i.test(s.nome))?.nome || defSetor
     }
   ];
   draw(); toast("Fluxos de triagem de saúde carregados!");
 }
 
 function loadPreAtendComercial() {
+  const defSetor = S.operacao.setores[0]?.nome || "";
+  const comSetor = S.operacao.setores.find(s => /comercial|vendas/i.test(s.nome))?.nome || defSetor;
   S.ia.fluxosPreAtendimento = [
     {
       nome: "Novo Contrato / Proposta B2B",
@@ -453,7 +480,8 @@ function loadPreAtendComercial() {
         "Qual o CNPJ da empresa?",
         "Quantos operadores / atendentes utilizarão a plataforma?",
         "Qual o seu cargo ou papel na decisão?"
-      ]
+      ],
+      destino: comSetor
     },
     {
       nome: "Demonstração e Dúvidas de Planos",
@@ -461,7 +489,8 @@ function loadPreAtendComercial() {
         "Quais canais sua empresa precisa integrar (WhatsApp, Telefonia, E-mail)?",
         "Você já utiliza algum sistema de atendimento ou CRM hoje?",
         "Qual o melhor e-mail e telefone para envio da proposta?"
-      ]
+      ],
+      destino: comSetor
     }
   ];
   draw(); toast("Fluxos de qualificação comercial carregados!");

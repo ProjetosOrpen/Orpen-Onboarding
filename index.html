@@ -1429,7 +1429,8 @@
               "Qual o nome completo e CPF do paciente?",
               "Qual o convênio ou prefere atendimento particular?",
               "Qual a preferência de data e período (manhã/tarde)?"
-            ]
+            ],
+            destino: "Recepção / Agendamento"
           },
           {
             nome: "Exames e Laudos",
@@ -1438,7 +1439,8 @@
               "Você já possui o pedido médico em mãos?",
               "Qual o convênio para realização do exame?",
               "Qual a unidade de preferência?"
-            ]
+            ],
+            destino: "Recepção / Agendamento"
           },
           {
             nome: "Remarcações e Cancelamentos",
@@ -1446,13 +1448,23 @@
               "Qual o nome completo e CPF cadastrado?",
               "Qual consulta ou exame você deseja remarcar ou cancelar?",
               "Qual a nova data ou horário de sua preferência?"
-            ]
+            ],
+            destino: "Recepção / Agendamento"
+          },
+          {
+            nome: "Financeiro e Faturamento",
+            passos: [
+              "Qual o número da fatura, guia ou boleto?",
+              "Qual o nome e CPF do titular responsável?",
+              "Qual a dúvida ou solicitação sobre o pagamento?"
+            ],
+            destino: "Financeiro"
           }
         ],
-        filaFallback: "",
+        filaFallback: "Recepção / Agendamento",
         tentativasErro: "3",
 
-        // 6. Inatividade e Encerramento
+        // 5. Inatividade e Encerramento
         inatTempo: "10",
         inatAcao: "finalizar",
         inatFila: "",
@@ -1587,7 +1599,7 @@
       if (n === 1) return !!(a.processoOtimizar && a.processoOtimizar.trim() && a.kpis && a.kpis.trim());
       if (n === 2) return !!(a.nome && a.nome.trim() && a.tom && a.tom.length && a.extensaoResp);
       if (n === 3) return !!(a.habilidades && a.habilidades.trim() && (a.topicosTransbordo && a.topicosTransbordo.length) && a.restricoes && a.restricoes.trim());
-      if (n === 4) return !!(a.fluxosPreAtendimento && a.fluxosPreAtendimento.length && a.filaFallback);
+      if (n === 4) return !!(a.fluxosPreAtendimento && a.fluxosPreAtendimento.length && a.fluxosPreAtendimento.every(f => f.destino) && a.filaFallback);
       if (n === 5) return !!(a.inatTempo && a.inatAcao);
       if (n === 6) return !!(a.baseUrl || (a.arquivos && a.arquivos.length) || (a.faqTexto && a.faqTexto.trim()) || a.faqRespNome);
       return false;
@@ -1605,13 +1617,15 @@
       if (!S.ia.fluxosPreAtendimento) S.ia.fluxosPreAtendimento = [];
       const jaExiste = S.ia.fluxosPreAtendimento.some(f => f.nome.toLowerCase() === limpo.toLowerCase());
       if (!jaExiste) {
+        const defSetor = S.operacao.setores[0]?.nome || "";
         S.ia.fluxosPreAtendimento.push({
           nome: limpo,
           passos: [
             "Qual o seu nome completo e CPF do paciente?",
             "Qual o convênio ou particular?",
-            "Qual a especialidade ou procedimento desejado?"
-          ]
+            "Qual la especialidade ou procedimento desejado?"
+          ],
+          destino: defSetor
         });
       }
       draw();
@@ -1642,7 +1656,8 @@
     // Gerenciamento de Fluxos de Pré-Atendimento
     function addIaFluxo() {
       if (!S.ia.fluxosPreAtendimento) S.ia.fluxosPreAtendimento = [];
-      S.ia.fluxosPreAtendimento.push({ nome: `Novo Fluxo ${S.ia.fluxosPreAtendimento.length + 1}`, passos: [""] });
+      const defSetor = S.operacao.setores[0]?.nome || "";
+      S.ia.fluxosPreAtendimento.push({ nome: `Novo Fluxo ${S.ia.fluxosPreAtendimento.length + 1}`, passos: [""], destino: defSetor });
       draw();
       toast("Novo fluxo adicionado!");
     }
@@ -1654,6 +1669,12 @@
     function setIaFluxoNome(i, val) {
       if (S.ia.fluxosPreAtendimento[i]) {
         S.ia.fluxosPreAtendimento[i].nome = val;
+        soft();
+      }
+    }
+    function setIaFluxoDestino(i, val) {
+      if (S.ia.fluxosPreAtendimento[i]) {
+        S.ia.fluxosPreAtendimento[i].destino = val;
         soft();
       }
     }
@@ -1696,13 +1717,11 @@
       if (!S.ia.arquivos) S.ia.arquivos = [];
       S.ia.arquivos.push({ nome: nome || "Documento.pdf", tamanho: tamanho || "500 KB" });
       draw();
-      toast("Arquivo adicionado à Base de Conhecimento!");
     }
     function delIaArquivo(i) {
       if (S.ia.arquivos) {
         S.ia.arquivos.splice(i, 1);
         draw();
-        toast("Arquivo removido.");
       }
     }
 
@@ -1720,6 +1739,7 @@
     }
 
     function loadPreAtendSaude() {
+      const defSetor = S.operacao.setores[0]?.nome || "";
       S.ia.fluxosPreAtendimento = [
         {
           nome: "Consultas e Agendamentos",
@@ -1728,7 +1748,8 @@
             "Qual o nome completo e CPF do paciente?",
             "Qual o convênio ou prefere atendimento particular?",
             "Qual a preferência de data e período (manhã/tarde)?"
-          ]
+          ],
+          destino: S.operacao.setores.find(s => /agend|recep/i.test(s.nome))?.nome || defSetor
         },
         {
           nome: "Exames e Laudos",
@@ -1737,7 +1758,8 @@
             "Você já possui o pedido médico em mãos?",
             "Qual o convênio para realização do exame?",
             "Qual a unidade de preferência?"
-          ]
+          ],
+          destino: S.operacao.setores.find(s => /exame|recep/i.test(s.nome))?.nome || defSetor
         },
         {
           nome: "Remarcações e Cancelamentos",
@@ -1745,13 +1767,16 @@
             "Qual o nome completo e CPF cadastrado?",
             "Qual consulta ou exame você deseja remarcar ou cancelar?",
             "Qual a nova data ou horário de sua preferência?"
-          ]
+          ],
+          destino: S.operacao.setores.find(s => /agend|recep/i.test(s.nome))?.nome || defSetor
         }
       ];
       draw(); toast("Fluxos de triagem de saúde carregados!");
     }
 
     function loadPreAtendComercial() {
+      const defSetor = S.operacao.setores[0]?.nome || "";
+      const comSetor = S.operacao.setores.find(s => /comercial|vendas/i.test(s.nome))?.nome || defSetor;
       S.ia.fluxosPreAtendimento = [
         {
           nome: "Novo Contrato / Proposta B2B",
@@ -1760,7 +1785,8 @@
             "Qual o CNPJ da empresa?",
             "Quantos operadores / atendentes utilizarão a plataforma?",
             "Qual o seu cargo ou papel na decisão?"
-          ]
+          ],
+          destino: comSetor
         },
         {
           nome: "Demonstração e Dúvidas de Planos",
@@ -1768,7 +1794,8 @@
             "Quais canais sua empresa precisa integrar (WhatsApp, Telefonia, E-mail)?",
             "Você já utiliza algum sistema de atendimento ou CRM hoje?",
             "Qual o melhor e-mail e telefone para envio da proposta?"
-          ]
+          ],
+          destino: comSetor
         }
       ];
       draw(); toast("Fluxos de qualificação comercial carregados!");
@@ -2044,7 +2071,12 @@
       if (!temPreColeta) {
         ambiguidades.push({ tipo: "warn", txt: "Sem pré-qualificação: Nenhum passo configurado nos fluxos de atendimento." });
       } else {
-        ambiguidades.push({ tipo: "ok", txt: `${(S.ia.fluxosPreAtendimento || []).length} fluxo(s) de atendimento com ${totalPassosFluxos} passo(s) ao todo.` });
+        const fluxosSemDestino = (S.ia.fluxosPreAtendimento || []).filter(f => !f.destino);
+        if (fluxosSemDestino.length > 0) {
+          ambiguidades.push({ tipo: "warn", txt: `Fila de transferência: ${fluxosSemDestino.length} fluxo(s) ainda sem fila de destino definida.` });
+        } else {
+          ambiguidades.push({ tipo: "ok", txt: `${(S.ia.fluxosPreAtendimento || []).length} fluxo(s) de atendimento com filas de transbordo mapeadas.` });
+        }
       }
 
       if (temInteg && temCasosComplexos && temBaseExtensa && temPreColeta && temTopicosTransbordo) {
@@ -2133,6 +2165,7 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
               prompt += `   Passo ${pIdx + 1}: "${passo.trim()}"\n`;
             }
           });
+          prompt += `   ➔ DESTINO DO TRANSBORDO: Ao coletar os dados acima, transferir o atendimento para a Fila "${f.destino || S.ia.filaFallback || 'Atendimento Geral'}".\n`;
         });
         if (S.ia.filaFallback) {
           prompt += `\n* Se a IA não identificar o fluxo do cliente ou houver falha de compreensão, encaminhar para a Fila de Contingência: ${S.ia.filaFallback}.\n`;
@@ -2543,6 +2576,8 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
           if (!a.topicosTransbordo || !a.topicosTransbordo.length) p.push("Assuntos de transbordo humano");
           if (!a.restricoes) p.push("O que a IA está proibida de fazer (Restrições)");
           if (!a.fluxosPreAtendimento || !a.fluxosPreAtendimento.length) p.push("Ao menos um fluxo de atendimento");
+          if ((a.fluxosPreAtendimento || []).some(f => !f.destino)) p.push("Fila de transferência de todos os fluxos");
+          if (!a.filaFallback) p.push("Fila de transbordo / contingência da IA");
           return p;
         },
         render() {
@@ -2686,6 +2721,7 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
             `;
           } else if (etapa === 4) {
             contentHtml = `
+              ${!S.operacao.setores.length ? `<div class="note warn" style="margin-bottom:14px">Cadastre os setores no bloco de Horário e Filas para vinculá-los aqui como destinos de transbordo.</div>` : ""}
               <div style="margin-bottom:20px">
                 ${fluxos.map((f, fi) => `
                   <div class="flow-card">
@@ -2714,6 +2750,22 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
                     <button type="button" class="btn-add-step" onclick="addIaPasso(${fi})">
                       <span>➕</span> Adicionar Passo a este fluxo
                     </button>
+
+                    <div style="margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--line);background:#FBFBFE;margin-left:-16px;margin-right:-16px;margin-bottom:-16px;padding:14px 16px;border-bottom-left-radius:8px;border-bottom-right-radius:8px">
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+                        <label style="font-size:12px;font-weight:700;color:var(--signal-deep);display:flex;align-items:center;gap:6px;margin:0">
+                          <span>🎯</span> Fila de Destino da Transferência <span class="req">*</span>
+                        </label>
+                        ${f.destino ? `<span style="font-size:11px;font-weight:600;color:var(--signal-deep);background:var(--signal-soft);padding:2px 8px;border-radius:12px">Fila: ${esc(f.destino)}</span>` : `<span style="font-size:11px;font-weight:600;color:var(--amber);background:#FEF3C7;padding:2px 8px;border-radius:12px">Obrigatório</span>`}
+                      </div>
+                      <p style="font-size:11.5px;color:var(--muted);margin:0 0 8px">
+                        Para qual setor / fila humana o cliente será transferido automaticamente após responder às perguntas deste fluxo?
+                      </p>
+                      <select onchange="setIaFluxoDestino(${fi}, this.value)" style="background:#fff;border:1.5px solid ${f.destino ? 'var(--line)' : 'var(--amber)'}">
+                        ${setOpts(f.destino)}
+                      </select>
+                      ${!f.destino ? `<span style="font-size:11.5px;color:var(--amber);margin-top:4px;display:block;font-weight:600">⚠ Selecione a fila de transbordo para este fluxo para avançar.</span>` : ""}
+                    </div>
                   </div>
                 `).join("")}
 
