@@ -90,16 +90,18 @@ const S = {
 
     // 3. Contexto do Negócio e Objetivos
     habilidades: "- Horários de funcionamento e endereços das unidades\n- Relação de convênios atendidos\n- Orientações e preparos básicos de exames\n- Envio de links de agendamento online",
-    assuntosTransbordo: "- Emergências médicas ou risco à vida\n- Negociação financeira complexa ou faturamento de contas\n- Procedimentos cirúrgicos ou autorizações especiais de guias\n- Pedido explícito do cliente para falar com um atendente",
+    topicosTransbordo: [
+      "Consultas e Agendamentos",
+      "Exames e Laudos",
+      "Remarcações e Cancelamentos",
+      "Financeiro e Faturamento"
+    ],
     restricoes: "- Proibido fornecer diagnóstico médico ou prescrever condutas\n- Não confirmar cobertura sem checagem de plano\n- Não prometer procedimentos cirúrgicos ou horários sem confirmação",
     publicoAlvo: "Pacientes e clientes buscando agendamento, exames e orientações gerais.",
     problema: "Alto tempo de espera no WhatsApp e dúvidas repetitivas sobre preparo e convênios.",
     foraEscopo: "Política, receitas caseiras, conselhos pessoais não médicos.",
 
-    // 4. Roteamento Inteligente (Smart Jump) e Filas
-    smartJump: [],
-
-    // 5. Pré-Atendimento e Coleta Sequencial de Dados (por Fluxo)
+    // 4. Fluxos de Atendimento (por Assunto / Tópico)
     fluxosPreAtendimento: [
       {
         nome: "Consultas e Agendamentos",
@@ -256,7 +258,7 @@ function sugerirM02() {
   S.whats.m02 = `Olá! Nosso atendimento funciona ${S.operacao.diasSem ? "de segunda a sexta, das " + S.operacao.diasSem : "em horário comercial"}.\nDeixe sua mensagem que retornamos no próximo dia útil.`; draw();
 }
 function setIaSubStep(n) {
-  S.ia._etapa = Math.max(1, Math.min(7, n));
+  S.ia._etapa = Math.max(1, Math.min(6, n));
   draw();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -265,12 +267,57 @@ function isIaStepDone(n) {
   const a = S.ia;
   if (n === 1) return !!(a.processoOtimizar && a.processoOtimizar.trim() && a.kpis && a.kpis.trim());
   if (n === 2) return !!(a.nome && a.nome.trim() && a.tom && a.tom.length && a.extensaoResp);
-  if (n === 3) return !!(a.habilidades && a.habilidades.trim() && a.restricoes && a.restricoes.trim());
-  if (n === 4) return !!(a.smartJump && a.smartJump.length);
-  if (n === 5) return !!(a.fluxosPreAtendimento && a.fluxosPreAtendimento.length && a.filaFallback);
-  if (n === 6) return !!(a.inatTempo && a.inatAcao);
-  if (n === 7) return !!(a.baseUrl || (a.arquivos && a.arquivos.length) || (a.faqTexto && a.faqTexto.trim()) || a.faqRespNome);
+  if (n === 3) return !!(a.habilidades && a.habilidades.trim() && (a.topicosTransbordo && a.topicosTransbordo.length) && a.restricoes && a.restricoes.trim());
+  if (n === 4) return !!(a.fluxosPreAtendimento && a.fluxosPreAtendimento.length && a.filaFallback);
+  if (n === 5) return !!(a.inatTempo && a.inatAcao);
+  if (n === 6) return !!(a.baseUrl || (a.arquivos && a.arquivos.length) || (a.faqTexto && a.faqTexto.trim()) || a.faqRespNome);
   return false;
+}
+
+// Gerenciamento de Tópicos de Transbordo (que geram os fluxos de atendimento)
+function addIaTopicoTransbordo(nome) {
+  if (!nome || !nome.trim()) return;
+  const limpo = nome.trim();
+  if (!S.ia.topicosTransbordo) S.ia.topicosTransbordo = [];
+  if (!S.ia.topicosTransbordo.includes(limpo)) {
+    S.ia.topicosTransbordo.push(limpo);
+  }
+  // Sincroniza criando automaticamente o fluxo na Etapa 4 se ainda não existir
+  if (!S.ia.fluxosPreAtendimento) S.ia.fluxosPreAtendimento = [];
+  const jaExiste = S.ia.fluxosPreAtendimento.some(f => f.nome.toLowerCase() === limpo.toLowerCase());
+  if (!jaExiste) {
+    S.ia.fluxosPreAtendimento.push({
+      nome: limpo,
+      passos: [
+        "Qual o seu nome completo e CPF do paciente?",
+        "Qual o convênio ou particular?",
+        "Qual a especialidade ou procedimento desejado?"
+      ]
+    });
+  }
+  draw();
+  toast(`Assunto "${limpo}" adicionado e sincronizado aos fluxos!`);
+}
+
+function setIaTopicoTransbordo(idx, val) {
+  if (!S.ia.topicosTransbordo) S.ia.topicosTransbordo = [];
+  const antigo = S.ia.topicosTransbordo[idx];
+  S.ia.topicosTransbordo[idx] = val;
+  if (S.ia.fluxosPreAtendimento) {
+    const fl = S.ia.fluxosPreAtendimento.find(f => f.nome === antigo);
+    if (fl) fl.nome = val;
+  }
+  soft();
+}
+
+function delIaTopicoTransbordo(idx) {
+  if (S.ia.topicosTransbordo && S.ia.topicosTransbordo[idx] !== undefined) {
+    const nome = S.ia.topicosTransbordo[idx];
+    S.ia.topicosTransbordo.splice(idx, 1);
+    S.ia.fluxosPreAtendimento = (S.ia.fluxosPreAtendimento || []).filter(f => f.nome !== nome);
+    draw();
+    toast("Assunto e fluxo correspondente removidos.");
+  }
 }
 
 function togIaTom(t) { const a = S.ia.tom, i = a.indexOf(t); i < 0 ? a.push(t) : a.splice(i, 1); draw(); }
@@ -284,8 +331,6 @@ function appendIaField(path, text) {
   draw();
   toast("Sugestão adicionada!");
 }
-
-function addSmartJump() { S.ia.smartJump.push({ categoria: "", gatilhos: "", destino: "" }); draw(); }
 
 // Gerenciamento de Fluxos de Pré-Atendimento
 function addIaFluxo() {

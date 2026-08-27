@@ -1409,16 +1409,18 @@
 
         // 3. Contexto do Negócio e Objetivos
         habilidades: "- Horários de funcionamento e endereços das unidades\n- Relação de convênios atendidos\n- Orientações e preparos básicos de exames\n- Envio de links de agendamento online",
-        assuntosTransbordo: "- Emergências médicas ou risco à vida\n- Negociação financeira complexa ou faturamento de contas\n- Procedimentos cirúrgicos ou autorizações especiais de guias\n- Pedido explícito do cliente para falar com um atendente",
+        topicosTransbordo: [
+          "Consultas e Agendamentos",
+          "Exames e Laudos",
+          "Remarcações e Cancelamentos",
+          "Financeiro e Faturamento"
+        ],
         restricoes: "- Proibido fornecer diagnóstico médico ou prescrever condutas\n- Não confirmar cobertura sem checagem de plano\n- Não prometer procedimentos cirúrgicos ou horários sem confirmação",
         publicoAlvo: "Pacientes e clientes buscando agendamento, exames e orientações gerais.",
         problema: "Alto tempo de espera no WhatsApp e dúvidas repetitivas sobre preparo e convênios.",
         foraEscopo: "Política, receitas caseiras, conselhos pessoais não médicos.",
 
-        // 4. Roteamento Inteligente (Smart Jump) e Filas
-        smartJump: [],
-
-        // 5. Pré-Atendimento e Coleta Sequencial de Dados (por Fluxo)
+        // 4. Fluxos de Atendimento (por Assunto / Tópico)
         fluxosPreAtendimento: [
           {
             nome: "Consultas e Agendamentos",
@@ -1575,7 +1577,7 @@
     function togCaso(c) { const a = S.integ.casos, i = a.indexOf(c); i < 0 ? a.push(c) : a.splice(i, 1); draw(); }
 
     function setIaSubStep(n) {
-      S.ia._etapa = Math.max(1, Math.min(7, n));
+      S.ia._etapa = Math.max(1, Math.min(6, n));
       draw();
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -1584,27 +1586,58 @@
       const a = S.ia;
       if (n === 1) return !!(a.processoOtimizar && a.processoOtimizar.trim() && a.kpis && a.kpis.trim());
       if (n === 2) return !!(a.nome && a.nome.trim() && a.tom && a.tom.length && a.extensaoResp);
-      if (n === 3) return !!(a.habilidades && a.habilidades.trim() && a.restricoes && a.restricoes.trim());
-      if (n === 4) return !!(a.smartJump && a.smartJump.length);
-      if (n === 5) return !!(a.fluxosPreAtendimento && a.fluxosPreAtendimento.length && a.filaFallback);
-      if (n === 6) return !!(a.inatTempo && a.inatAcao);
-      if (n === 7) return !!(a.baseUrl || (a.arquivos && a.arquivos.length) || (a.faqTexto && a.faqTexto.trim()) || a.faqRespNome);
+      if (n === 3) return !!(a.habilidades && a.habilidades.trim() && (a.topicosTransbordo && a.topicosTransbordo.length) && a.restricoes && a.restricoes.trim());
+      if (n === 4) return !!(a.fluxosPreAtendimento && a.fluxosPreAtendimento.length && a.filaFallback);
+      if (n === 5) return !!(a.inatTempo && a.inatAcao);
+      if (n === 6) return !!(a.baseUrl || (a.arquivos && a.arquivos.length) || (a.faqTexto && a.faqTexto.trim()) || a.faqRespNome);
       return false;
     }
 
-    function togIaTom(t) { const a = S.ia.tom, i = a.indexOf(t); i < 0 ? a.push(t) : a.splice(i, 1); draw(); }
-    function togIaIdioma(l) { const a = S.ia.idiomas || (S.ia.idiomas = []); const i = a.indexOf(l); i < 0 ? a.push(l) : a.splice(i, 1); draw(); }
-    function addIaIdiomaCustom(v) { v = v.trim(); if (!v) return; const a = S.ia.idiomas || (S.ia.idiomas = []); if (!a.includes(v)) a.push(v); draw(); }
-
-    function appendIaField(path, text) {
-      const current = get(path) || "";
-      const sep = current.trim() ? (current.includes("\n") ? "\n" : ", ") : "";
-      set(path, current + sep + text);
+    // Gerenciamento de Tópicos de Transbordo (que geram os fluxos de atendimento)
+    function addIaTopicoTransbordo(nome) {
+      if (!nome || !nome.trim()) return;
+      const limpo = nome.trim();
+      if (!S.ia.topicosTransbordo) S.ia.topicosTransbordo = [];
+      if (!S.ia.topicosTransbordo.includes(limpo)) {
+        S.ia.topicosTransbordo.push(limpo);
+      }
+      // Sincroniza criando automaticamente o fluxo na Etapa 4 se ainda não existir
+      if (!S.ia.fluxosPreAtendimento) S.ia.fluxosPreAtendimento = [];
+      const jaExiste = S.ia.fluxosPreAtendimento.some(f => f.nome.toLowerCase() === limpo.toLowerCase());
+      if (!jaExiste) {
+        S.ia.fluxosPreAtendimento.push({
+          nome: limpo,
+          passos: [
+            "Qual o seu nome completo e CPF do paciente?",
+            "Qual o convênio ou particular?",
+            "Qual a especialidade ou procedimento desejado?"
+          ]
+        });
+      }
       draw();
-      toast("Sugestão adicionada!");
+      toast(`Assunto "${limpo}" adicionado e sincronizado aos fluxos!`);
     }
 
-    function addSmartJump() { S.ia.smartJump.push({ categoria: "", gatilhos: "", destino: "" }); draw(); }
+    function setIaTopicoTransbordo(idx, val) {
+      if (!S.ia.topicosTransbordo) S.ia.topicosTransbordo = [];
+      const antigo = S.ia.topicosTransbordo[idx];
+      S.ia.topicosTransbordo[idx] = val;
+      if (S.ia.fluxosPreAtendimento) {
+        const fl = S.ia.fluxosPreAtendimento.find(f => f.nome === antigo);
+        if (fl) fl.nome = val;
+      }
+      soft();
+    }
+
+    function delIaTopicoTransbordo(idx) {
+      if (S.ia.topicosTransbordo && S.ia.topicosTransbordo[idx] !== undefined) {
+        const nome = S.ia.topicosTransbordo[idx];
+        S.ia.topicosTransbordo.splice(idx, 1);
+        S.ia.fluxosPreAtendimento = (S.ia.fluxosPreAtendimento || []).filter(f => f.nome !== nome);
+        draw();
+        toast("Assunto e fluxo correspondente removidos.");
+      }
+    }
 
     // Gerenciamento de Fluxos de Pré-Atendimento
     function addIaFluxo() {
@@ -1972,7 +2005,7 @@
       const temInteg = S.contrato.integracao && S.integ.sistema;
       const temApi = S.integ.temApi === 'sim';
       const temCasosComplexos = S.integ.casos.some(c => /marcar|remarcar|laudo|exame/i.test(c));
-      const temSmartJump = S.ia.smartJump && S.ia.smartJump.length >= 2;
+      const temTopicosTransbordo = S.ia.topicosTransbordo && S.ia.topicosTransbordo.length >= 1;
       const totalPassosFluxos = (S.ia.fluxosPreAtendimento || []).reduce((acc, f) => acc + (f.passos || []).filter(Boolean).length, 0);
       const temPreColeta = totalPassosFluxos >= 2;
       const temRestricoes = (S.ia.restricoes || "").length > 20;
@@ -1984,7 +2017,7 @@
       if (S.ia.tom && S.ia.tom.length > 1) score += 5;
       if (S.ia.idiomas && S.ia.idiomas.length > 1) score += 5;
       if (temRestricoes) score += 10;
-      if (temSmartJump) score += 15;
+      if (temTopicosTransbordo) score += 15;
       if (temPreColeta) score += 15;
       if (temBaseExtensa || temArquivosOuLinks) score += 10;
       if (temInteg) score += 15;
@@ -2002,19 +2035,19 @@
         ambiguidades.push({ tipo: "ok", txt: "Limites e regras anti-alucinação bem definidos." });
       }
 
-      if (!temSmartJump) {
-        ambiguidades.push({ tipo: "warn", txt: "Transbordo sensível: Poucos gatilhos de Smart Jump cadastrados." });
+      if (!temTopicosTransbordo) {
+        ambiguidades.push({ tipo: "warn", txt: "Transbordo humano: Nenhum assunto de transbordo cadastrado." });
       } else {
-        ambiguidades.push({ tipo: "ok", txt: `${S.ia.smartJump.length} regras de transbordo inteligente ativas.` });
+        ambiguidades.push({ tipo: "ok", txt: `${S.ia.topicosTransbordo.length} assunto(s) de transbordo humano mapeado(s).` });
       }
 
       if (!temPreColeta) {
-        ambiguidades.push({ tipo: "warn", txt: "Sem pré-qualificação: Nenhum passo configurado nos fluxos de triagem." });
+        ambiguidades.push({ tipo: "warn", txt: "Sem pré-qualificação: Nenhum passo configurado nos fluxos de atendimento." });
       } else {
-        ambiguidades.push({ tipo: "ok", txt: `${(S.ia.fluxosPreAtendimento || []).length} fluxo(s) de pré-atendimento com ${totalPassosFluxos} passo(s) ao todo.` });
+        ambiguidades.push({ tipo: "ok", txt: `${(S.ia.fluxosPreAtendimento || []).length} fluxo(s) de atendimento com ${totalPassosFluxos} passo(s) ao todo.` });
       }
 
-      if (temInteg && temCasosComplexos && temBaseExtensa && temPreColeta && temSmartJump) {
+      if (temInteg && temCasosComplexos && temBaseExtensa && temPreColeta && temTopicosTransbordo) {
         return {
           tier: "Plano Diamante+",
           badgeClass: "tier-consultor",
@@ -2034,7 +2067,7 @@
           desc: "Capacidade transacional com chamadas de ferramentas/APIs, consulta a bancos de dados e roteamento prioritário."
         };
       }
-      if (temBaseExtensa || S.ia.baseUrl || temSmartJump || temArquivosOuLinks) {
+      if (temBaseExtensa || S.ia.baseUrl || temTopicosTransbordo || temArquivosOuLinks) {
         return {
           tier: "Plano Gold",
           badgeClass: "tier-gold",
@@ -2082,24 +2115,17 @@ ${S.ia.publicoAlvo ? `- Perfil do público-alvo: ${S.ia.publicoAlvo}` : ''}
 Você tem AUTONOMIA TOTAL para resolver diretamente os seguintes assuntos:
 ${S.ia.habilidades ? S.ia.habilidades : '- Fornecer informações institucionais, horários e orientações gerais'}
 
-### 5. GATILHOS DE TRANSBORDO HUMANO
-Transfira o atendimento para um atendente humano quando houver:
-${S.ia.assuntosTransbordo ? S.ia.assuntosTransbordo : '- Solicitação explícita de atendente ou casos complexos fora de escopo'}
+### 5. ASSUNTOS DE TRANSBORDO HUMANO
+Transfira o atendimento para um atendente humano quando a solicitação se referir a:
+${(S.ia.topicosTransbordo && S.ia.topicosTransbordo.length) ? S.ia.topicosTransbordo.map(t => `- ${t}`).join('\n') : (S.ia.assuntosTransbordo ? S.ia.assuntosTransbordo : '- Solicitação explícita de atendente ou casos complexos fora de escopo')}
 
 ### 6. RESTRIÇÕES CRÍTICAS (ANTI-ALUCINAÇÃO & GUARDRAILS)
 ${S.ia.restricoes ? S.ia.restricoes : '- NUNCA forneça informações não confirmadas oficialmente pela empresa\n- NUNCA invente procedimentos, prazos ou valores'}
 ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.foraEscopo}` : ''}
 `;
 
-      if (S.ia.smartJump && S.ia.smartJump.length > 0) {
-        prompt += `\n### 7. REGRAS DE ROTEAMENTO IMEDIATO (SMART JUMP)\nSe o cliente mencionar algum dos gatilhos abaixo, interrompa a triagem e transfira IMEDIATAMENTE para a fila indicada:\n`;
-        S.ia.smartJump.forEach((r, idx) => {
-          prompt += `${idx + 1}. [${r.categoria || 'Intenção'}]: Gatilhos ("${r.gatilhos || ''}") -> Transferir para Fila: ${r.destino || 'Atendimento Geral'}\n`;
-        });
-      }
-
       if (S.ia.fluxosPreAtendimento && S.ia.fluxosPreAtendimento.length > 0) {
-        prompt += `\n### 8. PRÉ-ATENDIMENTO E COLETA SEQUENCIAL POR FLUXO\nIdentifique o fluxo correspondente à solicitação do cliente e realize a coleta de dados de forma SEQUENCIAL (uma pergunta por vez):\n`;
+        prompt += `\n### 7. FLUXOS DE ATENDIMENTO E COLETA SEQUENCIAL\nIdentifique o fluxo correspondente à solicitação do cliente e realize a coleta de dados de forma SEQUENCIAL (uma pergunta por vez):\n`;
         S.ia.fluxosPreAtendimento.forEach((f, idx) => {
           prompt += `\n▶ FLUXO ${idx + 1}: ${f.nome || 'Geral'}\n`;
           (f.passos || []).forEach((passo, pIdx) => {
@@ -2114,7 +2140,7 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
       }
 
       if (S.ia.baseUrl || (S.ia.linksAdicionais && S.ia.linksAdicionais.length) || S.ia.faqTexto || (S.ia.arquivos && S.ia.arquivos.length)) {
-        prompt += `\n### 9. BASE DE CONHECIMENTO E GOVERNANÇA\n`;
+        prompt += `\n### 8. BASE DE CONHECIMENTO E GOVERNANÇA\n`;
         if (S.ia.baseUrl) prompt += `- Site oficial: ${S.ia.baseUrl}\n`;
         if (S.ia.linksAdicionais && S.ia.linksAdicionais.length) {
           const validLinks = S.ia.linksAdicionais.filter(Boolean);
@@ -2134,7 +2160,7 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
         }
       }
 
-      prompt += `\n### 10. POLÍTICA DE INATIVIDADE E FALLBACK\n`;
+      prompt += `\n### 9. POLÍTICA DE INATIVIDADE E FALLBACK\n`;
       prompt += `- Tempo de inatividade limite: ${S.ia.inatTempo || '10'} minutos.\n`;
       prompt += `- Ação ao esgotar inatividade: ${S.ia.inatAcao === 'transferir' ? `Transferir para ${S.ia.inatFila || 'fila padrão'}` : 'Encerrar conversa'}.\n`;
       if (S.ia.msgFinalizacao) {
@@ -2514,9 +2540,9 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
           if (!a.nome) p.push("Nome do assistente de IA");
           if (!a.tom || !a.tom.length) p.push("Tom de voz da IA");
           if (!a.habilidades) p.push("Tópicos que a IA resolve sozinha");
+          if (!a.topicosTransbordo || !a.topicosTransbordo.length) p.push("Assuntos de transbordo humano");
           if (!a.restricoes) p.push("O que a IA está proibida de fazer (Restrições)");
-          if (!a.smartJump || !a.smartJump.length) p.push("Ao menos uma regra de prioridade / Smart Jump");
-          if (!a.fluxosPreAtendimento || !a.fluxosPreAtendimento.length) p.push("Ao menos um fluxo de pré-atendimento");
+          if (!a.fluxosPreAtendimento || !a.fluxosPreAtendimento.length) p.push("Ao menos um fluxo de atendimento");
           return p;
         },
         render() {
@@ -2527,15 +2553,15 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
           const fluxos = a.fluxosPreAtendimento || [];
           const links = a.linksAdicionais || [];
           const arquivos = a.arquivos || [];
+          const topicos = a.topicosTransbordo || [];
 
           const subSteps = [
             { n: 1, lbl: "1. Expectativas", full: "1. Alinhamento de Expectativas", desc: "Qual o objetivo central e qual indicador define o sucesso do projeto." },
             { n: 2, lbl: "2. Persona", full: "2. Identidade, Persona e Comunicação", desc: "Como o assistente se apresenta, quais idiomas fala e como formata mensagens." },
-            { n: 3, lbl: "3. Contexto & Regras", full: "3. Contexto do Negócio e Objetivos", desc: "Defina o que a IA resolve com autonomia total, o que deve transbordar e o que ela nunca deve fazer." },
-            { n: 4, lbl: "4. Roteamento", full: "4. Roteamento Inteligente e Filas", desc: "Gatilhos imediatos que cortam o menu e transferem para filas específicas." },
-            { n: 5, lbl: "5. Pré-Atendimento", full: "5. Pré-Atendimento e Coleta de Dados", desc: "Roteiro de perguntas sequenciais (uma por vez) que a IA realiza para qualificar o atendimento antes de transferir ao atendente, estruturado por cada fluxo." },
-            { n: 6, lbl: "6. Inatividade", full: "6. Inatividade e Encerramento", desc: "Controle de tempo e ação quando o cliente para de responder." },
-            { n: 7, lbl: "7. Conhecimento", full: "7. Base de Conhecimento e Governança", desc: "Fontes de dados oficiais, procedimentos, arquivos anexos e responsáveis de contato." }
+            { n: 3, lbl: "3. Contexto & Regras", full: "3. Contexto do Negócio e Objetivos", desc: "Defina o que a IA resolve com autonomia total, os assuntos de transbordo e o que ela nunca deve fazer." },
+            { n: 4, lbl: "4. Fluxos", full: "4. Fluxos de Atendimento", desc: "Roteiro de perguntas sequenciais (uma por vez) que a IA realiza para qualificar o atendimento antes de transferir ao atendente, estruturado por cada fluxo." },
+            { n: 5, lbl: "5. Inatividade", full: "5. Inatividade e Encerramento", desc: "Controle de tempo e ação quando o cliente para de responder." },
+            { n: 6, lbl: "6. Conhecimento", full: "6. Base de Conhecimento e Governança", desc: "Fontes de dados oficiais, procedimentos, arquivos anexos e responsáveis de contato." }
           ];
           const curStep = subSteps[etapa - 1] || subSteps[0];
 
@@ -2612,9 +2638,33 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
                 <span class="hint">Assuntos em que a IA responde e conclui a dúvida do cliente sem precisar de atendente.</span>
               </div>
 
-              <div class="f"><label>Quais assuntos ela deve passar ao atendente? (Transbordo Humano)</label>
-                ${fta("ia.assuntosTransbordo", "Ex.:\n- Casos de emergência médica, dor aguda ou risco à vida\n- Negociações financeiras complexas ou faturamento de contas\n- Procedimentos cirúrgicos ou autorizações especiais de guias\n- Pedido explícito do cliente para falar com um atendente")}
-                <span class="hint">Gatilhos que devem acionar a transferência para um operador humano.</span>
+              <div class="f">
+                <label>Quais assuntos ela deve passar ao atendente? (Transbordo Humano) <span class="req">*</span></label>
+                <span class="hint" style="margin-bottom:8px;display:block">Adicione os assuntos que exigem transferência para um atendente humano. Cada assunto gera automaticamente um fluxo na próxima etapa (Fluxos de Atendimento).</span>
+
+                <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
+                  ${topicos.map((topico, ti) => `
+                    <div class="step-item">
+                      <span class="step-num-badge">📌</span>
+                      <input type="text" value="${esc(topico)}" placeholder="Ex.: Consultas e Agendamentos" oninput="setIaTopicoTransbordo(${ti}, this.value)">
+                      <button class="rowdel" title="Remover assunto" onclick="delIaTopicoTransbordo(${ti})">×</button>
+                    </div>
+                  `).join("")}
+                </div>
+
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+                  <input type="text" id="novo_topico_input" placeholder="Digite um novo assunto e pressione Enter..." onkeydown="if(event.key==='Enter'){event.preventDefault();addIaTopicoTransbordo(this.value);this.value='';}">
+                  <button type="button" class="btn btn-s" onclick="const inp=document.getElementById('novo_topico_input');if(inp.value.trim()){addIaTopicoTransbordo(inp.value.trim());inp.value='';}">➕ Adicionar Assunto</button>
+                </div>
+
+                <div class="chip-row">
+                  <span class="chip-label">Sugestões rápidas:</span>
+                  <button type="button" class="btn-chip" onclick="addIaTopicoTransbordo('Consultas e Agendamentos')">💡 Consultas e Agendamentos</button>
+                  <button type="button" class="btn-chip" onclick="addIaTopicoTransbordo('Exames e Preparos')">💡 Exames e Preparos</button>
+                  <button type="button" class="btn-chip" onclick="addIaTopicoTransbordo('Remarcações e Cancelamentos')">💡 Remarcações e Cancelamentos</button>
+                  <button type="button" class="btn-chip" onclick="addIaTopicoTransbordo('Financeiro e Faturamento')">💡 Financeiro e Faturamento</button>
+                  <button type="button" class="btn-chip" onclick="addIaTopicoTransbordo('Cirurgias e Procedimentos')">💡 Cirurgias e Procedimentos</button>
+                </div>
               </div>
 
               <div class="grid2">
@@ -2631,31 +2681,10 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
               <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
                 <button class="btn btn-s" onclick="setIaSubStep(2)">← 2. Persona</button>
                 <div class="sp"></div>
-                <button class="btn btn-p" onclick="setIaSubStep(4)">Continuar: 4. Roteamento & Filas →</button>
+                <button class="btn btn-p" onclick="setIaSubStep(4)">Continuar: 4. Fluxos de Atendimento →</button>
               </div>
             `;
           } else if (etapa === 4) {
-            contentHtml = `
-              ${!S.operacao.setores.length ? `<div class="note warn">Cadastre os setores no bloco de Horário e Filas para vinculá-los aqui como destinos de transbordo.</div>` : ""}
-              ${a.smartJump.length ? `<table><thead><tr><th style="width:28%">Categoria / Intenção</th><th style="width:42%">Gatilhos (palavras-chave separadas por vírgula)</th><th>Fila / Ação</th><th style="width:36px"></th></tr></thead><tbody>
-                ${a.smartJump.map((r, i) => `<tr>
-                  <td><input type="text" value="${esc(r.categoria)}" placeholder="Ex.: Emergência Médica" oninput="S.ia.smartJump[${i}].categoria=this.value;soft()"></td>
-                  <td><input type="text" value="${esc(r.gatilhos)}" placeholder="Ex.: dor, sangramento, urgência" oninput="S.ia.smartJump[${i}].gatilhos=this.value;soft()"></td>
-                  <td><select onchange="S.ia.smartJump[${i}].destino=this.value;soft()">${setOpts(r.destino)}</select></td>
-                  <td><button class="rowdel" onclick="S.ia.smartJump.splice(${i},1);draw()">×</button></td></tr>`).join("")}
-              </tbody></table>` : `<div class="note info">Nenhuma regra de Smart Jump cadastrada. Clique abaixo para adicionar ou carregar o modelo.</div>`}
-              <div class="navrow" style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-                <button type="button" class="btn btn-s" onclick="addSmartJump()">➕ Adicionar Regra Smart Jump</button>
-                <button type="button" class="btn-chip template" onclick="loadIaTemplates()">✨ Carregar Regras Padrão de Transbordo</button>
-              </div>
-
-              <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
-                <button class="btn btn-s" onclick="setIaSubStep(3)">← 3. Contexto & Regras</button>
-                <div class="sp"></div>
-                <button class="btn btn-p" onclick="setIaSubStep(5)">Continuar: 5. Pré-Atendimento →</button>
-              </div>
-            `;
-          } else if (etapa === 5) {
             contentHtml = `
               <div style="margin-bottom:20px">
                 ${fluxos.map((f, fi) => `
@@ -2714,12 +2743,12 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
               </div></div>
 
               <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
-                <button class="btn btn-s" onclick="setIaSubStep(4)">← 4. Roteamento</button>
+                <button class="btn btn-s" onclick="setIaSubStep(3)">← 3. Contexto & Regras</button>
                 <div class="sp"></div>
-                <button class="btn btn-p" onclick="setIaSubStep(6)">Continuar: 6. Inatividade & Encerramento →</button>
+                <button class="btn btn-p" onclick="setIaSubStep(5)">Continuar: 5. Inatividade & Encerramento →</button>
               </div>
             `;
-          } else if (etapa === 6) {
+          } else if (etapa === 5) {
             contentHtml = `
               <div class="grid3">
                 <div class="f"><label>Tempo limite de inatividade</label><div class="opts">
@@ -2743,12 +2772,12 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
               </div>
 
               <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
-                <button class="btn btn-s" onclick="setIaSubStep(5)">← 5. Pré-Atendimento</button>
+                <button class="btn btn-s" onclick="setIaSubStep(4)">← 4. Fluxos de Atendimento</button>
                 <div class="sp"></div>
-                <button class="btn btn-p" onclick="setIaSubStep(7)">Continuar: 7. Base de Conhecimento →</button>
+                <button class="btn btn-p" onclick="setIaSubStep(6)">Continuar: 6. Base de Conhecimento →</button>
               </div>
             `;
-          } else if (etapa === 7) {
+          } else if (etapa === 6) {
             contentHtml = `
               <div class="grid2">
                 ${fi("Site ou página com as informações oficiais", "ia.baseUrl", "text", "https://suaempresa.com.br")}
@@ -2804,7 +2833,7 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
               </div>
 
               <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
-                <button class="btn btn-s" onclick="setIaSubStep(6)">← 6. Inatividade</button>
+                <button class="btn btn-s" onclick="setIaSubStep(5)">← 5. Inatividade</button>
                 <div class="sp"></div>
                 <button class="btn btn-p" onclick="next()">Concluir Assistente de IA e Avançar →</button>
               </div>
@@ -2815,14 +2844,14 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
             <div class="ia-step-header">
               <div class="ia-step-header-top">
                 <div class="ia-step-badge-group">
-                  <span class="ia-step-tag">Etapa ${etapa} de 7</span>
+                  <span class="ia-step-tag">Etapa ${etapa} de 6</span>
                   <h2 class="ia-step-title-text">${curStep.full}</h2>
                 </div>
-                <div class="ia-step-progress-container" title="${Math.round((etapa / 7) * 100)}% concluído">
+                <div class="ia-step-progress-container" title="${Math.round((etapa / 6) * 100)}% concluído">
                   <div class="ia-step-line-track">
-                    <div class="ia-step-line-fill" style="width: ${Math.round((etapa / 7) * 100)}%"></div>
+                    <div class="ia-step-line-fill" style="width: ${Math.round((etapa / 6) * 100)}%"></div>
                   </div>
-                  <span class="ia-step-pct-val">${Math.round((etapa / 7) * 100)}%</span>
+                  <span class="ia-step-pct-val">${Math.round((etapa / 6) * 100)}%</span>
                 </div>
               </div>
 
@@ -2995,7 +3024,7 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
             </div>
             <div style="font-size:11px;color:#A78BFA;display:flex;justify-content:space-between">
               <span>Densidade: ${S.ia.habilidades.length > 120 ? 'Alta' : 'Moderada'}</span>
-              <span>Transbordo: ${(S.ia.smartJump || []).length} regras</span>
+              <span>Transbordo: ${(S.ia.topicosTransbordo || []).length} assuntos</span>
             </div>
           </div>
 
@@ -3011,8 +3040,8 @@ ${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.fo
           </div>
 
           ${line("Nome do Agente", S.ia.nome || "—", !S.ia.nome)}
-          ${line("Roteamento Inteligente", `${(S.ia.smartJump || []).length} regra(s)`, !(S.ia.smartJump && S.ia.smartJump.length))}
-          ${line("Fluxos de Triagem", `${totalFluxos} fluxo(s) · ${totalPassos} passo(s)`, !totalPassos)}
+          ${line("Assuntos de Transbordo", `${(S.ia.topicosTransbordo || []).length} cadastrado(s)`, !(S.ia.topicosTransbordo && S.ia.topicosTransbordo.length))}
+          ${line("Fluxos de Atendimento", `${totalFluxos} fluxo(s) · ${totalPassos} passo(s)`, !totalPassos)}
           ${line("Base Conhecimento", S.ia.baseUrl ? "Vinculada" : "Pendente", !S.ia.baseUrl)}
           ${line("Integração de Sistema", S.contrato.integracao ? (S.integ.sistema || "Aguardando") : "Não contratado", !S.integ.sistema)}
 

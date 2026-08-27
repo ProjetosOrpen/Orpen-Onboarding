@@ -96,7 +96,7 @@ function drawSum() {
         </div>
         <div style="font-size:11px;color:#A78BFA;display:flex;justify-content:space-between">
           <span>Densidade: ${S.ia.habilidades.length > 120 ? 'Alta' : 'Moderada'}</span>
-          <span>Transbordo: ${(S.ia.smartJump || []).length} regras</span>
+          <span>Transbordo: ${(S.ia.topicosTransbordo || []).length} assuntos</span>
         </div>
       </div>
 
@@ -112,8 +112,8 @@ function drawSum() {
       </div>
 
       ${line("Nome do Agente", S.ia.nome || "—", !S.ia.nome)}
-      ${line("Roteamento Inteligente", `${(S.ia.smartJump || []).length} regra(s)`, !(S.ia.smartJump || []).length)}
-      ${line("Fluxos de Triagem", `${totalFluxos} fluxo(s) · ${totalPassos} passo(s)`, !totalPassos)}
+      ${line("Assuntos de Transbordo", `${(S.ia.topicosTransbordo || []).length} cadastrado(s)`, !(S.ia.topicosTransbordo && S.ia.topicosTransbordo.length))}
+      ${line("Fluxos de Atendimento", `${totalFluxos} fluxo(s) · ${totalPassos} passo(s)`, !totalPassos)}
       ${line("Base Conhecimento", S.ia.baseUrl ? "Vinculada" : "Pendente", !S.ia.baseUrl)}
       ${line("Integração de Sistema", S.contrato.integracao ? (S.integ.sistema || "Aguardando") : "Não contratado", !S.integ.sistema)}
 

@@ -333,9 +333,9 @@ const BLOCKS = [
       if (!a.nome) p.push("Nome do assistente de IA");
       if (!a.tom || !a.tom.length) p.push("Tom de voz da IA");
       if (!a.habilidades) p.push("Tópicos que a IA resolve sozinha");
+      if (!a.topicosTransbordo || !a.topicosTransbordo.length) p.push("Assuntos de transbordo humano");
       if (!a.restricoes) p.push("O que a IA está proibida de fazer (Restrições)");
-      if (!a.smartJump || !a.smartJump.length) p.push("Ao menos uma regra de prioridade / Smart Jump");
-      if (!a.fluxosPreAtendimento || !a.fluxosPreAtendimento.length) p.push("Ao menos um fluxo de pré-atendimento");
+      if (!a.fluxosPreAtendimento || !a.fluxosPreAtendimento.length) p.push("Ao menos um fluxo de atendimento");
       return p;
     },
     render() {
@@ -346,15 +346,15 @@ const BLOCKS = [
       const fluxos = a.fluxosPreAtendimento || [];
       const links = a.linksAdicionais || [];
       const arquivos = a.arquivos || [];
+      const topicos = a.topicosTransbordo || [];
 
       const subSteps = [
         { n: 1, lbl: "1. Expectativas", full: "1. Alinhamento de Expectativas", desc: "Qual o objetivo central e qual indicador define o sucesso do projeto." },
         { n: 2, lbl: "2. Persona", full: "2. Identidade, Persona e Comunicação", desc: "Como o assistente se apresenta, quais idiomas fala e como formata mensagens." },
-        { n: 3, lbl: "3. Contexto & Regras", full: "3. Contexto do Negócio e Objetivos", desc: "Defina o que a IA resolve com autonomia total, o que deve transbordar e o que ela nunca deve fazer." },
-        { n: 4, lbl: "4. Roteamento", full: "4. Roteamento Inteligente e Filas", desc: "Gatilhos imediatos que cortam o menu e transferem para filas específicas." },
-        { n: 5, lbl: "5. Pré-Atendimento", full: "5. Pré-Atendimento e Coleta de Dados", desc: "Roteiro de perguntas sequenciais (uma por vez) que a IA realiza para qualificar o atendimento antes de transferir ao atendente, estruturado por cada fluxo." },
-        { n: 6, lbl: "6. Inatividade", full: "6. Inatividade e Encerramento", desc: "Controle de tempo e ação quando o cliente para de responder." },
-        { n: 7, lbl: "7. Conhecimento", full: "7. Base de Conhecimento e Governança", desc: "Fontes de dados oficiais, procedimentos, arquivos anexos e responsáveis de contato." }
+        { n: 3, lbl: "3. Contexto & Regras", full: "3. Contexto do Negócio e Objetivos", desc: "Defina o que a IA resolve com autonomia total, os assuntos de transbordo e o que ela nunca deve fazer." },
+        { n: 4, lbl: "4. Fluxos", full: "4. Fluxos de Atendimento", desc: "Roteiro de perguntas sequenciais (uma por vez) que a IA realiza para qualificar o atendimento antes de transferir ao atendente, estruturado por cada fluxo." },
+        { n: 5, lbl: "5. Inatividade", full: "5. Inatividade e Encerramento", desc: "Controle de tempo e ação quando o cliente para de responder." },
+        { n: 6, lbl: "6. Conhecimento", full: "6. Base de Conhecimento e Governança", desc: "Fontes de dados oficiais, procedimentos, arquivos anexos e responsáveis de contato." }
       ];
       const curStep = subSteps[etapa - 1] || subSteps[0];
 
@@ -431,9 +431,33 @@ const BLOCKS = [
             <span class="hint">Assuntos em que a IA responde e conclui a dúvida do cliente sem precisar de atendente.</span>
           </div>
 
-          <div class="f"><label>Quais assuntos ela deve passar ao atendente? (Transbordo Humano)</label>
-            ${fta("ia.assuntosTransbordo", "Ex.:\n- Casos de emergência médica, dor aguda ou risco à vida\n- Negociações financeiras complexas ou faturamento de contas\n- Procedimentos cirúrgicos ou autorizações especiais de guias\n- Pedido explícito do cliente para falar com um atendente")}
-            <span class="hint">Gatilhos que devem acionar a transferência para um operador humano.</span>
+          <div class="f">
+            <label>Quais assuntos ela deve passar ao atendente? (Transbordo Humano) <span class="req">*</span></label>
+            <span class="hint" style="margin-bottom:8px;display:block">Adicione os assuntos que exigem transferência para um atendente humano. Cada assunto gera automaticamente um fluxo na próxima etapa (Fluxos de Atendimento).</span>
+
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
+              ${topicos.map((topico, ti) => `
+                <div class="step-item">
+                  <span class="step-num-badge">📌</span>
+                  <input type="text" value="${esc(topico)}" placeholder="Ex.: Consultas e Agendamentos" oninput="setIaTopicoTransbordo(${ti}, this.value)">
+                  <button class="rowdel" title="Remover assunto" onclick="delIaTopicoTransbordo(${ti})">×</button>
+                </div>
+              `).join("")}
+            </div>
+
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+              <input type="text" id="novo_topico_input" placeholder="Digite um novo assunto e pressione Enter..." onkeydown="if(event.key==='Enter'){event.preventDefault();addIaTopicoTransbordo(this.value);this.value='';}">
+              <button type="button" class="btn btn-s" onclick="const inp=document.getElementById('novo_topico_input');if(inp.value.trim()){addIaTopicoTransbordo(inp.value.trim());inp.value='';}">➕ Adicionar Assunto</button>
+            </div>
+
+            <div class="chip-row">
+              <span class="chip-label">Sugestões rápidas:</span>
+              <button type="button" class="btn-chip" onclick="addIaTopicoTransbordo('Consultas e Agendamentos')">💡 Consultas e Agendamentos</button>
+              <button type="button" class="btn-chip" onclick="addIaTopicoTransbordo('Exames e Preparos')">💡 Exames e Preparos</button>
+              <button type="button" class="btn-chip" onclick="addIaTopicoTransbordo('Remarcações e Cancelamentos')">💡 Remarcações e Cancelamentos</button>
+              <button type="button" class="btn-chip" onclick="addIaTopicoTransbordo('Financeiro e Faturamento')">💡 Financeiro e Faturamento</button>
+              <button type="button" class="btn-chip" onclick="addIaTopicoTransbordo('Cirurgias e Procedimentos')">💡 Cirurgias e Procedimentos</button>
+            </div>
           </div>
 
           <div class="grid2">
@@ -450,31 +474,10 @@ const BLOCKS = [
           <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
             <button class="btn btn-s" onclick="setIaSubStep(2)">← 2. Persona</button>
             <div class="sp"></div>
-            <button class="btn btn-p" onclick="setIaSubStep(4)">Continuar: 4. Roteamento & Filas →</button>
+            <button class="btn btn-p" onclick="setIaSubStep(4)">Continuar: 4. Fluxos de Atendimento →</button>
           </div>
         `;
       } else if (etapa === 4) {
-        contentHtml = `
-          ${!S.operacao.setores.length ? `<div class="note warn">Cadastre os setores no bloco de Horário e Filas para vinculá-los aqui como destinos de transbordo.</div>` : ""}
-          ${a.smartJump.length ? `<table><thead><tr><th style="width:28%">Categoria / Intenção</th><th style="width:42%">Gatilhos (palavras-chave separadas por vírgula)</th><th>Fila / Ação</th><th style="width:36px"></th></tr></thead><tbody>
-            ${a.smartJump.map((r, i) => `<tr>
-              <td><input type="text" value="${esc(r.categoria)}" placeholder="Ex.: Emergência Médica" oninput="S.ia.smartJump[${i}].categoria=this.value;soft()"></td>
-              <td><input type="text" value="${esc(r.gatilhos)}" placeholder="Ex.: dor, sangramento, urgência" oninput="S.ia.smartJump[${i}].gatilhos=this.value;soft()"></td>
-              <td><select onchange="S.ia.smartJump[${i}].destino=this.value;soft()">${setOpts(r.destino)}</select></td>
-              <td><button class="rowdel" onclick="S.ia.smartJump.splice(${i},1);draw()">×</button></td></tr>`).join("")}
-          </tbody></table>` : `<div class="note info">Nenhuma regra de Smart Jump cadastrada. Clique abaixo para adicionar ou carregar o modelo.</div>`}
-          <div class="navrow" style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-            <button type="button" class="btn btn-s" onclick="addSmartJump()">➕ Adicionar Regra Smart Jump</button>
-            <button type="button" class="btn-chip template" onclick="loadIaTemplates()">✨ Carregar Regras Padrão de Transbordo</button>
-          </div>
-
-          <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
-            <button class="btn btn-s" onclick="setIaSubStep(3)">← 3. Contexto & Regras</button>
-            <div class="sp"></div>
-            <button class="btn btn-p" onclick="setIaSubStep(5)">Continuar: 5. Pré-Atendimento →</button>
-          </div>
-        `;
-      } else if (etapa === 5) {
         contentHtml = `
           <div style="margin-bottom:20px">
             ${fluxos.map((f, fi) => `
@@ -533,12 +536,12 @@ const BLOCKS = [
           </div></div>
 
           <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
-            <button class="btn btn-s" onclick="setIaSubStep(4)">← 4. Roteamento</button>
+            <button class="btn btn-s" onclick="setIaSubStep(3)">← 3. Contexto & Regras</button>
             <div class="sp"></div>
-            <button class="btn btn-p" onclick="setIaSubStep(6)">Continuar: 6. Inatividade & Encerramento →</button>
+            <button class="btn btn-p" onclick="setIaSubStep(5)">Continuar: 5. Inatividade & Encerramento →</button>
           </div>
         `;
-      } else if (etapa === 6) {
+      } else if (etapa === 5) {
         contentHtml = `
           <div class="grid3">
             <div class="f"><label>Tempo limite de inatividade</label><div class="opts">
@@ -562,12 +565,12 @@ const BLOCKS = [
           </div>
 
           <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
-            <button class="btn btn-s" onclick="setIaSubStep(5)">← 5. Pré-Atendimento</button>
+            <button class="btn btn-s" onclick="setIaSubStep(4)">← 4. Fluxos de Atendimento</button>
             <div class="sp"></div>
-            <button class="btn btn-p" onclick="setIaSubStep(7)">Continuar: 7. Base de Conhecimento →</button>
+            <button class="btn btn-p" onclick="setIaSubStep(6)">Continuar: 6. Base de Conhecimento →</button>
           </div>
         `;
-      } else if (etapa === 7) {
+      } else if (etapa === 6) {
         contentHtml = `
           <div class="grid2">
             ${fi("Site ou página com as informações oficiais", "ia.baseUrl", "text", "https://suaempresa.com.br")}
@@ -623,7 +626,7 @@ const BLOCKS = [
           </div>
 
           <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line)">
-            <button class="btn btn-s" onclick="setIaSubStep(6)">← 6. Inatividade</button>
+            <button class="btn btn-s" onclick="setIaSubStep(5)">← 5. Inatividade</button>
             <div class="sp"></div>
             <button class="btn btn-p" onclick="next()">Concluir Assistente de IA e Avançar →</button>
           </div>
@@ -634,14 +637,14 @@ const BLOCKS = [
         <div class="ia-step-header">
           <div class="ia-step-header-top">
             <div class="ia-step-badge-group">
-              <span class="ia-step-tag">Etapa ${etapa} de 7</span>
+              <span class="ia-step-tag">Etapa ${etapa} de 6</span>
               <h2 class="ia-step-title-text">${curStep.full}</h2>
             </div>
-            <div class="ia-step-progress-container" title="${Math.round((etapa / 7) * 100)}% concluído">
+            <div class="ia-step-progress-container" title="${Math.round((etapa / 6) * 100)}% concluído">
               <div class="ia-step-line-track">
-                <div class="ia-step-line-fill" style="width: ${Math.round((etapa / 7) * 100)}%"></div>
+                <div class="ia-step-line-fill" style="width: ${Math.round((etapa / 6) * 100)}%"></div>
               </div>
-              <span class="ia-step-pct-val">${Math.round((etapa / 7) * 100)}%</span>
+              <span class="ia-step-pct-val">${Math.round((etapa / 6) * 100)}%</span>
             </div>
           </div>
 
