@@ -37,7 +37,7 @@ function draw() {
         const p = b.check().length;
         const st = b.id === "revisao" ? "" : (p === 0 ? "done" : "part");
         return `<button class="step ${b.id === cur ? "on" : ""} ${st}" onclick="go('${b.id}')">
-          <span class="mk">${st === "done" ? "OK" : i + 1}</span>
+          <span class="mk">${st === "done" ? "✅" : i + 1}</span>
           <span class="lbl">${b.nome}</span>
         </button>`;
       }).join("") +
@@ -103,7 +103,7 @@ function drawSum() {
         <div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-brand-primary);font-family:'IBM Plex Mono',monospace;font-weight:700;margin-bottom:6px">Diagnóstico de Ambiguidades</div>
         ${diag.ambiguidades.map(a => `
           <div class="ambig-item">
-            <span class="${a.tipo === 'ok' ? 'ambig-ok' : 'ambig-warn'}">${a.tipo === 'ok' ? 'OK' : '!'}</span>
+            <span class="${a.tipo === 'ok' ? 'ambig-ok' : 'ambig-warn'}">${a.tipo === 'ok' ? '✅' : '!'}</span>
             <span style="color:${a.tipo === 'ok' ? 'var(--color-fg-1)' : 'var(--color-warning)'}">${esc(a.txt)}</span>
           </div>
         `).join("")}

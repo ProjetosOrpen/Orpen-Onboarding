@@ -6,7 +6,7 @@ function renderBlockHeader({ badge, title, desc, pendList }) {
   const pCount = (pendList || []).length;
   const isDone = pCount === 0;
   const statusHtml = isDone
-    ? `<span class="block-status-pill done">100% Concluído</span>`
+    ? `<span class="block-status-pill done">✅ 100% Concluído</span>`
     : `<span class="block-status-pill part">${pCount} ${pCount === 1 ? 'pendência' : 'pendências'}</span>`;
 
   return `
@@ -1026,7 +1026,7 @@ const BLOCKS = [
             <div class="ia-mini-steps">
               ${subSteps.map(s => `
                 <button type="button" class="ia-mini-step-btn ${etapa === s.n ? 'active' : ''} ${isIaStepDone(s.n) ? 'done' : ''}" onclick="setIaSubStep(${s.n})" title="${esc(s.full)}">
-                  <span class="ia-mini-step-dot">${isIaStepDone(s.n) ? 'OK' : s.n}</span>
+                  <span class="ia-mini-step-dot">${isIaStepDone(s.n) ? '✅' : s.n}</span>
                   <span class="ia-mini-step-name">${esc(s.lbl.replace(/^\d+\.\s*/, ''))}</span>
                 </button>
               `).join("")}
