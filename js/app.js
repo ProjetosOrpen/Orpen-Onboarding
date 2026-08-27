@@ -85,29 +85,29 @@ function drawSum() {
         <p style="margin-top:4px">${diag.desc}</p>
       </div>
 
-      <div style="background:#281452;border:1px solid #3D1F75;border-radius:8px;padding:11px 12px;margin:10px 0">
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:#C4B5FD;font-weight:600">
+      <div class="side-context-card" style="margin:10px 0">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-muted-2);font-weight:600">
           <span>Complexidade do Prompt</span>
-          <span style="color:#C084FC">${diag.complexidadeNivel} · ${diag.score}/100</span>
+          <span style="color:var(--color-brand-accent)">${diag.complexidadeNivel} · ${diag.score}/100</span>
         </div>
         <div class="meter-track">
           <div class="meter-fill" style="width:${diag.score}%"></div>
         </div>
-        <div style="font-size:11px;color:#A78BFA;display:flex;justify-content:space-between">
+        <div style="font-size:11px;color:var(--color-muted-2);display:flex;justify-content:space-between">
           <span>Densidade: ${S.ia.habilidades.length > 120 ? 'Alta' : 'Moderada'}</span>
           <span>Transbordo: ${(S.ia.topicosTransbordo || []).length} assuntos</span>
         </div>
       </div>
 
-      <div style="background:#221045;border:1px solid #361B66;border-radius:8px;padding:11px 12px;margin:10px 0">
-        <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#C4B5FD;font-weight:700;margin-bottom:6px">Diagnóstico de Ambiguidades</div>
+      <div class="side-context-card" style="margin:10px 0">
+        <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-muted-2);font-weight:700;margin-bottom:6px">Diagnóstico de Ambiguidades</div>
         ${diag.ambiguidades.map(a => `
           <div class="ambig-item">
             <span class="${a.tipo === 'ok' ? 'ambig-ok' : 'ambig-warn'}">${a.tipo === 'ok' ? '✓' : '⚠'}</span>
-            <span style="color:${a.tipo === 'ok' ? '#EDE9FE' : '#FDE68A'}">${esc(a.txt)}</span>
+            <span style="color:${a.tipo === 'ok' ? 'var(--color-surface)' : 'var(--color-warning)'}">${esc(a.txt)}</span>
           </div>
         `).join("")}
-        <button class="btn-g" style="color:#C084FC;font-size:12px;margin-top:6px;padding:0" onclick="otimizarIaAuditora()">✨ Otimizar regras com a Auditora</button>
+        <button class="btn-g" style="color:var(--color-brand-accent);font-size:12px;margin-top:6px;padding:0" onclick="otimizarIaAuditora()">✨ Otimizar regras com a Auditora</button>
       </div>
 
       ${line("Nome do Agente", S.ia.nome || "—", !S.ia.nome)}
@@ -116,7 +116,7 @@ function drawSum() {
       ${line("Base Conhecimento", S.ia.baseUrl ? "Vinculada" : "Pendente", !S.ia.baseUrl)}
       ${line("Integração", S.contrato.integracao ? (S.integ.sistema || "Aguardando") : "Não contratado", !S.integ.sistema)}
 
-      <button class="btn btn-p" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#9333EA,#7C3AED);border:0;display:flex;align-items:center;justify-content:center;gap:6px" onclick="abrirModalPromptFinal()">
+      <button class="btn btn-p" style="width:100%;margin-top:12px;justify-content:center;" onclick="abrirModalPromptFinal()">
         👁️ Visualizar Prompt Final da IA
       </button>
     `;
@@ -222,10 +222,10 @@ function drawSum() {
     <h3>Resumo do Setup</h3>
     <p class="cli">${esc(c.razaoSocial || "Hospital Exemplo Ltda.")}</p>
 
-    <div style="background:#281452;border:1px solid #3D1F75;border-radius:8px;padding:10px 12px;margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:#C4B5FD;font-weight:600;margin-bottom:4px">
+    <div class="side-context-card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-muted-2);font-weight:600;margin-bottom:4px">
         <span>Progresso Geral</span>
-        <span style="color:#10B981;font-weight:700">${pc}%</span>
+        <span style="color:var(--color-success);font-weight:700">${pc}%</span>
       </div>
       <div class="meter-track" style="margin:2px 0 0">
         <div class="meter-fill" style="width:${pc}%"></div>
