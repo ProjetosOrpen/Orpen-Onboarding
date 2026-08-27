@@ -19,14 +19,17 @@
 .auditor-avatar {
   width: 38px;
   height: 38px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--brand-gradient);
   box-shadow: var(--shadow-brand);
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  font-size: 18px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
   color: #fff;
+  letter-spacing: 0.04em;
 }
 
 .auditor-content h4 {
@@ -212,17 +215,22 @@
 .chat-avatar {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
-  background: oklch(15% .01 280);
+  border-radius: var(--radius-sm);
+  background: oklch(25% .01 280);
   color: #fff;
   display: grid;
   place-items: center;
-  font-size: 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
   flex-shrink: 0;
+  border: 1px solid oklch(35% .01 280);
 }
 
 .chat-bubble.user .chat-avatar {
-  background: var(--color-brand-primary);
+  background: var(--brand-gradient);
+  border-color: transparent;
+  box-shadow: var(--shadow-brand);
 }
 
 .chat-text {

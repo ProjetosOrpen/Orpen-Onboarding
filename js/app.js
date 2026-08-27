@@ -37,7 +37,7 @@ function draw() {
         const p = b.check().length;
         const st = b.id === "revisao" ? "" : (p === 0 ? "done" : "part");
         return `<button class="step ${b.id === cur ? "on" : ""} ${st}" onclick="go('${b.id}')">
-          <span class="mk">${st === "done" ? "✓" : i + 1}</span>
+          <span class="mk">${st === "done" ? "OK" : i + 1}</span>
           <span class="lbl">${b.nome}</span>
         </button>`;
       }).join("") +
@@ -103,11 +103,11 @@ function drawSum() {
         <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-muted-2);font-weight:700;margin-bottom:6px">Diagnóstico de Ambiguidades</div>
         ${diag.ambiguidades.map(a => `
           <div class="ambig-item">
-            <span class="${a.tipo === 'ok' ? 'ambig-ok' : 'ambig-warn'}">${a.tipo === 'ok' ? '✓' : '⚠'}</span>
+            <span class="${a.tipo === 'ok' ? 'ambig-ok' : 'ambig-warn'}">${a.tipo === 'ok' ? 'OK' : '!'}</span>
             <span style="color:${a.tipo === 'ok' ? 'var(--color-surface)' : 'var(--color-warning)'}">${esc(a.txt)}</span>
           </div>
         `).join("")}
-        <button class="btn-g" style="color:var(--color-brand-accent);font-size:12px;margin-top:6px;padding:0" onclick="otimizarIaAuditora()">✨ Otimizar regras com a Auditora</button>
+        <button class="btn-g" style="color:var(--color-brand-accent);font-size:12px;margin-top:6px;padding:0" onclick="otimizarIaAuditora()">Otimizar regras com a Auditora</button>
       </div>
 
       ${line("Nome do Agente", S.ia.nome || "—", !S.ia.nome)}
@@ -117,7 +117,7 @@ function drawSum() {
       ${line("Integração", S.contrato.integracao ? (S.integ.sistema || "Aguardando") : "Não contratado", !S.integ.sistema)}
 
       <button class="btn btn-p" style="width:100%;margin-top:12px;justify-content:center;" onclick="abrirModalPromptFinal()">
-        👁️ Visualizar Prompt Final da IA
+        Visualizar Prompt Final da IA
       </button>
     `;
   } else if (cur === "contrato") {
@@ -128,7 +128,7 @@ function drawSum() {
         ${line("Licenças Agente", c.licAgente)}
         ${line("Licenças Gestor", c.licGestor)}
         ${line("WhatsApp", `${c.numerosWhats} número(s)`)}
-        ${line("Status", c.confirmado ? "Confirmado ✓" : "Aguardando confirmação", !c.confirmado)}
+        ${line("Status", c.confirmado ? "Confirmado" : "Aguardando confirmação", !c.confirmado)}
       </div>
     `;
   } else if (cur === "contatos") {
@@ -177,8 +177,8 @@ function drawSum() {
         <span class="side-context-kicker">Canal WhatsApp</span>
         ${line("Número", S.whats.numero || "Pendente", !S.whats.numero)}
         ${line("Status Atual", S.whats.emUso === 'sim' ? 'Em uso (Virada)' : (S.whats.emUso === 'nao' ? 'Número Novo' : 'Pendente'))}
-        ${line("Recepção M01", S.whats.m01 ? "Configurada ✓" : "Pendente", !S.whats.m01)}
-        ${line("Fora Horário M02", S.whats.m02 ? "Configurada ✓" : "Pendente", !S.whats.m02)}
+        ${line("Recepção M01", S.whats.m01 ? "Configurada" : "Pendente", !S.whats.m01)}
+        ${line("Fora Horário M02", S.whats.m02 ? "Configurada" : "Pendente", !S.whats.m02)}
       </div>
     `;
   } else if (cur === "bot") {

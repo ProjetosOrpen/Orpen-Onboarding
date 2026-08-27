@@ -9,19 +9,23 @@ let AUDITOR_CHAT_MESSAGES = [
 let AUDITOR_STEP = 0; // 0: Nome/Tom, 1: Público/Objetivo, 2: Habilidades, 3: Restrições, 4: Smart Jump, 5: Conclusão
 
 function getOpenAIKey() {
-  try { return localStorage.getItem("orpen_openai_sk") || ""; } catch (e) { return ""; }
+  try { return localStorage.getItem("orpen_openai_key") || ""; } catch (e) { return ""; }
 }
 
 function salvarOpenAIKey(k) {
-  try { localStorage.setItem("orpen_openai_sk", k.trim()); } catch (e) { }
-  toast("Chave OpenAI salva para a Auditora!");
+  try {
+    localStorage.setItem("orpen_openai_key", (k || "").trim());
+    toast("Chave de API salva com segurança.");
+  } catch (e) {}
 }
 
 function renderChatMessages() {
   return AUDITOR_CHAT_MESSAGES.map(m => `
     <div class="chat-bubble ${m.sender}">
-      <div class="chat-avatar">${m.sender === 'bot' ? '🤖' : '👤'}</div>
-      <div class="chat-text">${m.text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>')}</div>
+      <div class="chat-avatar">${m.sender === 'bot' ? 'IA' : 'CLI'}</div>
+      <div class="chat-text">
+        <p>${esc(m.text).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>')}</p>
+      </div>
     </div>
   `).join("");
 }
@@ -29,36 +33,107 @@ function renderChatMessages() {
 function renderChatQuickChips() {
   if (AUDITOR_STEP === 0) {
     return `
-      <button class="c-chip" onclick="responderRapido('Ires, tom cordial, acolhedor e direto.')">💡 Ires (Cordial e Direto)</button>
-      <button class="c-chip" onclick="responderRapido('Sofia, tom formal e institucional.')">💡 Sofia (Formal / Corporativo)</button>
-      <button class="c-chip" onclick="responderRapido('Max, tom consultivo e focado em vendas.')">💡 Max (Comercial / Vendas)</button>
+      <span class="chat-quick-label">Sugestões:</span>
+      <button type="button" class="chat-quick-chip" onclick="responderRapido('Ires, tom cordial e acolhedor')">Ires (Cordial)</button>
+      <button type="button" class="chat-quick-chip" onclick="responderRapido('Luna, tom direto e objetivo')">Luna (Direto)</button>
+      <button type="button" class="chat-quick-chip" onclick="responderRapido('Max, tom comercial e consultivo')">Max (Comercial)</button>
     `;
   }
   if (AUDITOR_STEP === 1) {
     return `
-      <button class="c-chip" onclick="responderRapido('Atender pacientes e convênios para agendamento e reduzir filas.')">💡 Pacientes e Agendamento</button>
-      <button class="c-chip" onclick="responderRapido('Qualificar leads comerciais B2B que chegam pelo WhatsApp.')">💡 Qualificar Leads Comerciais</button>
+      <span class="chat-quick-label">Sugestões:</span>
+      <button type="button" class="chat-quick-chip" onclick="responderRapido('Pacientes querendo marcar exames e tirar dúvidas de preparo')">Triagem de Pacientes</button>
+      <button type="button" class="chat-quick-chip" onclick="responderRapido('Leads de empresas querendo proposta comercial')">Qualificação de Leads</button>
     `;
   }
   if (AUDITOR_STEP === 2) {
     return `
-      <button class="c-chip" onclick="responderRapido('Ela deve tirar dúvidas de endereço, convênios aceitos e enviar links de agendamento.')">💡 FAQs, Convênios e Agendamento</button>
-      <button class="c-chip" onclick="responderRapido('Ela resolve qualquer dúvida de clientes sem restrições.')">⚠️ Ela resolve tudo (Testar Indagação)</button>
+      <span class="chat-quick-label">Sugestões:</span>
+      <button type="button" class="chat-quick-chip" onclick="responderRapido('Passar horários, endereços, lista de convênios e links de agendamento')">Horários e Convênios</button>
+      <button type="button" class="chat-quick-chip" onclick="responderRapido('Explicar preparos de exames laboratoriais e enviar tabela de valores')">Preparos de Exames</button>
     `;
   }
   if (AUDITOR_STEP === 3) {
     return `
-      <button class="c-chip" onclick="responderRapido('Nunca fornecer diagnóstico médico, nem confirmar cobertura sem autorização prévia.')">💡 Proibir Diagnósticos e Laudos</button>
-      <button class="c-chip" onclick="responderRapido('Não dar descontos sem autorização e não assinar contratos.')">💡 Proibir Descontos sem Aprovação</button>
+      <span class="chat-quick-label">Sugestões:</span>
+      <button type="button" class="chat-quick-chip" onclick="responderRapido('Proibido dar parecer médico, prescrever ou confirmar cirurgias sem autorização')">Blindagem Médica</button>
+      <button type="button" class="chat-quick-chip" onclick="responderRapido('Não dar descontos fora da tabela nem prometer prazos de entrega urgentes')">Blindagem Comercial</button>
     `;
   }
   if (AUDITOR_STEP === 4) {
     return `
-      <button class="c-chip" onclick="responderRapido('Casos de dor forte e emergência transferem imediatamente para Recepção / Triagem.')">💡 Emergência → Recepção</button>
-      <button class="c-chip" onclick="responderRapido('Dúvidas de boletos e notas fiscais transferem para o Financeiro.')">💡 Boletos → Financeiro</button>
+      <span class="chat-quick-label">Sugestões:</span>
+      <button type="button" class="chat-quick-chip" onclick="responderRapido('Transferir para Recepção se for emergência e Financeiro se for boleto')">Recepção / Financeiro</button>
+      <button type="button" class="chat-quick-chip" onclick="responderRapido('Transferir para Comercial se for proposta e Suporte se for dúvida técnica')">Comercial / Suporte</button>
     `;
   }
-  return `<button class="c-chip" onclick="reiniciarChatAuditora()">↺ Reiniciar Conversa</button>`;
+  return `
+    <button type="button" class="chat-quick-chip" onclick="reiniciarChatAuditora()">Reiniciar Conversa</button>
+    <button type="button" class="chat-quick-chip" onclick="abrirModalPromptFinal()">Ver System Prompt</button>
+  `;
+}
+
+function renderAuditorBanner() {
+  const diag = avaliarTierIa();
+  const isChat = S.ia._mode === "chat";
+  return `
+    <div class="auditor-banner">
+      <div class="auditor-avatar">IA</div>
+      <div class="auditor-content" style="flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <h4>ORPEN IA Auditora · Motor 5.6 Sol</h4>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="tier-badge ${diag.badgeClass}" style="margin:0">${diag.tier}</span>
+            <span class="badge-prompt-stat" style="background:rgba(255,255,255,0.12);color:var(--color-brand-accent);font-weight:700">OpenAI 5.6 Sol Active</span>
+          </div>
+        </div>
+        <p>A Auditora analisa em tempo real a densidade do prompt, prevenindo alucinações e otimizando fluxos de transbordo humano.</p>
+        <div class="auditor-actions">
+          <button type="button" class="auditor-chip" onclick="abrirModalPromptFinal()">Ver System Prompt Compilado</button>
+          <button type="button" class="auditor-chip" onclick="aplicarPerfilClinica()">Perfil Clínicas / Saúde</button>
+          <button type="button" class="auditor-chip" onclick="aplicarPerfilComercial()">Perfil Comercial / Vendas</button>
+          <button type="button" class="auditor-chip" onclick="setIaViewMode('${isChat ? 'form' : 'chat'}')">
+            ${isChat ? 'Modo Formulário Guiado' : 'Abrir Copiloto Conversacional'}
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderAuditorChatBox() {
+  const key = getOpenAIKey();
+  return `
+    <div class="chat-container">
+      <div class="chat-cfg-bar">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span><b>Copiloto Conversacional Orpen</b> (5.6 Sol)</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="password" id="cfg_openai_key" placeholder="OpenAI Key (sk-...) ou use Modo Demo" value="${esc(key)}" onchange="salvarOpenAIKey(this.value)">
+          <button class="c-chip" style="background:oklch(25% .01 280);color:#fff;border-color:oklch(35% .01 280)" onclick="salvarOpenAIKey(document.getElementById('cfg_openai_key').value)">Salvar</button>
+        </div>
+      </div>
+
+      <div class="chat-stream" id="chat_stream">
+        ${renderChatMessages()}
+      </div>
+
+      <div class="chat-quick-chips">
+        ${renderChatQuickChips()}
+      </div>
+
+      <div class="chat-input-row">
+        <textarea id="chat_user_input" placeholder="Digite sua resposta ou instrução para a IA Auditora..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarChatUser();}"></textarea>
+        <button class="btn btn-p" style="padding:10px 18px" onclick="enviarChatUser()">Enviar ↵</button>
+      </div>
+
+      <div style="padding:12px 16px;background:var(--color-surface);border-top:1px solid var(--color-border);display:flex;justify-content:space-between;align-items:center">
+        <button class="btn btn-s" onclick="setIaViewMode('form')">← Voltar ao Formulário Guiado</button>
+        <button class="btn btn-p" onclick="abrirModalPromptFinal()">Ver System Prompt Compilado</button>
+      </div>
+    </div>
+  `;
 }
 
 function responderRapido(txt) {
@@ -137,7 +212,7 @@ function processarFluxoAuditoraSimulado(userText) {
   }
   else if (AUDITOR_STEP === 2) {
     if (/tudo|qualquer|sem limites|tudo que o cliente pedir/i.test(userText)) {
-      botReply = `⚠️ **Alerta de Ambiguidade:** Permitir 'tudo' gera alto risco de alucinação e respostas fora de escopo.\n\nPara mantermos a precisão, **quais são os tópicos principais que ela está estritamente PROIBIDA de fazer?** (Ex.: diagnóstico médico, prometer encaixes, passar laudos sem autorização).`;
+      botReply = `**Alerta de Ambiguidade:** Permitir 'tudo' gera alto risco de alucinação e respostas fora de escopo.\n\nPara mantermos a precisão, **quais são os tópicos principais que ela está estritamente PROIBIDA de fazer?** (Ex.: diagnóstico médico, prometer encaixes, passar laudos sem autorização).`;
       S.ia.habilidades = "- Consulta de informações institucionais e convênios\n- Orientações de preparo de exames\n- Envio de links de agendamento";
       AUDITOR_STEP = 3;
     } else {
@@ -155,10 +230,10 @@ function processarFluxoAuditoraSimulado(userText) {
   else if (AUDITOR_STEP === 4) {
     AUDITOR_STEP = 5;
     loadPreAtendSaude();
-    botReply = `🎉 **Compreensão Concluída com Sucesso!**\n\nTodos os parâmetros da **${S.ia.nome}** foram auditados e inseridos no setup. Seu assistente foi classificado no **${avaliarTierIa().tier}** com score de complexidade **${avaliarTierIa().score}/100**.\n\nVocê pode conferir o resumo no painel lateral direito ou clicar em 'Visualizar Prompt Final da IA'!`;
+    botReply = `**Compreensão Concluída com Sucesso!**\n\nTodos os parâmetros da **${S.ia.nome}** foram auditados e inseridos no setup. Seu assistente foi classificado no **${avaliarTierIa().tier}** com score de complexidade **${avaliarTierIa().score}/100**.\n\nVocê pode conferir o resumo no painel lateral direito ou clicar em 'Visualizar Prompt Final da IA'!`;
   }
   else {
-    botReply = `A IA ${S.ia.nome} já está configurada! Se quiser alterar alguma regra específica, basta me mandar por aqui ou clicar em '↺ Reiniciar Conversa'.`;
+    botReply = `A IA ${S.ia.nome} já está configurada! Se quiser alterar alguma regra específica, basta me mandar por aqui ou clicar em 'Reiniciar Conversa'.`;
   }
 
   AUDITOR_CHAT_MESSAGES.push({ sender: "bot", text: botReply });
@@ -276,7 +351,7 @@ function gerarPromptFinalCompilado() {
   const empresa = S.contrato.razaoSocial || "Empresa";
   const tom = (S.ia.tom && S.ia.tom.length) ? S.ia.tom.join(", ") : "Cordial, acolhedor e direto";
   const idiomas = (S.ia.idiomas && S.ia.idiomas.length) ? S.ia.idiomas.join(", ") : "Português (Brasil)";
-  const emoji = S.ia.emojiUso === 'nenhum' ? "Não utilize emojis." : `Utilize emojis com moderação (${S.ia.emojisPermitidos || '💙, 👋, 🏥, ✅'}).`;
+  const emoji = S.ia.emojiUso === 'nenhum' ? "Não utilize emojis." : `Utilize linguagem clara e profissional (${S.ia.emojisPermitidos || 'pontuais e profissionais'}).`;
   const extensao = S.ia.extensaoResp === 'curta' ? "Respostas curtas e objetivas (máximo 2 a 3 frases por mensagem)." : (S.ia.extensaoResp === 'media' ? "Respostas médias (4 a 6 linhas estruturadas)." : "Respostas flexíveis e bem contextualizadas.");
 
   let prompt = `### 1. PERSONA E PAPEL DO ASSISTENTE
@@ -392,4 +467,16 @@ function baixarPromptTxt() {
   a.download = `system-prompt-${(S.ia.nome || 'orpen').toLowerCase()}.txt`;
   a.click();
   toast("Arquivo do System Prompt baixado!");
+}
+
+function otimizarIaAuditora() {
+  if (!S.ia.restricoes || S.ia.restricoes.length < 20) {
+    S.ia.restricoes = "- Proibido dar parecer médico, diagnósticos ou interpretar exames\n- Não confirmar cobertura sem consulta à operadora\n- Não prometer procedimentos cirúrgicos ou descontos fora da tabela";
+  }
+  loadIaTemplates();
+  if (!S.ia.fluxosPreAtendimento || !S.ia.fluxosPreAtendimento.length) {
+    loadPreAtendSaude();
+  }
+  draw();
+  toast("Regras e guardrails otimizados pela Auditora!");
 }
