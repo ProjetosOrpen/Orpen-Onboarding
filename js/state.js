@@ -86,7 +86,7 @@ const S = {
     tom: ["Cordial e acolhedor", "Direto e objetivo"],
     idiomas: ["Português (Brasil)"],
     emojiUso: "moderado",
-    emojisPermitidos: "pontuais e profissionais",
+    emojisPermitidos: "💙, 👋, 🏥, ✅",
 
     // 3. Contexto do Negócio e Objetivos
     habilidades: "- Horários de funcionamento e endereços das unidades\n- Relação de convênios atendidos\n- Orientações e preparos básicos de exames\n- Envio de links de agendamento online",
@@ -149,7 +149,7 @@ const S = {
     inatTempo: "10",
     inatAcao: "finalizar",
     inatFila: "",
-    msgFinalizacao: "Atendimento finalizado por inatividade. Caso precise de mais alguma informação, basta nos enviar uma nova mensagem! Tenha um ótimo dia.",
+    msgFinalizacao: "Atendimento finalizado por inatividade. Caso precise de mais alguma informação, basta nos enviar uma nova mensagem! Tenha um ótimo dia. 😊",
 
     // 7. Base de Conhecimento e Governança
     baseUrl: "https://hospitalexemplo.com.br",
@@ -264,7 +264,7 @@ function previewBot() {
   return cab + "\n" + S.bot.opcoes.map((o, i) => `${i + 1} - ${o.rotulo || "…"}`).join("\n");
 }
 function sugerirM01() {
-  S.whats.m01 = `Olá! Você está falando com o ${S.contrato.razaoSocial}.\nEscolha uma das opções abaixo para continuar:`; draw();
+  S.whats.m01 = `Olá! Você está falando com o ${S.contrato.razaoSocial}. 😊\nEscolha uma das opções abaixo para continuar:`; draw();
 }
 function sugerirM02() {
   S.whats.m02 = `Olá! Nosso atendimento funciona ${S.operacao.diasSem ? "de segunda a sexta, das " + S.operacao.diasSem : "em horário comercial"}.\nDeixe sua mensagem que retornamos no próximo dia útil.`; draw();

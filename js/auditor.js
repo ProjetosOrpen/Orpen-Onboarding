@@ -351,7 +351,7 @@ function gerarPromptFinalCompilado() {
   const empresa = S.contrato.razaoSocial || "Empresa";
   const tom = (S.ia.tom && S.ia.tom.length) ? S.ia.tom.join(", ") : "Cordial, acolhedor e direto";
   const idiomas = (S.ia.idiomas && S.ia.idiomas.length) ? S.ia.idiomas.join(", ") : "Português (Brasil)";
-  const emoji = S.ia.emojiUso === 'nenhum' ? "Não utilize emojis." : `Utilize linguagem clara e profissional (${S.ia.emojisPermitidos || 'pontuais e profissionais'}).`;
+  const emoji = S.ia.emojiUso === 'nenhum' ? "Não utilize emojis." : `Utilize emojis com moderação (${S.ia.emojisPermitidos || '💙, 👋, 🏥, ✅'}).`;
   const extensao = S.ia.extensaoResp === 'curta' ? "Respostas curtas e objetivas (máximo 2 a 3 frases por mensagem)." : (S.ia.extensaoResp === 'media' ? "Respostas médias (4 a 6 linhas estruturadas)." : "Respostas flexíveis e bem contextualizadas.");
 
   let prompt = `### 1. PERSONA E PAPEL DO ASSISTENTE

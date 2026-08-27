@@ -715,7 +715,7 @@ const BLOCKS = [
                     return `<button class="opt sm" aria-pressed="${a.emojiUso === v}" onclick="S.ia.emojiUso='${v}';draw()">${l}</button>`;
                   }).join("")}
                 </div></div>
-                ${a.emojiUso !== "nenhum" ? fi("Emojis permitidos / restrições", "ia.emojisPermitidos", "text", "Ex.: Permitidos: pontuais e profissionais | Proibidos: informais") : ""}
+                ${a.emojiUso !== "nenhum" ? fi("Emojis permitidos / restrições", "ia.emojisPermitidos", "text", "Ex.: Permitidos: 💙, 👋, 🏥, ✅ | Proibidos: ❤️, 😂") : ""}
               </div>
             `
           })}
@@ -909,7 +909,7 @@ const BLOCKS = [
 
               <div class="f" style="margin-top:14px">
                 <label>Mensagem de finalização de atendimento (Opcional)</label>
-                ${fta("ia.msgFinalizacao", "Ex.: Atendimento finalizado por inatividade. Caso precise de mais alguma informação, basta nos enviar uma nova mensagem! Tenha um ótimo dia.")}
+                ${fta("ia.msgFinalizacao", "Ex.: Atendimento finalizado por inatividade. Caso precise de mais alguma informação, basta nos enviar uma nova mensagem! Tenha um ótimo dia. 😊")}
                 <span class="hint">Enviada automaticamente caso o atendimento seja encerrado pela IA.</span>
               </div>
             `
@@ -1007,8 +1007,6 @@ const BLOCKS = [
           desc: "Defina o comportamento, autonomia, personas, guardrails e fluxos de atendimento do seu assistente de IA para WhatsApp e canais digitais.",
           pendList: pend
         })}
-
-        ${renderAuditorBanner()}
 
         ${!isChat ? `
           <div class="ia-step-header">

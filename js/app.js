@@ -86,28 +86,28 @@ function drawSum() {
       </div>
 
       <div class="side-context-card" style="margin:10px 0">
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-muted-2);font-weight:600">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-muted);font-weight:600">
           <span>Complexidade do Prompt</span>
-          <span style="color:var(--color-brand-accent)">${diag.complexidadeNivel} · ${diag.score}/100</span>
+          <span style="color:var(--color-brand-primary);font-weight:700">${diag.complexidadeNivel} · ${diag.score}/100</span>
         </div>
         <div class="meter-track">
           <div class="meter-fill" style="width:${diag.score}%"></div>
         </div>
-        <div style="font-size:11px;color:var(--color-muted-2);display:flex;justify-content:space-between">
+        <div style="font-size:11px;color:var(--color-muted);display:flex;justify-content:space-between">
           <span>Densidade: ${S.ia.habilidades.length > 120 ? 'Alta' : 'Moderada'}</span>
           <span>Transbordo: ${(S.ia.topicosTransbordo || []).length} assuntos</span>
         </div>
       </div>
 
       <div class="side-context-card" style="margin:10px 0">
-        <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-muted-2);font-weight:700;margin-bottom:6px">Diagnóstico de Ambiguidades</div>
+        <div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-brand-primary);font-family:'IBM Plex Mono',monospace;font-weight:700;margin-bottom:6px">Diagnóstico de Ambiguidades</div>
         ${diag.ambiguidades.map(a => `
           <div class="ambig-item">
             <span class="${a.tipo === 'ok' ? 'ambig-ok' : 'ambig-warn'}">${a.tipo === 'ok' ? 'OK' : '!'}</span>
-            <span style="color:${a.tipo === 'ok' ? 'var(--color-surface)' : 'var(--color-warning)'}">${esc(a.txt)}</span>
+            <span style="color:${a.tipo === 'ok' ? 'var(--color-fg-1)' : 'var(--color-warning)'}">${esc(a.txt)}</span>
           </div>
         `).join("")}
-        <button class="btn-g" style="color:var(--color-brand-accent);font-size:12px;margin-top:6px;padding:0" onclick="otimizarIaAuditora()">Otimizar regras com a Auditora</button>
+        <button class="btn-g" style="color:var(--color-brand-primary);font-size:12px;margin-top:6px;padding:0" onclick="otimizarIaAuditora()">Otimizar regras com a Auditora</button>
       </div>
 
       ${line("Nome do Agente", S.ia.nome || "—", !S.ia.nome)}
@@ -223,9 +223,9 @@ function drawSum() {
     <p class="cli">${esc(c.razaoSocial || "Hospital Exemplo Ltda.")}</p>
 
     <div class="side-context-card" style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-muted-2);font-weight:600;margin-bottom:4px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-muted);font-weight:600;margin-bottom:4px">
         <span>Progresso Geral</span>
-        <span style="color:var(--color-success);font-weight:700">${pc}%</span>
+        <span style="color:var(--color-brand-primary);font-weight:700">${pc}%</span>
       </div>
       <div class="meter-track" style="margin:2px 0 0">
         <div class="meter-fill" style="width:${pc}%"></div>
