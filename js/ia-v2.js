@@ -46,7 +46,29 @@ function formatIaV2Time() {
 // Formatação segura de Markdown para visualização limpa de balões
 function formatIaV2Markdown(txt) {
   if (!txt) return "";
-  let html = esc(txt);
+
+  // Se o texto for um JSON bruto (ex: {"reply": "...", "extractedData": ...}), extrai apenas a mensagem
+  let cleanTxt = txt;
+  if (typeof cleanTxt === "string") {
+    const trimmed = cleanTxt.trim();
+    if (trimmed.startsWith("{") && (trimmed.includes('"reply"') || trimmed.includes('"message"'))) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        cleanTxt = parsed.reply || parsed.message || parsed.output || cleanTxt;
+      } catch (e) {
+        const matchReply = trimmed.match(/"(?:reply|message)"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+        if (matchReply && matchReply[1]) {
+          try {
+            cleanTxt = JSON.parse(`"${matchReply[1]}"`);
+          } catch (e2) {
+            cleanTxt = matchReply[1];
+          }
+        }
+      }
+    }
+  }
+
+  let html = esc(cleanTxt);
   // Negrito **texto**
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   // Itálico *texto*
@@ -208,48 +230,82 @@ async function sendIaV2Message(customText) {
         throw new Error(`N8N retornou HTTP ${resp.status}: ${rawResponse}`);
       }
 
-      try {
-        parsedData = JSON.parse(rawResponse);
-      } catch (e) {
-        // Formato texto puro
+      // Processamento e extração robusta da resposta do N8N
+      function parseJsonSafe(val) {
+        if (typeof val === "string") {
+          const trimmed = val.trim();
+          if ((trimmed.startsWith("{") && trimmed.endsWith("}")) || (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
+            try {
+              return JSON.parse(trimmed);
+            } catch (e) {
+              return val;
+            }
+          }
+        }
+        return val;
       }
+
+      parsedData = parseJsonSafe(rawResponse);
     } catch (fetchErr) {
       throw fetchErr;
     }
 
     let botReply = "";
+    let extracted = null;
 
-    if (parsedData) {
-      botReply = parsedData.reply ||
-                 parsedData.output ||
-                 parsedData.message ||
-                 parsedData.resposta ||
-                 parsedData.text ||
-                 parsedData.response ||
-                 "";
-
-      if (!botReply && typeof parsedData === "object") {
-        if (parsedData.data && typeof parsedData.data === "string") {
-          botReply = parsedData.data;
-        } else if (parsedData.content && typeof parsedData.content === "string") {
-          botReply = parsedData.content;
-        } else {
-          botReply = JSON.stringify(parsedData, null, 2);
+    function unwrapPayload(obj) {
+      if (!obj) return;
+      if (Array.isArray(obj) && obj.length > 0) {
+        unwrapPayload(obj[0]);
+        return;
+      }
+      if (typeof obj === "string") {
+        const p = parseJsonSafe(obj);
+        if (p && typeof p === "object") unwrapPayload(p);
+        else if (!botReply) botReply = obj;
+        return;
+      }
+      if (typeof obj === "object") {
+        if (obj.output) {
+          const pOut = parseJsonSafe(obj.output);
+          if (pOut && typeof pOut === "object") unwrapPayload(pOut);
+          else if (!botReply && typeof pOut === "string") botReply = pOut;
+        }
+        if (obj.response) {
+          const pResp = parseJsonSafe(obj.response);
+          if (pResp && typeof pResp === "object") unwrapPayload(pResp);
+        }
+        if (!botReply) {
+          botReply = obj.reply || obj.message || obj.text || obj.resposta || "";
+        }
+        if (!extracted) {
+          extracted = obj.extractedData || obj.state || obj.parsed_ai;
         }
       }
+    }
 
-      const extracted = parsedData.extractedData || parsedData.state || parsedData.parsed_ai || parsedData.context;
-      if (extracted) {
-        sincronizarVariaveisExtraidas(extracted);
+    unwrapPayload(parsedData);
+
+    // Se botReply ainda for uma string JSON, faz uma segunda descompactação
+    if (typeof botReply === "string") {
+      const p = parseJsonSafe(botReply);
+      if (p && typeof p === "object") {
+        botReply = p.reply || p.message || p.text || botReply;
+        if (!extracted && p.extractedData) extracted = p.extractedData;
       }
-    } else {
+    }
+
+    if (!botReply) {
       botReply = rawResponse || "Mensagem processada pelo fluxo no N8N.";
     }
 
-    if (botReply === "Workflow was started" || botReply.includes("Workflow was started")) {
-      botReply = `Mensagem recebida com sucesso pelo fluxo do N8N!
+    // Se o N8N retornou mensagem padrão de início sem responder
+    if (botReply === "Workflow was started" || (typeof botReply === "string" && botReply.includes("Workflow was started"))) {
+      botReply = `Mensagem recebida com sucesso pelo fluxo do N8N!\n\n*(Dica técnica: Para retornar a resposta gerada pela IA nesta conversa, adicione no final do fluxo no N8N o nó **Respond to Webhook** retornando o JSON: \`{"reply": "sua resposta aqui"}\`)*.`;
+    }
 
-*(Dica técnica: Para retornar a resposta gerada pela IA nesta conversa, adicione no final do fluxo no N8N o nó **Respond to Webhook** retornando o JSON: \`{"reply": "sua resposta aqui"}\`)*.`;
+    if (extracted && typeof extracted === "object") {
+      sincronizarVariaveisExtraidas(extracted);
     }
 
     S.ia.v2Messages.push({

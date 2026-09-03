@@ -248,6 +248,16 @@ function togCanal(c) {
   else S.contrato.canais.push(c);
   draw();
 }
+function stepLic(path, delta, min = 1) {
+  let curr = parseInt(get(path), 10) || 0;
+  curr = Math.max(min, curr + delta);
+  set(path, curr);
+  draw();
+}
+function setLic(path, val) {
+  set(path, val);
+  draw();
+}
 function addTag(p, v) { v = v.trim(); if (!v) return; const a = get(p); if (!a.includes(v)) a.push(v); draw(); }
 function delTag(p, i) { get(p).splice(i, 1); draw(); }
 function loadTpl(k, f) {

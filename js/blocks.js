@@ -78,7 +78,7 @@ const BLOCKS = [
         ${subCard({
           kicker: "Escopo Contratual",
           title: "Canais, Licenças e Módulos",
-          desc: "Configure os canais de atendimento, licenças de usuários e modelo de implantação.",
+          desc: "Configure as licenças de usuários, capacidade operacional e modelo de implantação da sua equipe.",
           content: `
             <div class="f">
               <label>Canais de Atendimento Ativos</label>
@@ -88,15 +88,101 @@ const BLOCKS = [
               </div>
             </div>
 
-            <div class="grid3" style="margin-top:14px">
-              ${fi("Licenças de Agente", "contrato.licAgente", "number", "15")}
-              ${fi("Licenças de Gestor", "contrato.licGestor", "number", "3")}
-              ${fi("Números de WhatsApp", "contrato.numerosWhats", "number", "1")}
+            <div class="lic-grid">
+              <!-- Card 1: Licenças de Agente -->
+              <div class="lic-card">
+                <div>
+                  <div class="lic-card-header">
+                    <div class="lic-card-titles">
+                      <span class="lic-card-kicker">Atendimento Humano</span>
+                      <h4 class="lic-card-title">Licenças de Agente</h4>
+                    </div>
+                    <span class="lic-card-badge">Operação</span>
+                  </div>
+                  <p class="lic-card-desc">Atendentes que dialogam simultaneamente com clientes nos canais digitais.</p>
+                </div>
+                <div>
+                  <div class="lic-counter-wrap">
+                    <button type="button" class="lic-btn-step" onclick="stepLic('contrato.licAgente', -1, 1)" title="Diminuir">−</button>
+                    <div class="lic-value-box">
+                      <input type="number" class="lic-number-input" data-path="contrato.licAgente" value="${c.licAgente || 1}" min="1">
+                      <span class="lic-unit">agentes</span>
+                    </div>
+                    <button type="button" class="lic-btn-step" onclick="stepLic('contrato.licAgente', 1, 1)" title="Aumentar">+</button>
+                  </div>
+                  <div class="lic-presets-row">
+                    <span class="lic-preset-label">Atalhos:</span>
+                    ${[5, 10, 15, 20, 30].map(n => `
+                      <button type="button" class="lic-preset-btn ${c.licAgente == n ? 'active' : ''}" onclick="setLic('contrato.licAgente', ${n})">${n}</button>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 2: Licenças de Gestor -->
+              <div class="lic-card">
+                <div>
+                  <div class="lic-card-header">
+                    <div class="lic-card-titles">
+                      <span class="lic-card-kicker">Supervisão & BI</span>
+                      <h4 class="lic-card-title">Licenças de Gestor</h4>
+                    </div>
+                    <span class="lic-card-badge">Gestão</span>
+                  </div>
+                  <p class="lic-card-desc">Acesso a relatórios, monitoria em tempo real, auditoria e dashboards.</p>
+                </div>
+                <div>
+                  <div class="lic-counter-wrap">
+                    <button type="button" class="lic-btn-step" onclick="stepLic('contrato.licGestor', -1, 1)" title="Diminuir">−</button>
+                    <div class="lic-value-box">
+                      <input type="number" class="lic-number-input" data-path="contrato.licGestor" value="${c.licGestor || 1}" min="1">
+                      <span class="lic-unit">gestores</span>
+                    </div>
+                    <button type="button" class="lic-btn-step" onclick="stepLic('contrato.licGestor', 1, 1)" title="Aumentar">+</button>
+                  </div>
+                  <div class="lic-presets-row">
+                    <span class="lic-preset-label">Atalhos:</span>
+                    ${[1, 2, 3, 5, 8].map(n => `
+                      <button type="button" class="lic-preset-btn ${c.licGestor == n ? 'active' : ''}" onclick="setLic('contrato.licGestor', ${n})">${n}</button>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 3: Números de WhatsApp -->
+              <div class="lic-card">
+                <div>
+                  <div class="lic-card-header">
+                    <div class="lic-card-titles">
+                      <span class="lic-card-kicker">Conexões Oficiais</span>
+                      <h4 class="lic-card-title">Linhas de WhatsApp</h4>
+                    </div>
+                    <span class="lic-card-badge">Instâncias</span>
+                  </div>
+                  <p class="lic-card-desc">Linhas telefônicas conectadas e ativas na API oficial do WhatsApp.</p>
+                </div>
+                <div>
+                  <div class="lic-counter-wrap">
+                    <button type="button" class="lic-btn-step" onclick="stepLic('contrato.numerosWhats', -1, 1)" title="Diminuir">−</button>
+                    <div class="lic-value-box">
+                      <input type="number" class="lic-number-input" data-path="contrato.numerosWhats" value="${c.numerosWhats || 1}" min="1">
+                      <span class="lic-unit">linhas</span>
+                    </div>
+                    <button type="button" class="lic-btn-step" onclick="stepLic('contrato.numerosWhats', 1, 1)" title="Aumentar">+</button>
+                  </div>
+                  <div class="lic-presets-row">
+                    <span class="lic-preset-label">Atalhos:</span>
+                    ${[1, 2, 3, 4, 5].map(n => `
+                      <button type="button" class="lic-preset-btn ${c.numerosWhats == n ? 'active' : ''}" onclick="setLic('contrato.numerosWhats', ${n})">${n}</button>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div class="grid2" style="margin-top:14px">
-              <div class="f">
-                <label>Tipo de Implantação</label>
+            <div class="grid2" style="margin-top:16px">
+              <div class="scope-options-box">
+                <span class="scope-options-label">Tipo de Implantação</span>
                 <div class="opts">
                   <button type="button" class="opt sm" aria-pressed="${c.implantacao === 'Nuvem'}" onclick="S.contrato.implantacao='Nuvem';draw()">Nuvem</button>
                   <button type="button" class="opt sm" aria-pressed="${c.implantacao === 'Híbrida'}" onclick="S.contrato.implantacao='Híbrida';draw()">Híbrida</button>
@@ -104,8 +190,8 @@ const BLOCKS = [
                 </div>
               </div>
 
-              <div class="f">
-                <label>Módulos Adicionais Contratados</label>
+              <div class="scope-options-box">
+                <span class="scope-options-label">Módulos Adicionais Contratados</span>
                 <div class="opts">
                   <button type="button" class="opt sm" aria-pressed="${c.integracao}" onclick="S.contrato.integracao=!S.contrato.integracao;draw()">Integração API/CRM</button>
                   <button type="button" class="opt sm" aria-pressed="${c.ia}" onclick="S.contrato.ia=!S.contrato.ia;draw()">Assistente de IA</button>
