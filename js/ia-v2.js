@@ -60,25 +60,51 @@ function formatIaV2Markdown(txt) {
   return html;
 }
 
-// Sincronização de variáveis extraídas pelo N8N
+// Sincronização completa de variáveis extraídas pelo N8N
 function sincronizarVariaveisExtraidas(data) {
   if (!data || typeof data !== "object") return;
   let updated = false;
 
-  if (data.nome && !S.ia.nome) { S.ia.nome = data.nome; updated = true; }
-  if (data.tom && (!S.ia.tom || !S.ia.tom.length)) {
+  const setIf = (k, v) => {
+    if (v !== undefined && v !== null && v !== "") {
+      S.ia[k] = v;
+      updated = true;
+    }
+  };
+
+  setIf("nome", data.nome);
+  if (data.tom) {
     S.ia.tom = Array.isArray(data.tom) ? data.tom : [data.tom];
     updated = true;
   }
-  if (data.habilidades) { S.ia.habilidades = data.habilidades; updated = true; }
-  if (data.restricoes) { S.ia.restricoes = data.restricoes; updated = true; }
-  if (data.publicoAlvo) { S.ia.publicoAlvo = data.publicoAlvo; updated = true; }
-  if (data.problema) { S.ia.problema = data.problema; updated = true; }
-  if (data.kpis) { S.ia.kpis = data.kpis; updated = true; }
+  setIf("extensaoResp", data.extensaoResp);
+  if (data.idiomas && Array.isArray(data.idiomas) && data.idiomas.length) {
+    S.ia.idiomas = data.idiomas;
+    updated = true;
+  }
+  setIf("emojiUso", data.emojiUso);
+  setIf("emojisPermitidos", data.emojisPermitidos);
+  setIf("processoOtimizar", data.processoOtimizar || data.problema);
+  setIf("kpis", data.kpis);
+  setIf("habilidades", data.habilidades);
+  setIf("restricoes", data.restricoes);
+  setIf("foraEscopo", data.foraEscopo);
   if (data.topicosTransbordo && Array.isArray(data.topicosTransbordo) && data.topicosTransbordo.length) {
     S.ia.topicosTransbordo = data.topicosTransbordo;
     updated = true;
   }
+  if (data.fluxosPreAtendimento && Array.isArray(data.fluxosPreAtendimento) && data.fluxosPreAtendimento.length) {
+    S.ia.fluxosPreAtendimento = data.fluxosPreAtendimento;
+    updated = true;
+  }
+  setIf("filaFallback", data.filaFallback);
+  setIf("inatTempo", data.inatTempo);
+  setIf("inatAcao", data.inatAcao);
+  setIf("msgFinalizacao", data.msgFinalizacao);
+  setIf("baseUrl", data.baseUrl);
+  setIf("faqTexto", data.faqTexto);
+  setIf("faqRespNome", data.faqRespNome);
+  setIf("faqRespEmail", data.faqRespEmail);
 
   if (updated) {
     toast("Variáveis do assistente sincronizadas em tempo real via IA!");
@@ -122,14 +148,18 @@ async function sendIaV2Message(customText) {
     context: {
       empresa: S.contrato.razaoSocial || "",
       cnpj: S.contrato.cnpj || "",
-      representante: S.contrato.repLegal || "",
+      cidade: S.contrato.cidade || "",
+      accountManager: S.contrato.am || "",
+      representante: S.contatos.projNome || S.contatos.legNome || "",
+      contatoEmail: S.contatos.projEmail || S.contatos.legEmail || "",
+      contatoTelefone: S.contatos.projTel || "",
       canais: S.contrato.canais || [],
       licencasAgente: S.contrato.licAgente || 0,
       licencasGestor: S.contrato.licGestor || 0,
       telefoneWhats: S.whats.numero || "",
       horariosOperacao: S.operacao.diasSem || "",
       jornada: S.operacao.jornada || "",
-      filasCadastradas: (S.operacao.setores || []).map(s => ({ nome: s.nome, dac: s.dac })),
+      filasCadastradas: (S.operacao.setores || []).map(s => ({ nome: s.nome, dac: s.dac, horario: s.horario || "" })),
       iaAtual: {
         nome: S.ia.nome || "",
         tom: S.ia.tom || [],

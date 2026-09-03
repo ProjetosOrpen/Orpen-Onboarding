@@ -45,49 +45,87 @@ function subCard({ kicker, title, desc, content, note, actions, style }) {
 const BLOCKS = [
   {
     id: "contrato", nome: "Contrato", when: () => true,
-    check() { const p = []; if (!S.contrato.confirmado) p.push("Confirmar os dados do contrato"); return p; },
+    check() {
+      const p = [], c = S.contrato;
+      if (!c.razaoSocial) p.push("Razão Social da empresa");
+      if (!c.cnpj) p.push("CNPJ da empresa");
+      if (!c.confirmado) p.push("Confirmar os dados do contrato");
+      return p;
+    },
     render() {
       const c = S.contrato;
       const pend = this.check();
       return `<div class="card">
         ${renderBlockHeader({
-          badge: "Contrato",
-          title: "Confirme os dados cadastrais e contratados",
-          desc: "Estes dados vieram diretamente da negociação com a ORPEN. Confira as licenças e módulos ativos — caso algo precise de ajuste, aponte abaixo para seu Account Manager.",
+          badge: "Contrato & Escopo",
+          title: "Dados Cadastrais e Escopo Contratado",
+          desc: "Preencha ou confira os dados cadastrais da empresa, canais contratados, licenças e módulos da operação.",
           pendList: pend
         })}
         ${subCard({
-          kicker: "Escopo Contratual",
-          title: "Dados da Empresa e Escopo Contratado",
-          desc: "Informações registradas no ambiente de produção da sua operação.",
+          kicker: "Identificação",
+          title: "Dados da Empresa *",
+          desc: "Informações cadastrais e localização da sua instituição.",
           content: `
-            <div class="data-badge-grid">
-              ${ro("Razão Social", c.razaoSocial)}
-              ${ro("CNPJ", c.cnpj)}
-              ${ro("Cidade", c.cidade)}
-              ${ro("Account Manager", c.am)}
-              ${ro("Canais Ativos", c.canais.join(" · "))}
-              ${ro("Implantação", c.implantacao)}
-              ${ro("Licenças de Agente", c.licAgente)}
-              ${ro("Licenças de Gestor", c.licGestor)}
-              ${ro("Números de WhatsApp", c.numerosWhats)}
-              ${ro("Módulos Adicionais", [c.integracao ? "Integração API/CRM" : null, c.ia ? "Assistente de IA" : null].filter(Boolean).join(" · ") || "—")}
+            <div class="grid2">
+              ${fi("Razão Social *", "contrato.razaoSocial", "text", "Ex.: Hospital Santa Clara Ltda.")}
+              ${fi("CNPJ *", "contrato.cnpj", "text", "00.000.000/0001-00")}
+              ${fi("Cidade / UF", "contrato.cidade", "text", "Ex.: São Paulo / SP")}
+              ${fi("Account Manager ORPEN", "contrato.am", "text", "Ex.: Filipe Oliveira")}
+            </div>
+          `
+        })}
+        ${subCard({
+          kicker: "Escopo Contratual",
+          title: "Canais, Licenças e Módulos",
+          desc: "Configure os canais de atendimento, licenças de usuários e modelo de implantação.",
+          content: `
+            <div class="f">
+              <label>Canais de Atendimento Ativos</label>
+              <div class="opts">
+                <button type="button" class="opt sm" aria-pressed="${has('WhatsApp')}" onclick="togCanal('WhatsApp')">WhatsApp</button>
+                <button type="button" class="opt sm" aria-pressed="${has('Voz')}" onclick="togCanal('Voz')">Voz / Telefonia</button>
+              </div>
+            </div>
+
+            <div class="grid3" style="margin-top:14px">
+              ${fi("Licenças de Agente", "contrato.licAgente", "number", "15")}
+              ${fi("Licenças de Gestor", "contrato.licGestor", "number", "3")}
+              ${fi("Números de WhatsApp", "contrato.numerosWhats", "number", "1")}
+            </div>
+
+            <div class="grid2" style="margin-top:14px">
+              <div class="f">
+                <label>Tipo de Implantação</label>
+                <div class="opts">
+                  <button type="button" class="opt sm" aria-pressed="${c.implantacao === 'Nuvem'}" onclick="S.contrato.implantacao='Nuvem';draw()">Nuvem</button>
+                  <button type="button" class="opt sm" aria-pressed="${c.implantacao === 'Híbrida'}" onclick="S.contrato.implantacao='Híbrida';draw()">Híbrida</button>
+                  <button type="button" class="opt sm" aria-pressed="${c.implantacao === 'On-Premise'}" onclick="S.contrato.implantacao='On-Premise';draw()">On-Premise</button>
+                </div>
+              </div>
+
+              <div class="f">
+                <label>Módulos Adicionais Contratados</label>
+                <div class="opts">
+                  <button type="button" class="opt sm" aria-pressed="${c.integracao}" onclick="S.contrato.integracao=!S.contrato.integracao;draw()">Integração API/CRM</button>
+                  <button type="button" class="opt sm" aria-pressed="${c.ia}" onclick="S.contrato.ia=!S.contrato.ia;draw()">Assistente de IA</button>
+                </div>
+              </div>
             </div>
           `
         })}
         ${subCard({
           kicker: "Confirmação",
           title: "Validação do Contrato",
-          desc: "Confirme se os dados acima estão corretos ou indique as alterações necessárias.",
+          desc: "Confirme se os dados estão corretos ou indique apontamentos para seu Account Manager.",
           content: `
             <div class="opts" style="margin-bottom:14px">
-              <button class="opt" aria-pressed="${c.confirmado}" onclick="S.contrato.confirmado=true;draw()">Sim, confirmo os dados</button>
-              <button class="opt" aria-pressed="${c.confirmado === false && c.correcao.length > 0}" onclick="S.contrato.confirmado=false;draw()">Preciso corrigir algo</button>
+              <button type="button" class="opt" aria-pressed="${c.confirmado}" onclick="S.contrato.confirmado=true;draw()">Sim, confirmo os dados</button>
+              <button type="button" class="opt" aria-pressed="${c.confirmado === false && c.correcao.length > 0}" onclick="S.contrato.confirmado=false;draw()">Preciso corrigir algo</button>
             </div>
             <div class="f">
-              <label>O que precisa ser ajustado no contrato?</label>
-              <textarea data-path="contrato.correcao" placeholder="Ex.: São 18 licenças de agentes, não 15. Alterar e-mail de faturamento...">${esc(c.correcao)}</textarea>
-              <span class="hint">Seu Account Manager recebe este apontamento instantaneamente no onboarding.</span>
+              <label>Observações ou ajustes para o Account Manager</label>
+              <textarea data-path="contrato.correcao" placeholder="Ex.: Ajustes adicionais, observações sobre faturamento...">${esc(c.correcao)}</textarea>
             </div>
           `
         })}

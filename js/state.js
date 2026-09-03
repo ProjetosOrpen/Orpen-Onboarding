@@ -4,18 +4,18 @@
 
 const S = {
   contrato: {
-    razaoSocial: "Hospital Exemplo Ltda.",
-    cnpj: "12.345.678/0001-90",
-    cidade: "Porto Alegre / RS",
-    am: "Filipe Oliveira",
+    razaoSocial: "",
+    cnpj: "",
+    cidade: "",
+    am: "",
     confirmado: false,
     correcao: "",
-    canais: ["WhatsApp", "Voz"],
+    canais: ["WhatsApp"],
     implantacao: "Nuvem",
-    licAgente: 15,
-    licGestor: 3,
+    licAgente: 1,
+    licGestor: 1,
     numerosWhats: 1,
-    integracao: true,
+    integracao: false,
     ia: true
   },
   contatos: {
@@ -46,7 +46,7 @@ const S = {
   },
   whats: {
     numero: "",
-    emUso: "",
+    emUso: "sim",
     dataAtivacao: "",
     m01: "",
     m02: "",
@@ -241,6 +241,13 @@ function next() {
 }
 
 /* ---------- ações auxiliares ---------- */
+function togCanal(c) {
+  if (!S.contrato.canais) S.contrato.canais = [];
+  const i = S.contrato.canais.indexOf(c);
+  if (i >= 0) S.contrato.canais.splice(i, 1);
+  else S.contrato.canais.push(c);
+  draw();
+}
 function addTag(p, v) { v = v.trim(); if (!v) return; const a = get(p); if (!a.includes(v)) a.push(v); draw(); }
 function delTag(p, i) { get(p).splice(i, 1); draw(); }
 function loadTpl(k, f) {
