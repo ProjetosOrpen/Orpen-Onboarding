@@ -73,7 +73,7 @@ function drawSum() {
 
   let contextCardHtml = "";
 
-  if (cur === "ia" && c.ia) {
+  if ((cur === "ia" || cur === "ia_v2") && c.ia) {
     const diag = avaliarTierIa();
     const totalFluxos = (S.ia.fluxosPreAtendimento || []).length;
     const totalPassos = (S.ia.fluxosPreAtendimento || []).reduce((acc, f) => acc + (f.passos || []).filter(Boolean).length, 0);

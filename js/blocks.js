@@ -610,9 +610,6 @@ const BLOCKS = [
     },
     render() {
       const a = S.ia;
-      if (a._version === "v2") {
-        return renderIaV2Chat();
-      }
       const pend = this.check();
       const isChat = a._mode === "chat";
       const etapa = a._etapa || 1;
@@ -1005,25 +1002,11 @@ const BLOCKS = [
 
       return `<div class="card">
         ${renderBlockHeader({
-          badge: "Assistente de IA · Versão 1",
+          badge: "Assistente de IA",
           title: "Configuração do Agente Virtual Inteligente",
           desc: "Defina o comportamento, autonomia, personas, guardrails e fluxos de atendimento do seu assistente de IA para WhatsApp e canais digitais.",
           pendList: pend
         })}
-
-        <div class="ia-version-switcher-bar">
-          <span class="ia-version-switcher-label">Modo de Configuração:</span>
-          <div class="ia-version-switcher">
-            <button type="button" class="ia-ver-tab active" onclick="switchIaVersion('v1')">
-              <span class="ia-ver-name">Versão 1 · Formulário Estruturado</span>
-              <span class="ia-ver-tag">6 Etapas</span>
-            </button>
-            <button type="button" class="ia-ver-tab" onclick="switchIaVersion('v2')">
-              <span class="ia-ver-name">Versão 2 · Entrevista com IA</span>
-              <span class="ia-ver-tag n8n">N8N Webhook</span>
-            </button>
-          </div>
-        </div>
 
         ${!isChat ? `
           <div class="ia-step-header">
@@ -1054,6 +1037,20 @@ const BLOCKS = [
 
         ${contentHtml}
       </div>`;
+    }
+  },
+
+  {
+    id: "ia_v2", nome: "Assistente de IA (V2)", when: () => S.contrato.ia,
+    check() {
+      const p = [];
+      if (!S.ia.v2Messages || S.ia.v2Messages.length <= 1) {
+        p.push("Iniciar entrevista com a IA");
+      }
+      return p;
+    },
+    render() {
+      return renderIaV2Chat();
     }
   },
 

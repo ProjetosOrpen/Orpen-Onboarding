@@ -235,6 +235,11 @@ function nav() {
     ${i < v.length - 1 ? `<button class="btn btn-p sp" onclick="go('${v[i + 1].id}')">Continuar</button>` : ""}</div>`;
 }
 
+function next() {
+  const v = visible(), i = v.findIndex(b => b.id === cur);
+  if (i < v.length - 1) go(v[i + 1].id);
+}
+
 /* ---------- ações auxiliares ---------- */
 function addTag(p, v) { v = v.trim(); if (!v) return; const a = get(p); if (!a.includes(v)) a.push(v); draw(); }
 function delTag(p, i) { get(p).splice(i, 1); draw(); }

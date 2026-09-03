@@ -331,25 +331,8 @@ function renderIaV2Chat() {
         </div>
 
         <div class="ia-v2-header-actions">
-          <button class="btn btn-s sm" onclick="switchIaVersion('v1')" title="Alternar para o formulário estruturado de 6 etapas">
-            Alternar para Formulário (V1)
-          </button>
           <button class="btn btn-s sm" onclick="reiniciarChatIaV2()" title="Limpar mensagens e iniciar do zero">
-            Reiniciar Conversa
-          </button>
-        </div>
-      </div>
-
-      <div class="ia-version-switcher-bar">
-        <span class="ia-version-switcher-label">Modo Ativo:</span>
-        <div class="ia-version-switcher">
-          <button type="button" class="ia-ver-tab" onclick="switchIaVersion('v1')">
-            <span class="ia-ver-name">Versão 1 · Formulário Estruturado</span>
-            <span class="ia-ver-tag">6 Etapas</span>
-          </button>
-          <button type="button" class="ia-ver-tab active" onclick="switchIaVersion('v2')">
-            <span class="ia-ver-name">Versão 2 · Entrevista com IA</span>
-            <span class="ia-ver-tag n8n">N8N Webhook</span>
+            🔄 Reiniciar Conversa
           </button>
         </div>
       </div>
@@ -425,6 +408,12 @@ function renderIaV2Chat() {
           <span>Pressione <strong>Enter</strong> para enviar e <strong>Shift + Enter</strong> para quebra de linha.</span>
           <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px">Webhook: automate.orpen.com.br/webhook/Orpen_IA_Onboarding</span>
         </div>
+      </div>
+
+      <div class="navrow" style="margin-top:20px;padding-top:16px;border-top:1.5px solid var(--color-border)">
+        <button class="btn btn-s" onclick="go('ia')">← 9. Assistente de IA</button>
+        <div class="sp"></div>
+        <button class="btn btn-p" onclick="go('integ')">Avançar para Integração →</button>
       </div>
     </div>
   `;
