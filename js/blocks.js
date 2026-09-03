@@ -610,6 +610,9 @@ const BLOCKS = [
     },
     render() {
       const a = S.ia;
+      if (a._version === "v2") {
+        return renderIaV2Chat();
+      }
       const pend = this.check();
       const isChat = a._mode === "chat";
       const etapa = a._etapa || 1;
@@ -1002,11 +1005,25 @@ const BLOCKS = [
 
       return `<div class="card">
         ${renderBlockHeader({
-          badge: "Assistente de IA & Motor 5.6 Sol",
+          badge: "Assistente de IA · Versão 1",
           title: "Configuração do Agente Virtual Inteligente",
           desc: "Defina o comportamento, autonomia, personas, guardrails e fluxos de atendimento do seu assistente de IA para WhatsApp e canais digitais.",
           pendList: pend
         })}
+
+        <div class="ia-version-switcher-bar">
+          <span class="ia-version-switcher-label">Modo de Configuração:</span>
+          <div class="ia-version-switcher">
+            <button type="button" class="ia-ver-tab active" onclick="switchIaVersion('v1')">
+              <span class="ia-ver-name">Versão 1 · Formulário Estruturado</span>
+              <span class="ia-ver-tag">6 Etapas</span>
+            </button>
+            <button type="button" class="ia-ver-tab" onclick="switchIaVersion('v2')">
+              <span class="ia-ver-name">Versão 2 · Entrevista com IA</span>
+              <span class="ia-ver-tag n8n">N8N Webhook</span>
+            </button>
+          </div>
+        </div>
 
         ${!isChat ? `
           <div class="ia-step-header">

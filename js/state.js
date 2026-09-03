@@ -74,7 +74,11 @@ const S = {
     whatsback: false
   },
   ia: {
-    _etapa: 1, // Sub-etapa ativa (1 a 7)
+    _version: "v2", // "v1" para formulário estruturado, "v2" para entrevista interativa via N8N
+    _etapa: 1, // Sub-etapa ativa (1 a 6) para a Versão 1
+    v2WebhookUrl: "https://automate.orpen.com.br/webhook/Orpen_IA_Onboarding",
+    v2SessionId: "",
+    v2Messages: [],
 
     // 1. Alinhamento de Expectativas
     processoOtimizar: "Atendimento inicial, triagem ágil de agendamentos e esclarecimento de dúvidas frequentes sobre convênios e preparo de exames.",
@@ -280,6 +284,13 @@ function setIaViewMode(mode) {
   S.ia._mode = mode;
   draw();
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function switchIaVersion(v) {
+  S.ia._version = v === "v1" ? "v1" : "v2";
+  draw();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  toast(S.ia._version === "v2" ? "Versão 2 (Chat com IA N8N) ativada" : "Versão 1 (Formulário Estruturado) ativada");
 }
 
 function isIaStepDone(n) {
