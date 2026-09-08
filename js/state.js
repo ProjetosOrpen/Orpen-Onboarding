@@ -270,17 +270,52 @@ function addSetor() { const n = 7001 + S.operacao.setores.length; S.operacao.set
 function addAgente() { S.equipe.agentes.push({ login: nextLogin(), nome: "", email: "", setor: "" }); draw(); }
 function addGestor() { S.equipe.gestores.push({ nome: "", email: "", setor: "" }); draw(); }
 function nextLogin() { const used = S.equipe.agentes.map(a => +a.login).filter(Boolean); let n = 101; while (used.includes(n)) n++; return String(n); }
-function parseBulk() {
-  const raw = document.getElementById("bulk").value.trim(); if (!raw) return;
+
+function abrirModalImportAgentes() {
+  const el = document.getElementById("modal_import_agentes");
+  if (el) {
+    el.classList.add("open");
+    const hint = document.getElementById("bulk_import_lic_hint");
+    if (hint) {
+      hint.innerHTML = `Contrato: <b>${S.contrato.licAgente}</b> licenças de agente (${S.equipe.agentes.length} em uso).`;
+    }
+    const txt = document.getElementById("bulk_import_area");
+    if (txt) {
+      txt.value = "";
+      setTimeout(() => txt.focus(), 60);
+    }
+  }
+}
+
+function fecharModalImportAgentes() {
+  const el = document.getElementById("modal_import_agentes");
+  if (el) el.classList.remove("open");
+}
+
+function executarImportacaoAgentes() {
+  const el = document.getElementById("bulk_import_area");
+  const raw = el ? el.value.trim() : "";
+  if (!raw) {
+    toast("Cole ao menos uma linha para importar");
+    return;
+  }
   let n = 0;
   raw.split(/\n/).forEach(line => {
-    const c = line.split(/\t|;|,/).map(s => s.trim()).filter(Boolean); if (!c.length) return;
+    const c = line.split(/\t|;|,/).map(s => s.trim()).filter(Boolean);
+    if (!c.length) return;
     const email = c.find(x => x.includes("@")) || "";
     const nome = c.find(x => !x.includes("@") && !/^\d+$/.test(x)) || "";
     const setorMatch = c.slice(1).find(x => S.operacao.setores.some(s => s.nome.toLowerCase() === x.toLowerCase()));
-    S.equipe.agentes.push({ login: nextLogin(), nome, email, setor: setorMatch || "" }); n++;
+    S.equipe.agentes.push({ login: nextLogin(), nome, email, setor: setorMatch || "" });
+    n++;
   });
-  document.getElementById("bulk").value = ""; draw(); toast(n + " agente(s) importado(s)");
+  fecharModalImportAgentes();
+  draw();
+  toast(`${n} agente(s) importado(s) com sucesso!`);
+}
+
+function parseBulk() {
+  executarImportacaoAgentes();
 }
 function addOpcao() { S.bot.opcoes.push({ rotulo: "", acao: "transferir", destino: "", texto: "", filhos: [] }); draw(); }
 function addFilho(i) { S.bot.opcoes[i].filhos = S.bot.opcoes[i].filhos || []; S.bot.opcoes[i].filhos.push({ rotulo: "", destino: "" }); draw(); }
