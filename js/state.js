@@ -271,51 +271,77 @@ function addAgente() { S.equipe.agentes.push({ login: nextLogin(), nome: "", ema
 function addGestor() { S.equipe.gestores.push({ nome: "", email: "", setor: "" }); draw(); }
 function nextLogin() { const used = S.equipe.agentes.map(a => +a.login).filter(Boolean); let n = 101; while (used.includes(n)) n++; return String(n); }
 
+async function importarArquivoAgentes(event) {
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+
+  const fileName = file.name || "";
+  const ext = fileName.split(".").pop().toLowerCase();
+
+  try {
+    let linhas = [];
+
+    if ((ext === "xlsx" || ext === "xls") && typeof XLSX !== "undefined") {
+      const buffer = await file.arrayBuffer();
+      const wb = XLSX.read(buffer, { type: "array" });
+      const firstSheetName = wb.SheetNames[0];
+      const sheet = wb.Sheets[firstSheetName];
+      const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+      linhas = data.map(row => (Array.isArray(row) ? row.map(c => String(c ?? "").trim()) : []));
+    } else {
+      const text = await file.text();
+      const lines = text.split(/\r?\n/);
+      linhas = lines.map(l => l.split(/[\t;,]/).map(c => c.trim()));
+    }
+
+    let importados = 0;
+    for (const cols of linhas) {
+      const filtered = cols.filter(Boolean);
+      if (!filtered.length) continue;
+
+      const joined = filtered.join(" ").toLowerCase();
+      // Pular cabeçalho
+      if ((joined.includes("nome") || joined.includes("name")) && (joined.includes("email") || joined.includes("e-mail") || joined.includes("setor") || joined.includes("fila"))) {
+        continue;
+      }
+
+      const email = filtered.find(x => x.includes("@")) || "";
+      const nome = filtered.find(x => !x.includes("@") && !/^\d+$/.test(x)) || "";
+      const setorMatch = filtered.find(x =>
+        S.operacao.setores.some(s => s.nome.trim().toLowerCase() === x.trim().toLowerCase())
+      );
+      const setorNome = setorMatch
+        ? (S.operacao.setores.find(s => s.nome.trim().toLowerCase() === setorMatch.trim().toLowerCase())?.nome || "")
+        : "";
+
+      if (nome || email) {
+        S.equipe.agentes.push({
+          login: nextLogin(),
+          nome: nome || (email ? email.split("@")[0] : `Agente ${nextLogin()}`),
+          email: email,
+          setor: setorNome
+        });
+        importados++;
+      }
+    }
+
+    if (importados > 0) {
+      toast(`${importados} agente(s) importado(s) de "${fileName}"!`);
+      draw();
+    } else {
+      toast("Nenhum agente válido encontrado no arquivo.");
+    }
+  } catch (err) {
+    console.error("Erro ao importar arquivo:", err);
+    toast("Erro ao ler o arquivo. Verifique o formato.");
+  } finally {
+    if (event.target) event.target.value = "";
+  }
+}
+
 function abrirModalImportAgentes() {
-  const el = document.getElementById("modal_import_agentes");
-  if (el) {
-    el.classList.add("open");
-    const hint = document.getElementById("bulk_import_lic_hint");
-    if (hint) {
-      hint.innerHTML = `Contrato: <b>${S.contrato.licAgente}</b> licenças de agente (${S.equipe.agentes.length} em uso).`;
-    }
-    const txt = document.getElementById("bulk_import_area");
-    if (txt) {
-      txt.value = "";
-      setTimeout(() => txt.focus(), 60);
-    }
-  }
-}
-
-function fecharModalImportAgentes() {
-  const el = document.getElementById("modal_import_agentes");
-  if (el) el.classList.remove("open");
-}
-
-function executarImportacaoAgentes() {
-  const el = document.getElementById("bulk_import_area");
-  const raw = el ? el.value.trim() : "";
-  if (!raw) {
-    toast("Cole ao menos uma linha para importar");
-    return;
-  }
-  let n = 0;
-  raw.split(/\n/).forEach(line => {
-    const c = line.split(/\t|;|,/).map(s => s.trim()).filter(Boolean);
-    if (!c.length) return;
-    const email = c.find(x => x.includes("@")) || "";
-    const nome = c.find(x => !x.includes("@") && !/^\d+$/.test(x)) || "";
-    const setorMatch = c.slice(1).find(x => S.operacao.setores.some(s => s.nome.toLowerCase() === x.toLowerCase()));
-    S.equipe.agentes.push({ login: nextLogin(), nome, email, setor: setorMatch || "" });
-    n++;
-  });
-  fecharModalImportAgentes();
-  draw();
-  toast(`${n} agente(s) importado(s) com sucesso!`);
-}
-
-function parseBulk() {
-  executarImportacaoAgentes();
+  const fi = document.getElementById("import_agentes_file");
+  if (fi) fi.click();
 }
 function addOpcao() { S.bot.opcoes.push({ rotulo: "", acao: "transferir", destino: "", texto: "", filhos: [] }); draw(); }
 function addFilho(i) { S.bot.opcoes[i].filhos = S.bot.opcoes[i].filhos || []; S.bot.opcoes[i].filhos.push({ rotulo: "", destino: "" }); draw(); }

@@ -73,31 +73,8 @@
     </div>
   </div>
 
-  <!-- MODAL DE IMPORTAÇÃO EM LOTE DE AGENTES -->
-  <div class="prompt-modal-backdrop" id="modal_import_agentes" onclick="if(event.target===this)fecharModalImportAgentes()">
-    <div class="prompt-modal" style="max-width:620px">
-      <div class="prompt-modal-header">
-        <h3>📋 Importar Agentes em Lote</h3>
-        <button class="rowdel" style="color:#fff;font-size:20px;line-height:1" onclick="fecharModalImportAgentes()">×</button>
-      </div>
-      <div class="prompt-modal-body" style="background:var(--color-surface);padding:20px">
-        <p style="margin:0 0 12px;font-size:13px;color:var(--color-muted);line-height:1.45">
-          Cole a lista copiada do Excel, Google Sheets ou sistema de RH. Formato: uma pessoa por linha contendo <b>Nome</b>, <b>E-mail</b> e <b>Setor</b> (separados por Tab, vírgula ou ponto-e-vírgula).
-        </p>
-        <div class="f">
-          <textarea id="bulk_import_area" style="min-height:160px;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.5" placeholder="Maria Souza	maria@empresa.com.br	Agendamento&#10;João Lima	joao@empresa.com.br	Recepção&#10;Carlos Silva	carlos@empresa.com.br	Financeiro"></textarea>
-          <span class="hint" style="margin-top:6px">Os logins numéricos (101, 102...) serão atribuídos sequencialmente de forma automática.</span>
-        </div>
-      </div>
-      <div class="prompt-modal-footer" style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:var(--color-surface-2);border-top:1px solid var(--color-border)">
-        <span class="hint" id="bulk_import_lic_hint" style="margin:0;font-size:12px">Contrato: licenças configuradas</span>
-        <div style="display:flex;gap:10px">
-          <button type="button" class="btn btn-s" onclick="fecharModalImportAgentes()">Cancelar</button>
-          <button type="button" class="btn btn-p" onclick="executarImportacaoAgentes()">Importar Agentes</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Leitor de Planilhas (Excel e CSV) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <!-- Scripts Modulares ORPEN -->
   <script src="js/state.js"></script>

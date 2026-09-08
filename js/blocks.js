@@ -366,7 +366,8 @@ const BLOCKS = [
           desc: "Cadastre os usuários que atenderão as filas. Os logins numéricos (101, 102...) são gerados automaticamente.",
           actions: `
             <button type="button" class="btn btn-p" onclick="addAgente()">+ Adicionar Agente</button>
-            <button type="button" class="btn btn-s" onclick="abrirModalImportAgentes()">📋 Importar em Lote</button>
+            <button type="button" class="btn btn-s" onclick="document.getElementById('import_agentes_file').click()">📁 Importar em Lote</button>
+            <input type="file" id="import_agentes_file" accept=".xlsx, .xls, .csv, .txt" style="display:none" onchange="importarArquivoAgentes(event)">
           `,
           content: e.agentes.length ? `
             <table>
@@ -384,10 +385,7 @@ const BLOCKS = [
           ` : `
             <div class="empty-sectors-card">
               <h4 class="empty-sectors-title">Nenhum agente cadastrado ainda</h4>
-              <p class="empty-sectors-desc">Cadastre manualmente pelo botão acima ou agilize colando uma planilha copiada do Excel / RH.</p>
-              <div class="empty-sectors-tpl-row">
-                <button type="button" class="btn btn-s" onclick="abrirModalImportAgentes()">📋 Colar Lista do Excel / RH</button>
-              </div>
+              <p class="empty-sectors-desc">Cadastre manualmente pelo botão acima ou importe um arquivo pelo botão <b>Importar em Lote</b>.</p>
             </div>
           `,
           note: over ? `<div class="note warn" style="margin-top:14px"><b>Atenção: ${e.agentes.length} agentes para ${S.contrato.licAgente} licenças contratadas.</b> Remova ${e.agentes.length - S.contrato.licAgente} ou solicite licenças adicionais ao seu Account Manager.</div>` : ""
