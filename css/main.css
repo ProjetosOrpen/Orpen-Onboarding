@@ -2090,4 +2090,44 @@ td input, td select {
   font-family: 'IBM Plex Mono', monospace;
 }
 
+/* ---------- Empty State do Chat V2 ---------- */
+.ia-chat-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 50px 20px;
+  margin: auto;
+  max-width: 440px;
+}
+
+.ia-empty-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: var(--brand-gradient);
+  color: #fff;
+  box-shadow: var(--shadow-brand);
+  margin-bottom: 12px;
+}
+
+.ia-chat-empty-state h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-fg-1);
+  margin: 0 0 6px 0;
+}
+
+.ia-chat-empty-state p {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+
 

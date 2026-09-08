@@ -6,11 +6,7 @@
 
 const IA_V2_CONFIG = {
   webhookUrl: "https://automate.orpen.com.br/webhook/Orpen_IA_Onboarding",
-  defaultGreeting: `Olá! Sou a Especialista de Onboarding da **ORPEN**.
-
-Estou aqui para criar o assistente de inteligência artificial ideal para sua empresa. Vou conduzir uma conversa rápida e estruturada para entender seu negócio, suas regras de atendimento e configurar tudo automaticamente.
-
-Para começarmos: **Qual é o nome da sua empresa/clínica e qual é o principal objetivo ou dor que você gostaria de resolver no atendimento pelo WhatsApp?**`
+  defaultGreeting: ""
 };
 
 let IA_V2_LOADING = false;
@@ -24,18 +20,13 @@ function getIaV2SessionId() {
   return S.ia.v2SessionId;
 }
 
-// Inicializa o array de mensagens se estiver vazio
+// Inicializa o array de mensagens se estiver vazio e remove mensagens chumbadas
 function initIaV2Messages() {
   if (!S.ia.v2Messages) {
     S.ia.v2Messages = [];
   }
-  if (S.ia.v2Messages.length === 0) {
-    S.ia.v2Messages.push({
-      sender: "bot",
-      text: IA_V2_CONFIG.defaultGreeting,
-      time: formatIaV2Time()
-    });
-  }
+  // Remove qualquer resquício da mensagem inicial chumbada
+  S.ia.v2Messages = S.ia.v2Messages.filter(m => !m.text.includes("Qual é o nome da sua empresa/clínica"));
 }
 
 function formatIaV2Time() {
@@ -333,13 +324,7 @@ async function sendIaV2Message(customText) {
 function reiniciarChatIaV2() {
   const slug = (S.contrato.razaoSocial || "cliente").toLowerCase().replace(/[^a-z0-9]/g, "_").slice(0, 18);
   S.ia.v2SessionId = `onb_${slug}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-  S.ia.v2Messages = [
-    {
-      sender: "bot",
-      text: IA_V2_CONFIG.defaultGreeting,
-      time: formatIaV2Time()
-    }
-  ];
+  S.ia.v2Messages = [];
   IA_V2_LOADING = false;
   draw();
   toast("Conversa reiniciada com nova sessão!");
@@ -347,6 +332,16 @@ function reiniciarChatIaV2() {
 
 function renderIaV2MessagesHtml() {
   initIaV2Messages();
+
+  if (S.ia.v2Messages.length === 0 && !IA_V2_LOADING) {
+    return `
+      <div class="ia-chat-empty-state">
+        <div class="ia-empty-badge">ORPEN IA</div>
+        <h4>Assistente de Onboarding</h4>
+        <p>Envie uma mensagem abaixo ou selecione um atalho de início para começar o alinhamento do seu atendimento.</p>
+      </div>
+    `;
+  }
 
   let html = S.ia.v2Messages.map(m => {
     const isBot = m.sender === 'bot';

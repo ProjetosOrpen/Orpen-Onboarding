@@ -1168,7 +1168,7 @@ const BLOCKS = [
     id: "ia_v2", nome: "Assistente de IA (V2)", when: () => S.contrato.ia,
     check() {
       const p = [];
-      if (!S.ia.v2Messages || S.ia.v2Messages.length <= 1) {
+      if (!S.ia.v2Messages || S.ia.v2Messages.length === 0) {
         p.push("Iniciar entrevista com a IA");
       }
       return p;
