@@ -2153,5 +2153,117 @@ td input, td select {
   margin: 0;
 }
 
+/* ---------- Setores / Filas DAC (Layout Refinado) ---------- */
+.sectors-table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.sectors-tpl-quickload {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-muted);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+}
+
+.sectors-tpl-quickload .tpl-label {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.tpl-sep {
+  color: var(--color-border-strong);
+  font-size: 10px;
+}
+
+.btn-text-tpl {
+  background: transparent;
+  border: 0;
+  color: var(--color-brand-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all var(--ease-out) .15s;
+}
+
+.btn-text-tpl:hover {
+  background: var(--color-brand-soft);
+  text-decoration: underline;
+}
+
+.empty-sectors-card {
+  background: var(--color-surface-2);
+  border: 1.5px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  padding: 28px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.empty-sectors-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--color-fg-1);
+  margin: 0;
+}
+
+.empty-sectors-desc {
+  font-size: 12.5px;
+  color: var(--color-muted);
+  max-width: 400px;
+  margin: 0 0 6px 0;
+  line-height: 1.45;
+}
+
+.empty-sectors-tpl-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.empty-sectors-tpl-row .tpl-note {
+  font-size: 11.5px;
+  color: var(--color-muted);
+}
+
+.btn-tpl-pill {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-brand-primary);
+  cursor: pointer;
+  transition: all var(--ease-out) .15s;
+}
+
+.btn-tpl-pill:hover {
+  border-color: var(--color-brand-primary);
+  background: var(--color-brand-soft);
+  transform: translateY(-1px);
+}
+
 
 

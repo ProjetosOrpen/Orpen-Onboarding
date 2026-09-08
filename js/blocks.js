@@ -301,11 +301,7 @@ const BLOCKS = [
           kicker: "Filas DAC",
           title: "Setores e Filas de Atendimento (DAC) *",
           desc: "Cada setor recebe um código numérico DAC (3 a 5 dígitos) para roteamento nas filas e relatórios.",
-          actions: `
-            <button class="btn btn-s" onclick="addSetor()">+ Adicionar Setor</button>
-            <button class="btn-g" onclick="loadTpl('saude','setores')">Modelo Saúde</button>
-            <button class="btn-g" onclick="loadTpl('generico','setores')">Modelo Geral</button>
-          `,
+          actions: `<button type="button" class="btn btn-p" onclick="addSetor()">+ Adicionar Setor</button>`,
           content: o.setores.length ? `
             <table>
               <thead><tr><th style="width:45%">Nome do Setor / Fila</th><th style="width:20%">Código DAC</th><th>Horário Específico</th><th style="width:36px"></th></tr></thead>
@@ -318,7 +314,27 @@ const BLOCKS = [
                 </tr>`).join("")}
               </tbody>
             </table>
-          ` : `<div class="note info">Nenhum setor cadastrado. Clique em "+ Adicionar Setor" ou escolha um dos modelos prontos acima.</div>`
+            <div class="sectors-table-footer">
+              <button type="button" class="btn btn-s" onclick="addSetor()">+ Adicionar outro setor</button>
+              <div class="sectors-tpl-quickload">
+                <span class="tpl-label">Modelos prontos:</span>
+                <button type="button" class="btn-text-tpl" onclick="loadTpl('saude','setores')">🏥 Modelo Saúde</button>
+                <span class="tpl-sep">•</span>
+                <button type="button" class="btn-text-tpl" onclick="loadTpl('generico','setores')">🏢 Modelo Geral</button>
+              </div>
+            </div>
+          ` : `
+            <div class="empty-sectors-card">
+              <h4 class="empty-sectors-title">Nenhum setor cadastrado</h4>
+              <p class="empty-sectors-desc">Adicione os setores de atendimento da sua empresa ou comece importando uma estrutura sugerida.</p>
+              <button type="button" class="btn btn-p" onclick="addSetor()">+ Adicionar Primeiro Setor</button>
+              <div class="empty-sectors-tpl-row">
+                <span class="tpl-note">Ou preencha com um modelo pronto:</span>
+                <button type="button" class="btn-tpl-pill" onclick="loadTpl('saude','setores')">🏥 Modelo Saúde</button>
+                <button type="button" class="btn-tpl-pill" onclick="loadTpl('generico','setores')">🏢 Modelo Geral</button>
+              </div>
+            </div>
+          `
         })}
         ${nav()}
       </div>`;
