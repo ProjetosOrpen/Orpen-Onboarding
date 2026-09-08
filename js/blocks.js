@@ -361,25 +361,13 @@ const BLOCKS = [
           pendList: pend
         })}
         ${subCard({
-          kicker: "Importação",
-          title: "Importação Rápida de Agentes",
-          desc: "Cole uma lista do Excel ou RH: uma pessoa por linha com Nome, E-mail e Setor separados por tabulação ou vírgula.",
-          content: `
-            <div class="f">
-              <textarea id="bulk" placeholder="Maria Souza	maria@empresa.com.br	Agendamento\nJoão Lima	joao@empresa.com.br	Recepção"></textarea>
-              <div class="navrow" style="margin-top:8px">
-                <button class="btn btn-p" onclick="parseBulk()">Importar Lista</button>
-                <button class="btn btn-s" onclick="addAgente()">+ Adicionar Manual</button>
-                <span class="hint sp">Contrato: ${S.contrato.licAgente} licenças de agentes.</span>
-              </div>
-            </div>
-          `
-        })}
-        ${over ? `<div class="note warn"><b>Atenção: ${e.agentes.length} agentes para ${S.contrato.licAgente} licenças contratadas.</b> Remova ${e.agentes.length - S.contrato.licAgente} ou solicite licenças adicionais ao seu Account Manager.</div>` : ""}
-        ${subCard({
           kicker: "Operadores",
-          title: `Agentes Cadastrados (${e.agentes.length} de ${S.contrato.licAgente})`,
-          desc: "Login: apenas números (mínimo de 3 dígitos, sem começar com 0).",
+          title: `Agentes de Atendimento (${e.agentes.length} de ${S.contrato.licAgente}) *`,
+          desc: "Cadastre os usuários que atenderão as filas. Os logins numéricos (101, 102...) são gerados automaticamente.",
+          actions: `
+            <button type="button" class="btn btn-p" onclick="addAgente()">+ Adicionar Agente</button>
+            <button type="button" class="btn btn-s" onclick="abrirModalImportAgentes()">📋 Importar em Lote</button>
+          `,
           content: e.agentes.length ? `
             <table>
               <thead><tr><th style="width:16%">Login</th><th style="width:28%">Nome Completo</th><th style="width:30%">E-mail</th><th>Fila / Setor</th><th style="width:36px"></th></tr></thead>
@@ -393,13 +381,22 @@ const BLOCKS = [
                 </tr>`).join("")}
               </tbody>
             </table>
-          ` : `<div class="note info">Nenhum agente cadastrado ainda. Use a importação rápida acima para começar.</div>`
+          ` : `
+            <div class="empty-sectors-card">
+              <h4 class="empty-sectors-title">Nenhum agente cadastrado ainda</h4>
+              <p class="empty-sectors-desc">Cadastre manualmente pelo botão acima ou agilize colando uma planilha copiada do Excel / RH.</p>
+              <div class="empty-sectors-tpl-row">
+                <button type="button" class="btn btn-s" onclick="abrirModalImportAgentes()">📋 Colar Lista do Excel / RH</button>
+              </div>
+            </div>
+          `,
+          note: over ? `<div class="note warn" style="margin-top:14px"><b>Atenção: ${e.agentes.length} agentes para ${S.contrato.licAgente} licenças contratadas.</b> Remova ${e.agentes.length - S.contrato.licAgente} ou solicite licenças adicionais ao seu Account Manager.</div>` : ""
         })}
         ${subCard({
           kicker: "Supervisão",
           title: `Gestores e Supervisores (${e.gestores.length} de ${S.contrato.licGestor}) *`,
           desc: "Acessam dashboards em tempo real, relatórios gerenciais, gravação e monitoria de filas.",
-          actions: `<button class="btn btn-s" onclick="addGestor()">+ Adicionar Gestor</button>`,
+          actions: `<button type="button" class="btn btn-p" onclick="addGestor()">+ Adicionar Gestor</button>`,
           content: e.gestores.length ? `
             <table>
               <thead><tr><th style="width:32%">Nome Completo</th><th style="width:36%">E-mail Corporativo</th><th>Setor Supervisionado</th><th style="width:36px"></th></tr></thead>

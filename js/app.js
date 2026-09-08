@@ -280,3 +280,10 @@ function baixarJSON() {
 document.addEventListener("DOMContentLoaded", () => {
   draw();
 });
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    if (typeof fecharModalPromptFinal === "function") fecharModalPromptFinal();
+    if (typeof fecharModalImportAgentes === "function") fecharModalImportAgentes();
+  }
+});
