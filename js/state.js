@@ -207,6 +207,7 @@ const TPL = {
 
 const has = c => S.contrato.canais.includes(c);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const ico = (name, extraClass = "") => `<i data-lucide="${name}" class="ui-icon ${extraClass}"></i>`;
 
 function get(p) { return p.split(".").reduce((o, k) => o?.[k], S); }
 function set(p, v) { const k = p.split("."), l = k.pop(); k.reduce((o, x) => o[x], S)[l] = v; }
@@ -225,8 +226,9 @@ function fin(p, ph) { return `<input type="text" data-path="${p}" value="${esc(g
 function fta(p, ph) { return `<textarea data-path="${p}" placeholder="${esc(ph)}">${esc(get(p) ?? "")}</textarea>`; }
 function tagBox(p, ph) {
   const arr = get(p) || [];
+  const placeholderText = ph.includes("Enter") ? ph : `${ph} — digite e aperte Enter`;
   return `<div class="tags">${arr.map((t, i) => `<span class="tag">${esc(t)}<button onclick="delTag('${p}',${i})">×</button></span>`).join("") || '<span class="hint">nada ainda</span>'}</div>
-  <input type="text" placeholder="${ph} — digite e aperte Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();addTag('${p}',this.value);this.value=''}">`;
+  <input type="text" placeholder="${esc(placeholderText)}" onkeydown="if(event.key==='Enter'){event.preventDefault();addTag('${p}',this.value);this.value=''}">`;
 }
 function nav() {
   const v = visible(), i = v.findIndex(b => b.id === cur);

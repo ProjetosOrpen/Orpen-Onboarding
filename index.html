@@ -65,8 +65,8 @@
       </div>
       <div class="prompt-modal-footer">
         <div style="display:flex;gap:10px">
-          <button class="btn btn-p" onclick="copiarPromptFinal()">Copiar Prompt</button>
-          <button class="btn btn-s" onclick="baixarPromptTxt()">Baixar .txt</button>
+          <button class="btn btn-p" onclick="copiarPromptFinal()"><i data-lucide="copy" class="ui-icon"></i> Copiar Prompt</button>
+          <button class="btn btn-s" onclick="baixarPromptTxt()"><i data-lucide="download" class="ui-icon"></i> Baixar .txt</button>
         </div>
         <button class="btn btn-s" onclick="fecharModalPromptFinal()">Fechar</button>
       </div>
@@ -75,6 +75,9 @@
 
   <!-- Leitor de Planilhas (Excel e CSV) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Biblioteca de Ícones Vetoriais Lucide -->
+  <script src="js/lucide.min.js"></script>
 
   <!-- Scripts Modulares ORPEN -->
   <script src="js/state.js"></script>

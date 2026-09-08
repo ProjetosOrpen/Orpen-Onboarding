@@ -6,7 +6,7 @@ function renderBlockHeader({ badge, title, desc, pendList }) {
   const pCount = (pendList || []).length;
   const isDone = pCount === 0;
   const statusHtml = isDone
-    ? `<span class="block-status-pill done">✅ 100% Concluído</span>`
+    ? `<span class="block-status-pill done">${ico('check')} 100% Concluído</span>`
     : `<span class="block-status-pill part">${pCount} ${pCount === 1 ? 'pendência' : 'pendências'}</span>`;
 
   return `
@@ -301,7 +301,7 @@ const BLOCKS = [
           kicker: "Filas DAC",
           title: "Setores e Filas de Atendimento (DAC) *",
           desc: "Cada setor recebe um código numérico DAC (3 a 5 dígitos) para roteamento nas filas e relatórios.",
-          actions: `<button type="button" class="btn btn-p" onclick="addSetor()">+ Adicionar Setor</button>`,
+          actions: `<button type="button" class="btn btn-p" onclick="addSetor()">${ico('plus')} Adicionar Setor</button>`,
           content: o.setores.length ? `
             <table>
               <thead><tr><th style="width:45%">Nome do Setor / Fila</th><th style="width:20%">Código DAC</th><th>Horário Específico</th><th style="width:36px"></th></tr></thead>
@@ -317,9 +317,9 @@ const BLOCKS = [
             <div class="sectors-table-footer">
               <div class="sectors-tpl-quickload">
                 <span class="tpl-label">Modelos prontos:</span>
-                <button type="button" class="btn-text-tpl" onclick="loadTpl('saude','setores')">🏥 Modelo Saúde</button>
+                <button type="button" class="btn-text-tpl" onclick="loadTpl('saude','setores')">${ico('heart-pulse')} Modelo Saúde</button>
                 <span class="tpl-sep">•</span>
-                <button type="button" class="btn-text-tpl" onclick="loadTpl('generico','setores')">🏢 Modelo Geral</button>
+                <button type="button" class="btn-text-tpl" onclick="loadTpl('generico','setores')">${ico('building-2')} Modelo Geral</button>
               </div>
             </div>
           ` : `
@@ -328,8 +328,8 @@ const BLOCKS = [
               <p class="empty-sectors-desc">Adicione os setores de atendimento da sua empresa pelo botão acima ou comece importando uma estrutura sugerida.</p>
               <div class="empty-sectors-tpl-row">
                 <span class="tpl-note">Ou preencha com um modelo pronto:</span>
-                <button type="button" class="btn-tpl-pill" onclick="loadTpl('saude','setores')">🏥 Modelo Saúde</button>
-                <button type="button" class="btn-tpl-pill" onclick="loadTpl('generico','setores')">🏢 Modelo Geral</button>
+                <button type="button" class="btn-tpl-pill" onclick="loadTpl('saude','setores')">${ico('heart-pulse')} Modelo Saúde</button>
+                <button type="button" class="btn-tpl-pill" onclick="loadTpl('generico','setores')">${ico('building-2')} Modelo Geral</button>
               </div>
             </div>
           `
@@ -365,8 +365,8 @@ const BLOCKS = [
           title: `Agentes de Atendimento (${e.agentes.length} de ${S.contrato.licAgente}) *`,
           desc: "Cadastre os usuários que atenderão as filas. Os logins numéricos (101, 102...) são gerados automaticamente.",
           actions: `
-            <button type="button" class="btn btn-p" onclick="addAgente()">+ Adicionar Agente</button>
-            <button type="button" class="btn btn-s" onclick="document.getElementById('import_agentes_file').click()">📁 Importar em Lote</button>
+            <button type="button" class="btn btn-p" onclick="addAgente()">${ico('plus')} Adicionar Agente</button>
+            <button type="button" class="btn btn-s" onclick="document.getElementById('import_agentes_file').click()">${ico('upload')} Importar em Lote</button>
             <input type="file" id="import_agentes_file" accept=".xlsx, .xls, .csv, .txt" style="display:none" onchange="importarArquivoAgentes(event)">
           `,
           content: e.agentes.length ? `
@@ -394,7 +394,7 @@ const BLOCKS = [
           kicker: "Supervisão",
           title: `Gestores e Supervisores (${e.gestores.length} de ${S.contrato.licGestor}) *`,
           desc: "Acessam dashboards em tempo real, relatórios gerenciais, gravação e monitoria de filas.",
-          actions: `<button type="button" class="btn btn-p" onclick="addGestor()">+ Adicionar Gestor</button>`,
+          actions: `<button type="button" class="btn btn-p" onclick="addGestor()">${ico('plus')} Adicionar Gestor</button>`,
           content: e.gestores.length ? `
             <table>
               <thead><tr><th style="width:32%">Nome Completo</th><th style="width:36%">E-mail Corporativo</th><th>Setor Supervisionado</th><th style="width:36px"></th></tr></thead>
@@ -447,21 +447,49 @@ const BLOCKS = [
           kicker: "Tabulações",
           title: "Tabulações de Atendimento (Motivos de Encerramento) *",
           desc: "Opções que o agente seleciona ao finalizar a conversa. Recomendamos de 4 a 10 opções claras.",
-          actions: `
-            <button class="btn-g" onclick="loadTpl('saude','tabulacoes')">Modelo Saúde</button>
-            <button class="btn-g" onclick="loadTpl('generico','tabulacoes')">Modelo Geral</button>
-          `,
-          content: tagBox("classif.tabulacoes", "Digite a tabulação e pressione Enter...")
+          content: `
+            ${tagBox("classif.tabulacoes", "Digite a tabulação e pressione Enter...")}
+            ${!c.tabulacoes.length ? `
+              <div class="empty-sectors-tpl-row" style="justify-content:flex-start;margin-top:10px">
+                <span class="tpl-note">Ou preencha com um modelo pronto:</span>
+                <button type="button" class="btn-tpl-pill" onclick="loadTpl('saude','tabulacoes')">${ico('heart-pulse')} Modelo Saúde</button>
+                <button type="button" class="btn-tpl-pill" onclick="loadTpl('generico','tabulacoes')">${ico('building-2')} Modelo Geral</button>
+              </div>
+            ` : `
+              <div style="display:flex;justify-content:flex-end;margin-top:10px">
+                <div class="sectors-tpl-quickload">
+                  <span class="tpl-label">Modelos prontos:</span>
+                  <button type="button" class="btn-text-tpl" onclick="loadTpl('saude','tabulacoes')">${ico('heart-pulse')} Modelo Saúde</button>
+                  <span class="tpl-sep">•</span>
+                  <button type="button" class="btn-text-tpl" onclick="loadTpl('generico','tabulacoes')">${ico('building-2')} Modelo Geral</button>
+                </div>
+              </div>
+            `}
+          `
         })}
         ${subCard({
           kicker: "Pausas",
           title: "Motivos de Pausa dos Atendentes *",
           desc: "Status que os agentes escolhem quando precisam se ausentar das filas de atendimento.",
-          actions: `
-            <button class="btn-g" onclick="loadTpl('saude','pausas')">Modelo Saúde</button>
-            <button class="btn-g" onclick="loadTpl('generico','pausas')">Modelo Geral</button>
-          `,
-          content: tagBox("classif.pausas", "Digite o motivo de pausa e pressione Enter...")
+          content: `
+            ${tagBox("classif.pausas", "Digite o motivo de pausa e pressione Enter...")}
+            ${!c.pausas.length ? `
+              <div class="empty-sectors-tpl-row" style="justify-content:flex-start;margin-top:10px">
+                <span class="tpl-note">Ou preencha com um modelo pronto:</span>
+                <button type="button" class="btn-tpl-pill" onclick="loadTpl('saude','pausas')">${ico('heart-pulse')} Modelo Saúde</button>
+                <button type="button" class="btn-tpl-pill" onclick="loadTpl('generico','pausas')">${ico('building-2')} Modelo Geral</button>
+              </div>
+            ` : `
+              <div style="display:flex;justify-content:flex-end;margin-top:10px">
+                <div class="sectors-tpl-quickload">
+                  <span class="tpl-label">Modelos prontos:</span>
+                  <button type="button" class="btn-text-tpl" onclick="loadTpl('saude','pausas')">${ico('heart-pulse')} Modelo Saúde</button>
+                  <span class="tpl-sep">•</span>
+                  <button type="button" class="btn-text-tpl" onclick="loadTpl('generico','pausas')">${ico('building-2')} Modelo Geral</button>
+                </div>
+              </div>
+            `}
+          `
         })}
         ${subCard({
           kicker: "Pesquisa",
@@ -545,12 +573,16 @@ const BLOCKS = [
             <div class="f">
               <label>M01 · Mensagem de Recepção Dentro do Horário <span class="req">*</span></label>
               <textarea data-path="whats.m01" placeholder="Olá! Seja bem-vindo à nossa Central de Atendimento...">${esc(w.m01)}</textarea>
-              <button class="btn-g" onclick="sugerirM01()">Montar sugestão a partir dos setores</button>
+              <div style="display:flex;justify-content:flex-end;margin-top:6px">
+                <button type="button" class="btn-text-tpl" onclick="sugerirM01()">${ico('sparkles')} Montar sugestão a partir dos setores</button>
+              </div>
             </div>
             <div class="f">
               <label>M02 · Mensagem Fora do Horário de Atendimento <span class="req">*</span></label>
               <textarea data-path="whats.m02" placeholder="Nosso horário de atendimento é de segunda a sexta...">${esc(w.m02)}</textarea>
-              <button class="btn-g" onclick="sugerirM02()">Montar sugestão a partir do horário</button>
+              <div style="display:flex;justify-content:flex-end;margin-top:6px">
+                <button type="button" class="btn-text-tpl" onclick="sugerirM02()">${ico('sparkles')} Montar sugestão a partir do horário</button>
+              </div>
             </div>
             <div class="grid2">
               <div class="f"><label>Ação fora do horário</label><div class="opts">
@@ -594,10 +626,7 @@ const BLOCKS = [
           kicker: "Navegação",
           title: "Opções do Menu Principal",
           desc: "Cada opção pode transferir para uma fila humana (DAC), abrir um submenu de perguntas ou responder com texto pronto.",
-          actions: `
-            <button class="btn btn-s" onclick="addOpcao()">+ Adicionar Opção</button>
-            ${S.operacao.setores.length ? `<button class="btn-g" onclick="botFromSetores()">Gerar a partir dos setores</button>` : ""}
-          `,
+          actions: `<button type="button" class="btn btn-p" onclick="addOpcao()">${ico('plus')} Adicionar Opção</button>`,
           content: b.opcoes.length ? `
             <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
               ${b.opcoes.map((o, i) => `
@@ -624,13 +653,32 @@ const BLOCKS = [
                           <button class="rowdel" title="Excluir item" onclick="S.bot.opcoes[${i}].filhos.splice(${j},1);draw()">×</button>
                         </div>
                       `).join("")}
-                      <button class="btn-g" style="margin-top:6px" onclick="addFilho(${i})">+ Adicionar opção no submenu</button>
+                      <button type="button" class="btn-text-tpl" style="margin-top:8px" onclick="addFilho(${i})">${ico('plus')} Adicionar opção no submenu</button>
                     </div>
                   ` : ""}
                 </div>
               `).join("")}
             </div>
-          ` : `<div class="note info">Nenhuma opção no menu. Clique em "+ Adicionar Opção" ou gere automaticamente a partir dos seus setores.</div>`
+            ${S.operacao.setores.length ? `
+              <div style="display:flex;justify-content:flex-end;margin-top:14px">
+                <div class="sectors-tpl-quickload">
+                  <span class="tpl-label">Atalho:</span>
+                  <button type="button" class="btn-text-tpl" onclick="botFromSetores()">${ico('zap')} Gerar menu a partir dos setores</button>
+                </div>
+              </div>
+            ` : ""}
+          ` : `
+            <div class="empty-sectors-card">
+              <h4 class="empty-sectors-title">Nenhuma opção no menu do chatbot</h4>
+              <p class="empty-sectors-desc">Adicione opções manualmente pelo botão acima ou gere automaticamente as opções a partir dos setores configurados.</p>
+              ${S.operacao.setores.length ? `
+                <div class="empty-sectors-tpl-row">
+                  <span class="tpl-note">Ou monte o menu em um clique:</span>
+                  <button type="button" class="btn-tpl-pill" onclick="botFromSetores()">${ico('zap')} Gerar a partir dos setores</button>
+                </div>
+              ` : ""}
+            </div>
+          `
         })}
         ${b.opcoes.length ? subCard({
           kicker: "Simulação",
@@ -927,12 +975,8 @@ const BLOCKS = [
             kicker: "Triagem Prévia",
             title: "Fluxos de Qualificação e Triagem Prévia *",
             desc: "Roteiro de perguntas sequenciais (uma por vez) que a IA realiza para qualificar a conversa antes de transferir ao setor correto.",
-            actions: `
-              <button type="button" class="btn btn-s" onclick="addIaFluxo()">+ Adicionar Fluxo</button>
-              <button type="button" class="btn-chip template" onclick="loadPreAtendSaude()">Modelo Saúde</button>
-              <button type="button" class="btn-chip template" onclick="loadPreAtendComercial()">Modelo Comercial</button>
-            `,
-            content: `
+            actions: `<button type="button" class="btn btn-p" onclick="addIaFluxo()">${ico('plus')} Adicionar Fluxo</button>`,
+            content: fluxos.length ? `
               <div style="margin-bottom:16px">
                 ${fluxos.map((f, fi) => `
                   <div class="flow-card">
@@ -958,7 +1002,7 @@ const BLOCKS = [
                     </div>
 
                     <button type="button" class="btn-add-step" onclick="addIaPasso(${fi})">
-                      + Adicionar Passo a este fluxo
+                      ${ico('plus')} Adicionar Passo a este fluxo
                     </button>
 
                     <div style="margin-top:16px;padding:14px 16px;background:var(--color-surface-3);border-radius:8px;border:1px solid var(--color-border)">
@@ -975,6 +1019,24 @@ const BLOCKS = [
                     </div>
                   </div>
                 `).join("")}
+              </div>
+              <div style="display:flex;justify-content:flex-end;margin-top:14px">
+                <div class="sectors-tpl-quickload">
+                  <span class="tpl-label">Modelos prontos:</span>
+                  <button type="button" class="btn-text-tpl" onclick="loadPreAtendSaude()">${ico('heart-pulse')} Modelo Saúde</button>
+                  <span class="tpl-sep">•</span>
+                  <button type="button" class="btn-text-tpl" onclick="loadPreAtendComercial()">${ico('briefcase')} Modelo Comercial</button>
+                </div>
+              </div>
+            ` : `
+              <div class="empty-sectors-card">
+                <h4 class="empty-sectors-title">Nenhum fluxo de qualificação cadastrado</h4>
+                <p class="empty-sectors-desc">Adicione um fluxo personalizado pelo botão acima ou preencha com um modelo pronto.</p>
+                <div class="empty-sectors-tpl-row">
+                  <span class="tpl-note">Ou preencha com um modelo pronto:</span>
+                  <button type="button" class="btn-tpl-pill" onclick="loadPreAtendSaude()">${ico('heart-pulse')} Modelo Saúde</button>
+                  <button type="button" class="btn-tpl-pill" onclick="loadPreAtendComercial()">${ico('briefcase')} Modelo Comercial</button>
+                </div>
               </div>
             `
           })}
@@ -1150,7 +1212,7 @@ const BLOCKS = [
             <div class="ia-mini-steps">
               ${subSteps.map(s => `
                 <button type="button" class="ia-mini-step-btn ${etapa === s.n ? 'active' : ''} ${isIaStepDone(s.n) ? 'done' : ''}" onclick="setIaSubStep(${s.n})" title="${esc(s.full)}">
-                  <span class="ia-mini-step-dot">${isIaStepDone(s.n) ? '✅' : s.n}</span>
+                  <span class="ia-mini-step-dot">${isIaStepDone(s.n) ? '✓' : s.n}</span>
                   <span class="ia-mini-step-name">${esc(s.lbl.replace(/^\d+\.\s*/, ''))}</span>
                 </button>
               `).join("")}

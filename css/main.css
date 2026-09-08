@@ -2263,5 +2263,29 @@ td input, td select {
   transform: translateY(-1px);
 }
 
+/* ---------- Ícones Vetoriais da Interface (Lucide) ---------- */
+.ui-icon {
+  width: 14.5px;
+  height: 14.5px;
+  stroke-width: 2.2px;
+  vertical-align: -2.5px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.btn .ui-icon {
+  margin-right: 6px;
+}
+
+.btn-tpl-pill .ui-icon,
+.btn-text-tpl .ui-icon {
+  width: 13px;
+  height: 13px;
+  vertical-align: -2px;
+  margin-right: 5px;
+  stroke-width: 2px;
+}
+
+
 
 
