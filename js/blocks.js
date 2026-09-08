@@ -315,7 +315,6 @@ const BLOCKS = [
               </tbody>
             </table>
             <div class="sectors-table-footer">
-              <button type="button" class="btn btn-s" onclick="addSetor()">+ Adicionar outro setor</button>
               <div class="sectors-tpl-quickload">
                 <span class="tpl-label">Modelos prontos:</span>
                 <button type="button" class="btn-text-tpl" onclick="loadTpl('saude','setores')">🏥 Modelo Saúde</button>
@@ -326,8 +325,7 @@ const BLOCKS = [
           ` : `
             <div class="empty-sectors-card">
               <h4 class="empty-sectors-title">Nenhum setor cadastrado</h4>
-              <p class="empty-sectors-desc">Adicione os setores de atendimento da sua empresa ou comece importando uma estrutura sugerida.</p>
-              <button type="button" class="btn btn-p" onclick="addSetor()">+ Adicionar Primeiro Setor</button>
+              <p class="empty-sectors-desc">Adicione os setores de atendimento da sua empresa pelo botão acima ou comece importando uma estrutura sugerida.</p>
               <div class="empty-sectors-tpl-row">
                 <span class="tpl-note">Ou preencha com um modelo pronto:</span>
                 <button type="button" class="btn-tpl-pill" onclick="loadTpl('saude','setores')">🏥 Modelo Saúde</button>

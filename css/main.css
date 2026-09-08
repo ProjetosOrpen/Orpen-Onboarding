@@ -2156,13 +2156,11 @@ td input, td select {
 /* ---------- Setores / Filas DAC (Layout Refinado) ---------- */
 .sectors-table-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px solid var(--color-border);
-  flex-wrap: wrap;
-  gap: 12px;
 }
 
 .sectors-tpl-quickload {
