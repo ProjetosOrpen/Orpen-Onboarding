@@ -418,30 +418,6 @@ function renderIaV2Chat() {
         </div>
       </div>
 
-      <div class="ia-v2-tracker-box">
-        <div class="ia-v2-tracker-top">
-          <span class="ia-v2-tracker-kicker">Mapeamento em Tempo Real</span>
-          <span class="ia-v2-tracker-count">Sessão: <code>${esc(sessionId.substring(0, 18))}…</code></span>
-        </div>
-        <div class="ia-v2-pills-row">
-          <span class="ia-v2-pill ${S.ia.nome ? 'done' : ''}">
-            ${S.ia.nome ? '✓' : '○'} Nome: <strong>${esc(S.ia.nome || 'Pendente')}</strong>
-          </span>
-          <span class="ia-v2-pill ${S.ia.tom && S.ia.tom.length ? 'done' : ''}">
-            ${S.ia.tom && S.ia.tom.length ? '✓' : '○'} Tom: <strong>${esc((S.ia.tom || []).join(', ') || 'Pendente')}</strong>
-          </span>
-          <span class="ia-v2-pill ${S.ia.habilidades ? 'done' : ''}">
-            ${S.ia.habilidades ? '✓' : '○'} Autonomia: <strong>${S.ia.habilidades ? 'Mapeado' : 'Pendente'}</strong>
-          </span>
-          <span class="ia-v2-pill ${S.ia.restricoes ? 'done' : ''}">
-            ${S.ia.restricoes ? '✓' : '○'} Restrições: <strong>${S.ia.restricoes ? 'Definidas' : 'Pendente'}</strong>
-          </span>
-          <span class="ia-v2-pill ${(S.ia.topicosTransbordo || []).length ? 'done' : ''}">
-            ${(S.ia.topicosTransbordo || []).length ? '✓' : '○'} Transbordo: <strong>${(S.ia.topicosTransbordo || []).length} assuntos</strong>
-          </span>
-        </div>
-      </div>
-
       <div class="ia-v2-chat-box">
         <div class="ia-v2-chat-stream" id="ia_v2_chat_stream">
           ${renderIaV2MessagesHtml()}
