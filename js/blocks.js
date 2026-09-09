@@ -376,10 +376,10 @@ const BLOCKS = [
           `,
           content: e.agentes.length ? `
             <table>
-              <thead><tr><th style="width:14%">Login</th><th style="width:26%">Nome Completo</th><th style="width:26%">E-mail ou ID</th><th>Filas / Setores</th><th style="width:36px"></th></tr></thead>
+              <thead><tr><th style="width:75px">Login</th><th style="width:26%">Nome Completo</th><th style="width:26%">E-mail ou ID</th><th>Filas / Setores</th><th style="width:36px"></th></tr></thead>
               <tbody>
                 ${e.agentes.map((a, i) => `<tr>
-                  <td><input type="text" class="mono ${vLogin(a.login) ? "" : "bad"}" value="${esc(a.login)}" oninput="S.equipe.agentes[${i}].login=this.value;soft()"></td>
+                  <td><input type="text" class="mono ${vLogin(a.login) ? "" : "bad"}" style="width:60px;text-align:center" value="${esc(a.login)}" oninput="S.equipe.agentes[${i}].login=this.value;soft()"></td>
                   <td><input type="text" value="${esc(a.nome)}" placeholder="Ex.: Mariana Silva" oninput="S.equipe.agentes[${i}].nome=this.value;soft()"></td>
                   <td><input type="text" class="${vEmailOuId(a.email) ? "" : "bad"}" placeholder="email@empresa.com ou ID123" value="${esc(a.email)}" oninput="S.equipe.agentes[${i}].email=this.value;soft()"></td>
                   <td>${renderAgenteSetoresSelector(i, a, o.setores)}</td>

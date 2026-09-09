@@ -370,6 +370,16 @@ function addGestor() { S.equipe.gestores.push({ nome: "", email: "", setor: "" }
 function nextLogin() { const used = S.equipe.agentes.map(a => +a.login).filter(Boolean); let n = 101; while (used.includes(n)) n++; return String(n); }
 
 /* ---------- Multi-select de Setores para Agentes ---------- */
+function formatMsTags(setores) {
+  if (!setores || !setores.length) {
+    return `<span class="ms-placeholder">Selecione as filas…</span>`;
+  }
+  if (setores.length <= 2) {
+    return setores.map(st => `<span class="ms-pill">${esc(st)}</span>`).join("");
+  }
+  return `<span class="ms-pill">${esc(setores[0])}</span> <span class="ms-pill">+${setores.length - 1} filas</span>`;
+}
+
 function toggleAgenteSetor(agenteIdx, setorNome) {
   const ag = S.equipe.agentes[agenteIdx];
   if (!ag) return;
@@ -386,9 +396,11 @@ function toggleAgenteSetor(agenteIdx, setorNome) {
 
   const tagsEl = document.getElementById(`ms_tags_${agenteIdx}`);
   if (tagsEl) {
-    tagsEl.innerHTML = ag.setores.length
-      ? ag.setores.map(st => `<span class="ms-pill">${esc(st)}</span>`).join("")
-      : `<span class="ms-placeholder">Selecione as filas…</span>`;
+    tagsEl.innerHTML = formatMsTags(ag.setores);
+  }
+  const trigger = document.getElementById(`ms_trigger_${agenteIdx}`);
+  if (trigger) {
+    trigger.title = ag.setores.length ? ag.setores.join(", ") : "Clique para selecionar as filas";
   }
   const safeKey = setorNome.replace(/[^a-zA-Z0-9]/g, '_');
   const itemEl = document.getElementById(`ms_item_${agenteIdx}_${safeKey}`);
@@ -406,17 +418,51 @@ function toggleMultiSelect(agenteIdx, event) {
   if (event) event.stopPropagation();
   const allMenus = document.querySelectorAll(".ms-menu");
   const menu = document.getElementById(`ms_menu_${agenteIdx}`);
+  const trigger = document.getElementById(`ms_trigger_${agenteIdx}`) || document.getElementById(`ms_wrap_${agenteIdx}`);
   const isOpen = menu && menu.classList.contains("open");
-  allMenus.forEach(m => m.classList.remove("open"));
-  if (menu && !isOpen) {
+
+  allMenus.forEach(m => {
+    m.classList.remove("open");
+    m.style.display = "none";
+  });
+  document.querySelectorAll(".multi-select-trigger.active").forEach(t => t.classList.remove("active"));
+
+  if (menu && !isOpen && trigger) {
+    const rect = trigger.getBoundingClientRect();
+    menu.style.position = "fixed";
+
+    // Auto-posicionamento inteligente (se não couber embaixo, abre pra cima)
+    const menuHeight = 220;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    if (spaceBelow < menuHeight && rect.top > menuHeight) {
+      menu.style.top = (rect.top - menuHeight - 4) + "px";
+    } else {
+      menu.style.top = (rect.bottom + 4) + "px";
+    }
+
+    const menuWidth = Math.max(260, Math.min(320, rect.width + 40));
+    let leftPos = rect.left;
+    if (leftPos + menuWidth > window.innerWidth - 16) {
+      leftPos = Math.max(16, window.innerWidth - menuWidth - 16);
+    }
+    menu.style.left = leftPos + "px";
+    menu.style.width = menuWidth + "px";
+    menu.style.zIndex = "99999";
+    menu.style.display = "block";
     menu.classList.add("open");
+    trigger.classList.add("active");
   }
 }
 
 function fecharMultiSelect(agenteIdx, event) {
   if (event) event.stopPropagation();
   const menu = document.getElementById(`ms_menu_${agenteIdx}`);
-  if (menu) menu.classList.remove("open");
+  const trigger = document.getElementById(`ms_trigger_${agenteIdx}`) || document.getElementById(`ms_wrap_${agenteIdx}`);
+  if (menu) {
+    menu.classList.remove("open");
+    menu.style.display = "none";
+  }
+  if (trigger) trigger.classList.remove("active");
   soft();
 }
 
@@ -425,9 +471,23 @@ function marcarTodosSetoresAgente(agenteIdx, marcar) {
   if (!ag) return;
   ag.setores = marcar ? S.operacao.setores.map(s => s.nome) : [];
   ag.setor = ag.setores.join(", ");
-  draw();
-  const menu = document.getElementById(`ms_menu_${agenteIdx}`);
-  if (menu) menu.classList.add("open");
+
+  const tagsEl = document.getElementById(`ms_tags_${agenteIdx}`);
+  if (tagsEl) {
+    tagsEl.innerHTML = formatMsTags(ag.setores);
+  }
+  const trigger = document.getElementById(`ms_trigger_${agenteIdx}`);
+  if (trigger) {
+    trigger.title = ag.setores.length ? ag.setores.join(", ") : "Clique para selecionar as filas";
+  }
+  S.operacao.setores.forEach(s => {
+    const safeKey = s.nome.replace(/[^a-zA-Z0-9]/g, '_');
+    const itemEl = document.getElementById(`ms_item_${agenteIdx}_${safeKey}`);
+    if (itemEl) itemEl.classList.toggle("checked", marcar);
+    const chk = document.getElementById(`chk_ag_${agenteIdx}_${safeKey}`);
+    if (chk) chk.checked = marcar;
+  });
+  soft();
 }
 
 function renderAgenteSetoresSelector(i, ag, todosSetores) {
@@ -436,19 +496,18 @@ function renderAgenteSetoresSelector(i, ag, todosSetores) {
 
   return `
     <div class="multi-select-wrap" id="ms_wrap_${i}">
-      <div class="multi-select-trigger" onclick="toggleMultiSelect(${i}, event)" title="Clique para selecionar as filas">
+      <div class="multi-select-trigger" id="ms_trigger_${i}" onclick="toggleMultiSelect(${i}, event)" title="${selecionados.length ? esc(selecionados.join(', ')) : 'Clique para selecionar as filas'}">
         <div class="ms-tags-container" id="ms_tags_${i}">
-          ${selecionados.length
-            ? selecionados.map(st => `<span class="ms-pill">${esc(st)}</span>`).join("")
-            : `<span class="ms-placeholder">Selecione as filas…</span>`}
+          ${formatMsTags(selecionados)}
         </div>
         <span class="ms-chevron">▾</span>
       </div>
       <div class="ms-menu" id="ms_menu_${i}" onclick="event.stopPropagation()">
         <div class="ms-menu-header">
           <span class="ms-menu-title">Filas de Atendimento</span>
-          <div style="display:flex;gap:6px">
+          <div style="display:flex;gap:4px;align-items:center">
             <button type="button" class="ms-btn-link" onclick="marcarTodosSetoresAgente(${i}, true)">Todas</button>
+            <span style="color:var(--color-border)">|</span>
             <button type="button" class="ms-btn-link" onclick="marcarTodosSetoresAgente(${i}, false)">Limpar</button>
             <button type="button" class="ms-btn-done" onclick="fecharMultiSelect(${i}, event)">OK</button>
           </div>
@@ -472,13 +531,26 @@ function renderAgenteSetoresSelector(i, ag, todosSetores) {
   `;
 }
 
-// Fechar multi-select ao clicar fora
-if (typeof document !== "undefined") {
+// Fechar multi-select ao clicar fora ou rolar
+if (typeof document !== "undefined" && typeof document.addEventListener === "function") {
   document.addEventListener("click", e => {
-    if (!e.target.closest(".multi-select-wrap")) {
-      document.querySelectorAll(".ms-menu.open").forEach(m => m.classList.remove("open"));
+    if (!e.target.closest(".multi-select-wrap") && !e.target.closest(".ms-menu")) {
+      document.querySelectorAll(".ms-menu.open").forEach(m => {
+        m.classList.remove("open");
+        m.style.display = "none";
+      });
+      document.querySelectorAll(".multi-select-trigger.active").forEach(t => t.classList.remove("active"));
     }
   });
+}
+if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
+  window.addEventListener("scroll", () => {
+    document.querySelectorAll(".ms-menu.open").forEach(m => {
+      m.classList.remove("open");
+      m.style.display = "none";
+    });
+    document.querySelectorAll(".multi-select-trigger.active").forEach(t => t.classList.remove("active"));
+  }, { passive: true });
 }
 
 async function importarArquivoAgentes(event) {
