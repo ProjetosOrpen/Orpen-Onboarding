@@ -19,10 +19,10 @@ const S = {
     ia: true
   },
   contatos: {
-    projNome: "", projEmail: "", projTel: "", projCargo: "", projContatoOpcional: "",
-    finNome: "", finEmail: "", finTel: "", finContatoOpcional: "",
-    legNome: "", legEmail: "", legTel: "", legContatoOpcional: "",
-    tiNome: "", tiEmail: "", tiTel: "", tiContatoOpcional: ""
+    projNome: "", projEmail: "", projTel: "", projCargo: "",
+    finNome: "", finEmail: "", finTel: "",
+    legNome: "", legEmail: "", legTel: "",
+    tiNome: "", tiEmail: "", tiTel: ""
   },
   operacao: {
     jornada: "comercial",
@@ -250,14 +250,37 @@ function get(p) { return p.split(".").reduce((o, k) => o?.[k], S); }
 function set(p, v) { const k = p.split("."), l = k.pop(); k.reduce((o, x) => o[x], S)[l] = v; }
 
 const vEmail = v => /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(v || "");
+const vEmailOuId = v => {
+  const str = String(v || "").trim();
+  if (!str) return false;
+  if (str.includes("@")) return vEmail(str);
+  return str.length >= 2;
+};
 const vTel = v => (v || "").replace(/\D/g, "").length >= 10;
 const vLogin = v => /^[1-9]\d{2,}$/.test(v || "");
 
+function mascaraTelefone(el) {
+  let v = el.value.replace(/\D/g, "");
+  if (v.length > 11) v = v.slice(0, 11);
+  if (v.length > 10) {
+    el.value = v.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+  } else if (v.length > 6) {
+    el.value = v.replace(/^(\d{2})(\d{4,5})(\d{0,4})$/, "($1) $2-$3");
+  } else if (v.length > 2) {
+    el.value = v.replace(/^(\d{2})(\d{0,5})$/, "($1) $2");
+  } else if (v.length > 0) {
+    el.value = v.replace(/^(\d*)$/, "($1");
+  }
+}
+
 /* ---------- componentes de formulário ---------- */
 function ro(l, v) { return `<div class="f"><label>${l}</label><input type="text" value="${esc(v)}" readonly style="background:var(--surface-2);color:var(--muted)"></div>`; }
-function fi(l, p, t = "text", ph = "") {
+function fi(l, p, t = "text", ph = "", extra = "") {
   const v = get(p) ?? "";
-  return `<div class="f"><label>${l}</label><input type="${t === 'email' ? 'text' : t}" data-path="${p}" value="${esc(v)}" placeholder="${esc(ph)}"></div>`;
+  const isTel = t === "tel" || p.toLowerCase().includes("tel") || l.toLowerCase().includes("telefone") || l.toLowerCase().includes("whatsapp");
+  const maskAttr = isTel ? 'oninput="mascaraTelefone(this)" maxlength="15"' : '';
+  const phFinal = ph || (isTel ? "(11) 99999-9999" : "");
+  return `<div class="f"><label>${l}</label><input type="${t === 'email' ? 'text' : (isTel ? 'tel' : t)}" data-path="${p}" value="${esc(v)}" placeholder="${esc(phFinal)}" ${maskAttr} ${extra}></div>`;
 }
 function fin(p, ph) { return `<input type="text" data-path="${p}" value="${esc(get(p) ?? "")}" placeholder="${esc(ph)}">`; }
 function fta(p, ph) { return `<textarea data-path="${p}" placeholder="${esc(ph)}">${esc(get(p) ?? "")}</textarea>`; }
@@ -342,9 +365,121 @@ function atualizarPesquisaTexto() {
   S.classif.pesquisaTexto = `${p}\n\n${opts}`;
 }
 function addSetor() { const n = 7001 + S.operacao.setores.length; S.operacao.setores.push({ nome: "", dac: String(n), horario: S.operacao.diasSem || "" }); draw(); }
-function addAgente() { S.equipe.agentes.push({ login: nextLogin(), nome: "", email: "", setor: "" }); draw(); }
+function addAgente() { S.equipe.agentes.push({ login: nextLogin(), nome: "", email: "", setor: "", setores: [] }); draw(); }
 function addGestor() { S.equipe.gestores.push({ nome: "", email: "", setor: "" }); draw(); }
 function nextLogin() { const used = S.equipe.agentes.map(a => +a.login).filter(Boolean); let n = 101; while (used.includes(n)) n++; return String(n); }
+
+/* ---------- Multi-select de Setores para Agentes ---------- */
+function toggleAgenteSetor(agenteIdx, setorNome) {
+  const ag = S.equipe.agentes[agenteIdx];
+  if (!ag) return;
+  if (!Array.isArray(ag.setores)) {
+    ag.setores = ag.setor ? ag.setor.split(",").map(s => s.trim()).filter(Boolean) : [];
+  }
+  const idx = ag.setores.indexOf(setorNome);
+  if (idx >= 0) {
+    ag.setores.splice(idx, 1);
+  } else {
+    ag.setores.push(setorNome);
+  }
+  ag.setor = ag.setores.join(", ");
+
+  const tagsEl = document.getElementById(`ms_tags_${agenteIdx}`);
+  if (tagsEl) {
+    tagsEl.innerHTML = ag.setores.length
+      ? ag.setores.map(st => `<span class="ms-pill">${esc(st)}</span>`).join("")
+      : `<span class="ms-placeholder">Selecione as filas…</span>`;
+  }
+  const safeKey = setorNome.replace(/[^a-zA-Z0-9]/g, '_');
+  const itemEl = document.getElementById(`ms_item_${agenteIdx}_${safeKey}`);
+  if (itemEl) {
+    itemEl.classList.toggle("checked", ag.setores.includes(setorNome));
+  }
+  const chk = document.getElementById(`chk_ag_${agenteIdx}_${safeKey}`);
+  if (chk) {
+    chk.checked = ag.setores.includes(setorNome);
+  }
+  soft();
+}
+
+function toggleMultiSelect(agenteIdx, event) {
+  if (event) event.stopPropagation();
+  const allMenus = document.querySelectorAll(".ms-menu");
+  const menu = document.getElementById(`ms_menu_${agenteIdx}`);
+  const isOpen = menu && menu.classList.contains("open");
+  allMenus.forEach(m => m.classList.remove("open"));
+  if (menu && !isOpen) {
+    menu.classList.add("open");
+  }
+}
+
+function fecharMultiSelect(agenteIdx, event) {
+  if (event) event.stopPropagation();
+  const menu = document.getElementById(`ms_menu_${agenteIdx}`);
+  if (menu) menu.classList.remove("open");
+  soft();
+}
+
+function marcarTodosSetoresAgente(agenteIdx, marcar) {
+  const ag = S.equipe.agentes[agenteIdx];
+  if (!ag) return;
+  ag.setores = marcar ? S.operacao.setores.map(s => s.nome) : [];
+  ag.setor = ag.setores.join(", ");
+  draw();
+  const menu = document.getElementById(`ms_menu_${agenteIdx}`);
+  if (menu) menu.classList.add("open");
+}
+
+function renderAgenteSetoresSelector(i, ag, todosSetores) {
+  const selecionados = Array.isArray(ag.setores) ? ag.setores : (ag.setor ? ag.setor.split(",").map(s => s.trim()).filter(Boolean) : []);
+  ag.setores = selecionados;
+
+  return `
+    <div class="multi-select-wrap" id="ms_wrap_${i}">
+      <div class="multi-select-trigger" onclick="toggleMultiSelect(${i}, event)" title="Clique para selecionar as filas">
+        <div class="ms-tags-container" id="ms_tags_${i}">
+          ${selecionados.length
+            ? selecionados.map(st => `<span class="ms-pill">${esc(st)}</span>`).join("")
+            : `<span class="ms-placeholder">Selecione as filas…</span>`}
+        </div>
+        <span class="ms-chevron">▾</span>
+      </div>
+      <div class="ms-menu" id="ms_menu_${i}" onclick="event.stopPropagation()">
+        <div class="ms-menu-header">
+          <span class="ms-menu-title">Filas de Atendimento</span>
+          <div style="display:flex;gap:6px">
+            <button type="button" class="ms-btn-link" onclick="marcarTodosSetoresAgente(${i}, true)">Todas</button>
+            <button type="button" class="ms-btn-link" onclick="marcarTodosSetoresAgente(${i}, false)">Limpar</button>
+            <button type="button" class="ms-btn-done" onclick="fecharMultiSelect(${i}, event)">OK</button>
+          </div>
+        </div>
+        <div class="ms-menu-body">
+          ${todosSetores.length ? todosSetores.map(s => {
+            const checked = selecionados.includes(s.nome);
+            const safeKey = s.nome.replace(/[^a-zA-Z0-9]/g, '_');
+            const chkId = `chk_ag_${i}_${safeKey}`;
+            return `
+              <label class="ms-item ${checked ? 'checked' : ''}" id="ms_item_${i}_${safeKey}" for="${chkId}">
+                <input type="checkbox" id="${chkId}" ${checked ? 'checked' : ''} onchange="toggleAgenteSetor(${i}, '${esc(s.nome)}')">
+                <span class="ms-item-name">${esc(s.nome)}</span>
+                <span class="ms-item-dac">DAC ${esc(s.dac)}</span>
+              </label>
+            `;
+          }).join("") : `<div class="ms-item-empty">Nenhum setor cadastrado em 2.1</div>`}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Fechar multi-select ao clicar fora
+if (typeof document !== "undefined") {
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".multi-select-wrap")) {
+      document.querySelectorAll(".ms-menu.open").forEach(m => m.classList.remove("open"));
+    }
+  });
+}
 
 async function importarArquivoAgentes(event) {
   const file = event?.target?.files?.[0];
@@ -376,25 +511,32 @@ async function importarArquivoAgentes(event) {
 
       const joined = filtered.join(" ").toLowerCase();
       // Pular cabeçalho
-      if ((joined.includes("nome") || joined.includes("name")) && (joined.includes("email") || joined.includes("e-mail") || joined.includes("setor") || joined.includes("fila"))) {
+      if ((joined.includes("nome") || joined.includes("name")) && (joined.includes("email") || joined.includes("e-mail") || joined.includes("id") || joined.includes("setor") || joined.includes("fila"))) {
         continue;
       }
 
-      const email = filtered.find(x => x.includes("@")) || "";
+      const emailMatch = filtered.find(x => x.includes("@")) || "";
       const nome = filtered.find(x => !x.includes("@") && !/^\d+$/.test(x)) || "";
-      const setorMatch = filtered.find(x =>
-        S.operacao.setores.some(s => s.nome.trim().toLowerCase() === x.trim().toLowerCase())
-      );
-      const setorNome = setorMatch
-        ? (S.operacao.setores.find(s => s.nome.trim().toLowerCase() === setorMatch.trim().toLowerCase())?.nome || "")
-        : "";
+      const idOrEmail = emailMatch || filtered.find(x => x !== nome && !/^\d{3,5}$/.test(x)) || "";
 
-      if (nome || email) {
+      const matchedSetores = [];
+      filtered.forEach(x => {
+        const parts = x.split(/[,/]/).map(p => p.trim().toLowerCase());
+        S.operacao.setores.forEach(s => {
+          if (parts.includes(s.nome.trim().toLowerCase()) && !matchedSetores.includes(s.nome)) {
+            matchedSetores.push(s.nome);
+          }
+        });
+      });
+      const setorNome = matchedSetores.join(", ");
+
+      if (nome || idOrEmail) {
         S.equipe.agentes.push({
           login: nextLogin(),
-          nome: nome || (email ? email.split("@")[0] : `Agente ${nextLogin()}`),
-          email: email,
-          setor: setorNome
+          nome: nome || (idOrEmail ? (idOrEmail.includes("@") ? idOrEmail.split("@")[0] : idOrEmail) : `Agente ${nextLogin()}`),
+          email: idOrEmail,
+          setor: setorNome,
+          setores: matchedSetores
         });
         importados++;
       }

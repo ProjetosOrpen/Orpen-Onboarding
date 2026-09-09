@@ -227,8 +227,7 @@ const BLOCKS = [
                   ${fi("Nome Completo *", "contatos.projNome")}
                   ${fi("Cargo / Função", "contatos.projCargo")}
                   ${fi("E-mail Corporativo *", "contatos.projEmail", "email")}
-                  ${fi("Telefone / WhatsApp Principal *", "contatos.projTel", "tel")}
-                  ${fi("Contato (Opcional)", "contatos.projContatoOpcional", "tel", "+55 (XX) XXXXX-XXXX")}
+                  ${fi("Telefone / WhatsApp (Opcional)", "contatos.projTel", "tel")}
                 </div>
               </div>
 
@@ -237,9 +236,9 @@ const BLOCKS = [
                 <p class="contact-section-desc">Recebe o espelho de faturamento, boletos e trata eventuais reajustes ou aditivos.</p>
                 <div class="grid2">
                   ${fi("Nome Completo *", "contatos.finNome")}
+                  ${fi("Cargo / Área", "contatos.finCargo")}
                   ${fi("E-mail Financeiro *", "contatos.finEmail", "email")}
-                  ${fi("Telefone *", "contatos.finTel", "tel")}
-                  ${fi("Contato (Opcional)", "contatos.finContatoOpcional", "tel", "+55 (XX) XXXXX-XXXX")}
+                  ${fi("Telefone / WhatsApp (Opcional)", "contatos.finTel", "tel")}
                 </div>
               </div>
 
@@ -248,9 +247,9 @@ const BLOCKS = [
                 <p class="contact-section-desc">Representante legal com poderes contratuais e assinatura digital.</p>
                 <div class="grid2">
                   ${fi("Nome Completo *", "contatos.legNome")}
+                  ${fi("Cargo / Função", "contatos.legCargo")}
                   ${fi("E-mail Corporativo *", "contatos.legEmail", "email")}
-                  ${fi("Telefone *", "contatos.legTel", "tel")}
-                  ${fi("Contato (Opcional)", "contatos.legContatoOpcional", "tel", "+55 (XX) XXXXX-XXXX")}
+                  ${fi("Telefone / WhatsApp (Opcional)", "contatos.legTel", "tel")}
                 </div>
               </div>
 
@@ -261,8 +260,8 @@ const BLOCKS = [
                   <div class="grid2">
                     ${fi("Nome do Técnico/Gestor de TI", "contatos.tiNome")}
                     ${fi("E-mail de TI", "contatos.tiEmail", "email")}
-                    ${fi("Telefone / Ramal", "contatos.tiTel", "tel")}
-                    ${fi("Contato (Opcional)", "contatos.tiContatoOpcional", "tel", "+55 (XX) XXXXX-XXXX")}
+                    ${fi("Telefone / WhatsApp (Opcional)", "contatos.tiTel", "tel")}
+                    ${fi("Horário / Plantão (Opcional)", "contatos.tiHorario")}
                   </div>
                 </div>
               ` : ""}
@@ -283,7 +282,7 @@ const BLOCKS = [
       if (!o.setores.length) p.push("Cadastrar ao menos um setor / fila");
       if (o.setores.some(s => !s.nome || !/^\d{3,5}$/.test(s.dac || ""))) p.push("Setor sem nome ou com DAC inválido");
       if (!e.agentes.length) p.push("Cadastrar os operadores de atendimento");
-      if (e.agentes.some(a => !vLogin(a.login) || !a.nome || !vEmail(a.email))) p.push("Corrigir operadores com dados inválidos");
+      if (e.agentes.some(a => !vLogin(a.login) || !a.nome || !vEmailOuId(a.email))) p.push("Corrigir operadores com dados inválidos (nome e e-mail ou ID)");
       if (e.agentes.length > S.contrato.licAgente) p.push(`Operadores acima das ${S.contrato.licAgente} licenças contratadas`);
       return p;
     },
@@ -377,14 +376,14 @@ const BLOCKS = [
           `,
           content: e.agentes.length ? `
             <table>
-              <thead><tr><th style="width:16%">Login</th><th style="width:28%">Nome Completo</th><th style="width:30%">E-mail</th><th>Fila / Setor</th><th style="width:36px"></th></tr></thead>
+              <thead><tr><th style="width:14%">Login</th><th style="width:26%">Nome Completo</th><th style="width:26%">E-mail ou ID</th><th>Filas / Setores</th><th style="width:36px"></th></tr></thead>
               <tbody>
                 ${e.agentes.map((a, i) => `<tr>
                   <td><input type="text" class="mono ${vLogin(a.login) ? "" : "bad"}" value="${esc(a.login)}" oninput="S.equipe.agentes[${i}].login=this.value;soft()"></td>
-                  <td><input type="text" value="${esc(a.nome)}" oninput="S.equipe.agentes[${i}].nome=this.value;soft()"></td>
-                  <td><input type="text" class="${vEmail(a.email) ? "" : "bad"}" value="${esc(a.email)}" oninput="S.equipe.agentes[${i}].email=this.value;soft()"></td>
-                  <td><select onchange="S.equipe.agentes[${i}].setor=this.value;soft()">${setOpts(a.setor)}</select></td>
-                  <td><button class="rowdel" title="Excluir agente" onclick="S.equipe.agentes.splice(${i},1);draw()">×</button></td>
+                  <td><input type="text" value="${esc(a.nome)}" placeholder="Ex.: Mariana Silva" oninput="S.equipe.agentes[${i}].nome=this.value;soft()"></td>
+                  <td><input type="text" class="${vEmailOuId(a.email) ? "" : "bad"}" placeholder="email@empresa.com ou ID123" value="${esc(a.email)}" oninput="S.equipe.agentes[${i}].email=this.value;soft()"></td>
+                  <td>${renderAgenteSetoresSelector(i, a, o.setores)}</td>
+                  <td><button class="rowdel" title="Excluir operador" onclick="S.equipe.agentes.splice(${i},1);draw()">×</button></td>
                 </tr>`).join("")}
               </tbody>
             </table>
