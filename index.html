@@ -50,15 +50,63 @@
   <div class="prompt-modal-backdrop" id="modal_prompt_backdrop" onclick="if(event.target===this)fecharModalPromptFinal()">
     <div class="prompt-modal">
       <div class="prompt-modal-header">
-        <h3>System Prompt Final do Cliente (Compilado pela Auditora)</h3>
         <div style="display:flex;align-items:center;gap:10px">
-          <span class="badge-prompt-stat" id="prompt_token_count">~620 tokens</span>
+          <h3>System Prompt Final do Cliente</h3>
+          <span class="prompt-source-tag local" id="prompt_source_badge">⚙️ Compilador Determinístico</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="badge-prompt-stat" id="prompt_token_count">~0 tokens</span>
           <button class="rowdel" style="color:#fff;font-size:20px;line-height:1" onclick="fecharModalPromptFinal()">×</button>
         </div>
       </div>
+
+      <!-- Barra de Ações & Alternância de Fontes -->
+      <div class="prompt-modal-toolbar">
+        <div class="prompt-tab-group">
+          <button type="button" class="prompt-tab-btn active" id="btn_fonte_local" onclick="alternarFontePrompt('local')">
+            ⚙️ Compilador Local (8 Seções)
+          </button>
+          <button type="button" class="prompt-tab-btn" id="btn_fonte_ia" onclick="alternarFontePrompt('ia')">
+            ✨ IA Especialista em Prompts (N8N)
+          </button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button type="button" class="btn btn-p sm" id="btn_gerar_ia_modal" onclick="solicitarPromptIaEspecialista()">
+            <i data-lucide="sparkles" class="ui-icon"></i> Gerar com IA Especialista
+          </button>
+          <button type="button" class="btn btn-s sm" onclick="toggleConfigWebhookPrompt()" title="Configurar Webhook N8N da IA">
+            <i data-lucide="settings" class="ui-icon"></i> Webhook
+          </button>
+        </div>
+      </div>
+
+      <!-- Caixa de Configuração do Webhook da IA -->
+      <div class="prompt-webhook-config-box" id="prompt_webhook_config_box" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-weight:600;font-size:12px;color:var(--text-bright)">Webhook da IA Especialista em Prompts (N8N):</span>
+          <span style="font-size:11px;color:var(--muted)">Envia todo o histórico de perguntas/respostas + base de conhecimento</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="input_prompt_webhook_url" class="ia-v2-textarea" style="height:34px;font-size:12px;padding:6px 10px;width:100%" placeholder="https://automate.orpen.com.br/webhook/Orpen_IA_Onboarding_Criador_Prompt" />
+          <button type="button" class="btn btn-p sm" onclick="salvarConfigWebhookPrompt()">Salvar</button>
+        </div>
+      </div>
+
       <div class="prompt-modal-body">
+        <div id="prompt_loading_box" class="prompt-loading-overlay" style="display:none">
+          <div class="ia-typing-dot-wrap" style="display:flex;gap:6px;justify-content:center;margin-bottom:12px">
+            <span class="ia-typing-dot"></span>
+            <span class="ia-typing-dot"></span>
+            <span class="ia-typing-dot"></span>
+          </div>
+          <h4 style="margin:0 0 6px 0;font-size:14.5px;color:var(--text-bright);font-weight:700">Consultando IA Especialista em Prompts no N8N...</h4>
+          <p style="margin:0;font-size:12px;color:var(--muted-2);max-width:480px;line-height:1.5">
+            Enviando todo o histórico de perguntas e respostas da entrevista, base de conhecimento e as regras obrigatórias das 8 seções corporativas.
+          </p>
+        </div>
+
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12px;color:var(--muted)">
-          <span>Este é o prompt final determinístico pronto para entrar em produção no WhatsApp/WebChat:</span>
+          <span id="prompt_desc_label">System prompt determinístico estruturado em 8 seções pronto para WhatsApp:</span>
           <span id="prompt_tier_tag" class="tier-badge tier-gold" style="margin:0">PLANO GOLD</span>
         </div>
         <pre class="prompt-box-code" id="prompt_final_code"></pre>

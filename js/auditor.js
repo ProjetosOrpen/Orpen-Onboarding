@@ -656,15 +656,269 @@ function gerarPromptFinalCompilado() {
   return p;
 }
 
-function abrirModalPromptFinal() {
-  const promptCode = gerarPromptFinalCompilado();
-  document.getElementById("prompt_final_code").textContent = promptCode;
+/* ============================================================
+   INTEGRAÇÃO COM WEBHOOK DA IA ESPECIALISTA EM PROMPTS (N8N)
+   ============================================================ */
+
+function montarPayloadIaEspecialista() {
+  const messages = (S.ia.v2Messages || []).map(m => ({
+    sender: m.sender,
+    text: m.text,
+    time: m.time || ""
+  }));
+
+  const fullTranscript = messages.map(m => {
+    const speaker = m.sender === 'bot' ? (S.ia.nome || 'IA Auditora') : 'Cliente/Usuário';
+    return `[${speaker} (${m.time || ''})]:\n${m.text}`;
+  }).join("\n\n");
+
+  return {
+    threadId: S.ia.v2SessionId || `onb_session_${Date.now()}`,
+    sessionId: S.ia.v2SessionId || `onb_session_${Date.now()}`,
+    solicitante: "Orpen Onboarding",
+    acao: "gerar_system_prompt_final",
+    timestamp: new Date().toISOString(),
+
+    // 1. Histórico COMPLETO bruto da entrevista
+    history: messages,
+
+    // 2. Transcrição textual completa organizada em ordem cronológica
+    fullTranscript: fullTranscript,
+
+    // 3. Informações da Empresa e Contrato
+    empresa: {
+      razaoSocial: S.contrato.razaoSocial || "Empresa",
+      cnpj: S.contrato.cnpj || "",
+      cidade: S.contrato.cidade || "",
+      accountManager: S.contrato.am || "",
+      canais: S.contrato.canais || [],
+      licencasAgente: S.contrato.licAgente || 1,
+      licencasGestor: S.contrato.licGestor || 1,
+      setoresCadastrados: (S.operacao.setores || []).map(s => ({ nome: s.nome, dac: s.dac }))
+    },
+
+    // 4. Base de Conhecimento e Variáveis já apuradas
+    knowledgeBase: {
+      nomeIa: S.ia.nome || "Assistente Virtual",
+      tom: S.ia.tom || [],
+      extensaoResp: S.ia.extensaoResp || "curta",
+      idiomas: S.ia.idiomas || ["Português (Brasil)"],
+      processoOtimizar: S.ia.processoOtimizar || "",
+      kpis: S.ia.kpis || "",
+      habilidadesAutonomia: S.ia.habilidades || "",
+      restricoesBlindagens: S.ia.restricoes || "",
+      foraEscopo: S.ia.foraEscopo || "",
+      fluxosCadastrados: S.ia.fluxosPreAtendimento || [],
+      topicosTransbordo: S.ia.topicosTransbordo || [],
+      siteOficial: S.ia.baseUrl || "",
+      linksAdicionais: S.ia.linksAdicionais || [],
+      faqTexto: S.ia.faqTexto || "",
+      arquivos: (S.ia.arquivos || []).map(a => a.nome || a),
+      responsavelFaq: `${S.ia.faqRespNome || ''} ${S.ia.faqRespEmail ? `(${S.ia.faqRespEmail})` : ''}`.trim()
+    },
+
+    // 5. Arquitetura Exata Obrigatória (8 Seções)
+    promptArchitectureSpecs: {
+      instrucoes: "Você é uma IA especializada exclusivamente em Engenharia de System Prompts para assistentes virtuais corporativos (WhatsApp/N8N). Analise TODO o histórico de perguntas e respostas fornecido e a base de conhecimento da empresa. Gere o System Prompt Final em Markdown rigorosamente estruturado nas 8 seções obrigatórias.",
+      secoesObrigatorias: [
+        "## 1. IDENTIDADE E PERSONA",
+        "## 2. CLASSIFICAÇÃO DE INTENÇÃO (SMART JUMP)",
+        "## 3. REGRAS OPERACIONAIS E SEGURANÇA",
+        "## 4. MENU PRINCIPAL (FLOW PADRÃO)",
+        "## 5. BASE DE CONHECIMENTO (FONTE ÚNICA DE VERDADE)",
+        "## 6. LÓGICA DE QUALIFICAÇÃO (EXECUÇÃO SEQUENCIAL)",
+        "## 7. TABELA DE TAGS FINAIS",
+        "## 8. PROTOCOLO DE ENCERRAMENTO (PÓS-ATENDIMENTO)"
+      ],
+      regrasChave: [
+        "Proibição absoluta de simular consulta à agenda em tempo real (apenas coleta dados para validação humana)",
+        "Trava de segurança para tags (tag isolada apenas na última linha)",
+        "Anti-repetição e trava de looping (silêncio total se já enviou mensagem de transbordo)",
+        "Filtro de relevância para fora de escopo com 3 strikes",
+        "Regra de aceitação flexível na qualificação de dados (não travar o cliente)",
+        "Resumo formatado em pares com tag isolada na última linha",
+        "Limite de respostas curtas (até 3 frases)"
+      ]
+    }
+  };
+}
+
+function unwrapPromptResponse(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') {
+    if (raw.prompt) return raw.prompt;
+    if (raw.system_prompt) return raw.system_prompt;
+    if (raw.output) {
+      if (typeof raw.output === 'object' && raw.output.prompt) return raw.output.prompt;
+      if (typeof raw.output === 'string') return raw.output;
+    }
+    if (raw.response) {
+      if (typeof raw.response === 'object' && raw.response.prompt) return raw.response.prompt;
+      if (typeof raw.response === 'string') return raw.response;
+    }
+    if (raw.reply) return raw.reply;
+    if (raw.text) return raw.text;
+  }
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      try {
+        return unwrapPromptResponse(JSON.parse(trimmed));
+      } catch (e) {
+        return raw;
+      }
+    }
+    return raw;
+  }
+  return null;
+}
+
+async function solicitarPromptIaEspecialista() {
+  const webhookUrl = S.ia.promptWebhookUrl || "https://automate.orpen.com.br/webhook/Orpen_IA_Onboarding_Criador_Prompt";
+  const btnGerar = document.getElementById("btn_gerar_ia_modal");
+  const loadingBox = document.getElementById("prompt_loading_box");
+  const codeBox = document.getElementById("prompt_final_code");
+
+  if (loadingBox) loadingBox.style.display = "flex";
+  if (codeBox) codeBox.style.opacity = "0.35";
+  if (btnGerar) {
+    btnGerar.disabled = true;
+    btnGerar.innerHTML = `${ico('loader')} Consultando IA...`;
+  }
+
+  S.ia.promptIaLoading = true;
+  const payload = montarPayloadIaEspecialista();
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s de timeout
+
+    const resp = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    const raw = await resp.text();
+    let promptGerado = unwrapPromptResponse(raw);
+
+    if (!resp.ok) {
+      throw new Error(`Webhook retornou HTTP ${resp.status}: ${raw.slice(0, 150)}`);
+    }
+
+    if (!promptGerado || promptGerado.length < 50) {
+      throw new Error("A IA especializada não retornou um conteúdo válido de prompt.");
+    }
+
+    S.ia.promptGeradoIa = promptGerado;
+    S.ia.promptFonteAtiva = "ia";
+    renderPromptModalConteudo();
+    toast("✨ System Prompt gerado com sucesso pela IA Especialista!");
+
+  } catch (err) {
+    console.warn("Falha ao consultar Webhook da IA Especialista:", err);
+    toast("Webhook da IA indisponível. Exibindo versão compilada local.");
+    S.ia.promptFonteAtiva = "local";
+    renderPromptModalConteudo();
+  } finally {
+    S.ia.promptIaLoading = false;
+    if (loadingBox) loadingBox.style.display = "none";
+    if (codeBox) codeBox.style.opacity = "1";
+    if (btnGerar) {
+      btnGerar.disabled = false;
+      btnGerar.innerHTML = `${ico('sparkles')} Gerar via IA`;
+    }
+  }
+}
+
+function alternarFontePrompt(fonte) {
+  S.ia.promptFonteAtiva = fonte;
+  if (fonte === 'ia' && !S.ia.promptGeradoIa) {
+    solicitarPromptIaEspecialista();
+  } else {
+    renderPromptModalConteudo();
+  }
+}
+
+function renderPromptModalConteudo() {
+  const codeBox = document.getElementById("prompt_final_code");
+  const sourceBadge = document.getElementById("prompt_source_badge");
+  const descLabel = document.getElementById("prompt_desc_label");
+  const btnLocal = document.getElementById("btn_fonte_local");
+  const btnIa = document.getElementById("btn_fonte_ia");
+
+  const isIa = S.ia.promptFonteAtiva === 'ia' && !!S.ia.promptGeradoIa;
+  const promptCode = isIa ? S.ia.promptGeradoIa : gerarPromptFinalCompilado();
+
+  if (codeBox) codeBox.textContent = promptCode;
+
+  if (btnLocal && btnIa) {
+    btnLocal.classList.toggle("active", !isIa);
+    btnIa.classList.toggle("active", isIa);
+  }
+
+  if (sourceBadge) {
+    if (isIa) {
+      sourceBadge.textContent = "✨ IA Especialista em Prompts (N8N)";
+      sourceBadge.className = "prompt-source-tag ia";
+    } else {
+      sourceBadge.textContent = "⚙️ Compilador Local (8 Seções)";
+      sourceBadge.className = "prompt-source-tag local";
+    }
+  }
+
+  if (descLabel) {
+    descLabel.textContent = isIa
+      ? "Prompt gerado pela IA Especialista a partir do histórico completo e regras:"
+      : "System prompt determinístico estruturado em 8 seções pronto para WhatsApp:";
+  }
+
   const diag = avaliarTierIa();
-  document.getElementById("prompt_tier_tag").textContent = diag.tier.toUpperCase();
-  document.getElementById("prompt_tier_tag").className = `tier-badge ${diag.badgeClass}`;
+  const tierTag = document.getElementById("prompt_tier_tag");
+  if (tierTag) {
+    tierTag.textContent = diag.tier.toUpperCase();
+    tierTag.className = `tier-badge ${diag.badgeClass}`;
+  }
+
   const tokensEst = Math.round(promptCode.length / 4);
-  document.getElementById("prompt_token_count").textContent = `~${tokensEst} tokens`;
+  const tokenBadge = document.getElementById("prompt_token_count");
+  if (tokenBadge) {
+    tokenBadge.textContent = `~${tokensEst} tokens`;
+  }
+}
+
+function toggleConfigWebhookPrompt() {
+  const box = document.getElementById("prompt_webhook_config_box");
+  const inp = document.getElementById("input_prompt_webhook_url");
+  if (!box) return;
+
+  const isHidden = box.style.display === "none" || !box.style.display;
+  box.style.display = isHidden ? "block" : "none";
+  if (isHidden && inp) {
+    inp.value = S.ia.promptWebhookUrl || "https://automate.orpen.com.br/webhook/Orpen_IA_Onboarding_Criador_Prompt";
+    inp.focus();
+  }
+}
+
+function salvarConfigWebhookPrompt() {
+  const inp = document.getElementById("input_prompt_webhook_url");
+  if (inp && inp.value.trim()) {
+    S.ia.promptWebhookUrl = inp.value.trim();
+    toast("URL do Webhook da IA atualizada!");
+    soft();
+    toggleConfigWebhookPrompt();
+  }
+}
+
+function abrirModalPromptFinal() {
+  renderPromptModalConteudo();
   document.getElementById("modal_prompt_backdrop").classList.add("open");
+  if (window.lucide) {
+    try { window.lucide.createIcons(); } catch(e){}
+  }
 }
 
 function fecharModalPromptFinal() {

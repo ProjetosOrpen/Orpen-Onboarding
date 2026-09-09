@@ -112,6 +112,10 @@ const S = {
     _version: "v2", // "v1" para formulário estruturado, "v2" para entrevista interativa via N8N
     _etapa: 1, // Sub-etapa ativa (1 a 6) para a Versão 1
     v2WebhookUrl: "https://automate.orpen.com.br/webhook/Orpen_IA_Onboarding",
+    promptWebhookUrl: "https://automate.orpen.com.br/webhook/Orpen_IA_Onboarding_Criador_Prompt",
+    promptGeradoIa: "",
+    promptFonteAtiva: "local", // "ia" | "local"
+    promptIaLoading: false,
     v2SessionId: "",
     v2Messages: [],
 
