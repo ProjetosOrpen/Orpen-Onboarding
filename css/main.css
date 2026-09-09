@@ -1989,6 +1989,7 @@ td input, td select {
 .lic-card-bottom {
   display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 
 .lic-counter-wrap {

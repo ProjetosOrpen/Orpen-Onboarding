@@ -589,7 +589,6 @@ async function importarArquivoAgentes(event) {
 
       const emailMatch = filtered.find(x => x.includes("@")) || "";
       const nome = filtered.find(x => !x.includes("@") && !/^\d+$/.test(x)) || "";
-      const idOrEmail = emailMatch || filtered.find(x => x !== nome && !/^\d{3,5}$/.test(x)) || "";
 
       const matchedSetores = [];
       filtered.forEach(x => {
@@ -602,11 +601,11 @@ async function importarArquivoAgentes(event) {
       });
       const setorNome = matchedSetores.join(", ");
 
-      if (nome || idOrEmail) {
+      if (nome || emailMatch) {
         S.equipe.agentes.push({
           login: nextLogin(),
-          nome: nome || (idOrEmail ? (idOrEmail.includes("@") ? idOrEmail.split("@")[0] : idOrEmail) : `Agente ${nextLogin()}`),
-          email: idOrEmail,
+          nome: nome || (emailMatch ? emailMatch.split("@")[0] : `Agente ${nextLogin()}`),
+          email: emailMatch,
           setor: setorNome,
           setores: matchedSetores
         });

@@ -115,7 +115,6 @@ const BLOCKS = [
                     </div>
                     <button type="button" class="lic-btn-step" onclick="stepLic('contrato.licAgente', 1, 1)" title="Aumentar">+</button>
                   </div>
-                  <div class="lic-unit-indicator">agentes simultâneos</div>
                   <div class="lic-presets-grid">
                     ${[5, 10, 15, 20].map(n => `
                       <button type="button" class="lic-preset-btn ${c.licAgente == n ? 'active' : ''}" onclick="setLic('contrato.licAgente', ${n})">${n}</button>
@@ -142,7 +141,6 @@ const BLOCKS = [
                     </div>
                     <button type="button" class="lic-btn-step" onclick="stepLic('contrato.licGestor', 1, 1)" title="Aumentar">+</button>
                   </div>
-                  <div class="lic-unit-indicator">gestores com BI</div>
                   <div class="lic-presets-grid">
                     ${[1, 2, 3, 5].map(n => `
                       <button type="button" class="lic-preset-btn ${c.licGestor == n ? 'active' : ''}" onclick="setLic('contrato.licGestor', ${n})">${n}</button>
@@ -169,7 +167,6 @@ const BLOCKS = [
                     </div>
                     <button type="button" class="lic-btn-step" onclick="stepLic('contrato.numerosWhats', 1, 1)" title="Aumentar">+</button>
                   </div>
-                  <div class="lic-unit-indicator">linhas oficiais</div>
                   <div class="lic-presets-grid">
                     ${[1, 2, 3, 4].map(n => `
                       <button type="button" class="lic-preset-btn ${c.numerosWhats == n ? 'active' : ''}" onclick="setLic('contrato.numerosWhats', ${n})">${n}</button>
@@ -282,7 +279,7 @@ const BLOCKS = [
       if (!o.setores.length) p.push("Cadastrar ao menos um setor / fila");
       if (o.setores.some(s => !s.nome || !/^\d{3,5}$/.test(s.dac || ""))) p.push("Setor sem nome ou com DAC inválido");
       if (!e.agentes.length) p.push("Cadastrar os operadores de atendimento");
-      if (e.agentes.some(a => !vLogin(a.login) || !a.nome || !vEmailOuId(a.email))) p.push("Corrigir operadores com dados inválidos (nome e e-mail ou ID)");
+      if (e.agentes.some(a => !vLogin(a.login) || !a.nome || (a.email && !vEmail(a.email)))) p.push("Corrigir operadores com dados inválidos (login e nome obrigatórios)");
       if (e.agentes.length > S.contrato.licAgente) p.push(`Operadores acima das ${S.contrato.licAgente} licenças contratadas`);
       return p;
     },
@@ -375,12 +372,12 @@ const BLOCKS = [
           `,
           content: e.agentes.length ? `
             <table>
-              <thead><tr><th style="width:75px">Login</th><th style="width:26%">Nome Completo</th><th style="width:26%">E-mail ou ID</th><th>Filas / Setores</th><th style="width:36px"></th></tr></thead>
+              <thead><tr><th style="width:75px">Login</th><th style="width:28%">Nome Completo</th><th style="width:26%">E-mail (Opcional)</th><th>Filas / Setores</th><th style="width:36px"></th></tr></thead>
               <tbody>
                 ${e.agentes.map((a, i) => `<tr>
                   <td><input type="text" class="mono ${vLogin(a.login) ? "" : "bad"}" style="width:60px;text-align:center" value="${esc(a.login)}" oninput="S.equipe.agentes[${i}].login=this.value;soft()"></td>
                   <td><input type="text" value="${esc(a.nome)}" placeholder="Ex.: Mariana Silva" oninput="S.equipe.agentes[${i}].nome=this.value;soft()"></td>
-                  <td><input type="text" class="${vEmailOuId(a.email) ? "" : "bad"}" placeholder="email@empresa.com ou ID123" value="${esc(a.email)}" oninput="S.equipe.agentes[${i}].email=this.value;soft()"></td>
+                  <td><input type="email" class="${(a.email && !vEmail(a.email)) ? "bad" : ""}" placeholder="email@empresa.com" value="${esc(a.email)}" oninput="S.equipe.agentes[${i}].email=this.value;soft()"></td>
                   <td>${renderAgenteSetoresSelector(i, a, o.setores)}</td>
                   <td><button class="rowdel" title="Excluir operador" onclick="S.equipe.agentes.splice(${i},1);draw()">×</button></td>
                 </tr>`).join("")}
