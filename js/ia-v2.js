@@ -172,7 +172,7 @@ async function sendIaV2Message(customText) {
       telefoneWhats: S.whats.numero || "",
       horariosOperacao: S.operacao.diasSem || "",
       jornada: S.operacao.jornada || "",
-      filasCadastradas: (S.operacao.setores || []).map(s => ({ nome: s.nome, dac: s.dac, horario: s.horario || "" })),
+      filasCadastradas: (S.operacao.setores || []).map(s => ({ nome: s.nome, dac: s.dac })),
       iaAtual: {
         nome: S.ia.nome || "",
         tom: S.ia.tom || [],

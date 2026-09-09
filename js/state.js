@@ -222,20 +222,20 @@ const S = {
 const TPL = {
   saude: {
     setores: [
-      { nome: "Agendamento", dac: "7001", horario: "07:00–19:00" },
-      { nome: "Recepção / Triagem", dac: "7002", horario: "07:00–19:00" },
-      { nome: "Resultados de exames", dac: "7003", horario: "08:00–18:00" },
-      { nome: "Faturamento / Convênios", dac: "7004", horario: "08:00–17:00" }
+      { nome: "Agendamento", dac: "7001" },
+      { nome: "Recepção / Triagem", dac: "7002" },
+      { nome: "Resultados de exames", dac: "7003" },
+      { nome: "Faturamento / Convênios", dac: "7004" }
     ],
     tabulacoes: ["Agendamento realizado", "Reagendamento", "Cancelamento", "Dúvida sobre convênio", "Resultado de exame", "Cliente não respondeu", "Fora do escopo"],
     pausas: ["Almoço", "Lanche", "Banheiro", "Reunião", "Treinamento", "Feedback"]
   },
   generico: {
     setores: [
-      { nome: "Atendimento", dac: "7001", horario: "08:00–18:00" },
-      { nome: "Comercial", dac: "7002", horario: "08:00–18:00" },
-      { nome: "Suporte", dac: "7003", horario: "08:00–18:00" },
-      { nome: "Financeiro", dac: "7004", horario: "08:00–17:00" }
+      { nome: "Atendimento", dac: "7001" },
+      { nome: "Comercial", dac: "7002" },
+      { nome: "Suporte", dac: "7003" },
+      { nome: "Financeiro", dac: "7004" }
     ],
     tabulacoes: ["Resolvido no primeiro contato", "Encaminhado para outro setor", "Cliente não respondeu", "Solicitação de orçamento", "Reclamação", "Fora do escopo"],
     pausas: ["Almoço", "Lanche", "Banheiro", "Reunião", "Treinamento"]
@@ -364,7 +364,7 @@ function atualizarPesquisaTexto() {
   const opts = (S.classif.pesquisaOpcoes || []).map(o => o.rotulo).join("\n");
   S.classif.pesquisaTexto = `${p}\n\n${opts}`;
 }
-function addSetor() { const n = 7001 + S.operacao.setores.length; S.operacao.setores.push({ nome: "", dac: String(n), horario: S.operacao.diasSem || "" }); draw(); }
+function addSetor() { const n = 7001 + S.operacao.setores.length; S.operacao.setores.push({ nome: "", dac: String(n) }); draw(); }
 function addAgente() { S.equipe.agentes.push({ login: nextLogin(), nome: "", email: "", setor: "", setores: [] }); draw(); }
 function addGestor() { S.equipe.gestores.push({ nome: "", email: "", setor: "" }); draw(); }
 function nextLogin() { const used = S.equipe.agentes.map(a => +a.login).filter(Boolean); let n = 101; while (used.includes(n)) n++; return String(n); }

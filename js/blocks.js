@@ -334,12 +334,11 @@ const BLOCKS = [
           actions: `<button type="button" class="btn btn-p" onclick="addSetor()">${ico('plus')} Adicionar Setor</button>`,
           content: o.setores.length ? `
             <table>
-              <thead><tr><th style="width:45%">Nome do Setor / Fila</th><th style="width:20%">Código DAC</th><th>Horário Específico</th><th style="width:36px"></th></tr></thead>
+              <thead><tr><th>Nome do Setor / Fila</th><th style="width:180px">Código DAC</th><th style="width:36px"></th></tr></thead>
               <tbody>
                 ${o.setores.map((s, i) => `<tr>
                   <td><input type="text" value="${esc(s.nome)}" placeholder="Ex.: Agendamento de Consultas" oninput="S.operacao.setores[${i}].nome=this.value;soft()"></td>
-                  <td><input type="text" class="mono ${/^\d{3,5}$/.test(s.dac || "") ? "" : "bad"}" placeholder="Ex.: 101" value="${esc(s.dac)}" oninput="S.operacao.setores[${i}].dac=this.value;soft()"></td>
-                  <td><input type="text" value="${esc(s.horario)}" placeholder="Seg a Sex 08:00–18:00" oninput="S.operacao.setores[${i}].horario=this.value;soft()"></td>
+                  <td><input type="text" class="mono ${/^\d{3,5}$/.test(s.dac || "") ? "" : "bad"}" placeholder="Ex.: 7001" value="${esc(s.dac)}" oninput="S.operacao.setores[${i}].dac=this.value;soft()"></td>
                   <td><button class="rowdel" title="Excluir setor" onclick="S.operacao.setores.splice(${i},1);draw()">×</button></td>
                 </tr>`).join("")}
               </tbody>
