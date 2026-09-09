@@ -823,27 +823,34 @@ function loadIaTemplates() {
 }
 
 function loadPreAtendSaude() {
-  const defSetor = S.operacao.setores[0]?.nome || "";
+  const defSetor = S.operacao.setores[0]?.nome || "Fila de Atendimento";
+  const consultaSetor = S.operacao.setores.find(s => /consulta/i.test(s.nome))?.nome || "Fila de Consultas";
+  const exameSetor = S.operacao.setores.find(s => /exame|atend/i.test(s.nome))?.nome || defSetor;
+
   S.ia.fluxosPreAtendimento = [
     {
-      nome: "Consultas e Agendamentos",
+      nome: "Agendamento de Consulta",
       passos: [
-        "Qual a especialidade desejada ou médico de preferência?",
-        "Qual o nome completo e CPF do paciente?",
-        "Qual o convênio ou prefere atendimento particular?",
-        "Qual a preferência de data e período (manhã/tarde)?"
+        "Qual especialidade ou profissional deseja?",
+        "É para o próprio paciente ou para outra pessoa?",
+        "Nome completo e data de nascimento do paciente.",
+        "Convênio ou particular? Se convênio, qual?",
+        "É primeira consulta ou retorno?",
+        "Preferência de data e turno."
       ],
-      destino: S.operacao.setores.find(s => /agend|recep/i.test(s.nome))?.nome || defSetor
+      destino: consultaSetor
     },
     {
-      nome: "Exames e Laudos",
+      nome: "Agendamento de Exame",
       passos: [
-        "Qual exame você precisa realizar?",
-        "Você já possui o pedido médico em mãos?",
-        "Qual o convênio para realização do exame?",
-        "Qual a unidade de preferência?"
+        "Qual é o nome do exame?",
+        "O paciente possui pedido médico/guia?",
+        "Nome completo e data de nascimento do paciente.",
+        "Convênio ou particular? Se convênio, qual?",
+        "Preferência de data e turno.",
+        "Há alguma necessidade de acessibilidade ou orientação adicional?"
       ],
-      destino: S.operacao.setores.find(s => /exame|recep/i.test(s.nome))?.nome || defSetor
+      destino: exameSetor
     },
     {
       nome: "Remarcações e Cancelamentos",
@@ -852,7 +859,7 @@ function loadPreAtendSaude() {
         "Qual consulta ou exame você deseja remarcar ou cancelar?",
         "Qual a nova data ou horário de sua preferência?"
       ],
-      destino: S.operacao.setores.find(s => /agend|recep/i.test(s.nome))?.nome || defSetor
+      destino: exameSetor
     }
   ];
   draw(); toast("Fluxos de triagem de saúde carregados!");

@@ -344,95 +344,316 @@ function avaliarTierIa() {
 }
 
 /* ============================================================
-   GERADOR DO SYSTEM PROMPT FINAL
+   GERADOR DO SYSTEM PROMPT FINAL (ARQUITETURA ENTERPRISE EM 8 SEÇÕES)
    ============================================================ */
+function cleanTagPrompt(nome) {
+  const semAcento = (nome || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const clean = semAcento.replace(/[^a-zA-Z0-9]/g, '');
+  if (/consulta/i.test(clean)) return 'TransferenciaConsulta';
+  if (/exame/i.test(clean)) return 'TransferenciaExame';
+  if (/agenda|remarca|cancela/i.test(clean)) return 'TransferenciaAgenda';
+  if (/financ/i.test(clean)) return 'TransferenciaFinanceiro';
+  return `Transferencia${clean || 'Geral'}`;
+}
+
+function extrairLabelCampoPrompt(passo) {
+  const p = (passo || '').toLowerCase();
+  if (p.includes('exame')) return 'Nome do Exame';
+  if (p.includes('especialidade') || p.includes('profissional')) return 'Especialidade/Profissional';
+  if (p.includes('pedido') || p.includes('guia')) return 'Pedido Médico/Guia';
+  if (p.includes('próprio') || p.includes('outra pessoa') || p.includes('proprio')) return 'Paciente';
+  if (p.includes('nome') && (p.includes('nasc') || p.includes('cpf'))) return 'Nome/Nascimento';
+  if (p.includes('nasc')) return 'Data de Nascimento';
+  if (p.includes('cpf')) return 'CPF';
+  if (p.includes('nome')) return 'Nome Completo';
+  if (p.includes('convênio') || p.includes('convenio') || p.includes('particular')) return 'Convênio/Plano';
+  if (p.includes('primeira') || p.includes('retorno')) return 'Tipo de Atendimento';
+  if (p.includes('turno')) return 'Data/Turno Preferencial';
+  if (p.includes('data') || p.includes('horário') || p.includes('horario')) return 'Data/Horário Preferencial';
+  if (p.includes('acessibilidade') || p.includes('adicional')) return 'Observações/Acessibilidade';
+  if (p.includes('unidade')) return 'Unidade Preferencial';
+  if (p.includes('fatura') || p.includes('boleto')) return 'Fatura/Boleto';
+
+  const curto = passo.replace(/[\?:\.]/g, '').trim().split(' ').slice(0, 3).join(' ');
+  return curto.charAt(0).toUpperCase() + curto.slice(1);
+}
+
 function gerarPromptFinalCompilado() {
   const nome = S.ia.nome || "Assistente Virtual";
   const empresa = S.contrato.razaoSocial || "Empresa";
-  const tom = (S.ia.tom && S.ia.tom.length) ? S.ia.tom.join(", ") : "Cordial, acolhedor e direto";
-  const idiomas = (S.ia.idiomas && S.ia.idiomas.length) ? S.ia.idiomas.join(", ") : "Português (Brasil)";
-  const emoji = S.ia.emojiUso === 'nenhum' ? "Não utilize emojis." : `Utilize emojis com moderação (${S.ia.emojisPermitidos || '💙, 👋, 🏥, ✅'}).`;
-  const extensao = S.ia.extensaoResp === 'curta' ? "Respostas curtas e objetivas (máximo 2 a 3 frases por mensagem)." : (S.ia.extensaoResp === 'media' ? "Respostas médias (4 a 6 linhas estruturadas)." : "Respostas flexíveis e bem contextualizadas.");
+  const tom = (S.ia.tom && S.ia.tom.length) ? S.ia.tom.join(", ") : "Cordial, calmo e profissional";
+  const idiomas = (S.ia.idiomas && S.ia.idiomas.length) ? S.ia.idiomas.join(", ") : "Português-BR";
 
-  let prompt = `### 1. PERSONA E PAPEL DO ASSISTENTE
-Você é ${nome}, o assistente virtual oficial de atendimento da empresa ${empresa}.
-Seu papel é recepcionar clientes no WhatsApp com excelência, tirar dúvidas frequentes e qualificar a conversa antes de qualquer encaminhamento humano.
+  let protocoloResp = "Limite-se a 3 frases (seja direta e útil).";
+  if (S.ia.extensaoResp === 'media') protocoloResp = "Limite-se a 4 a 6 linhas estruturadas (seja clara e objetiva).";
+  else if (S.ia.extensaoResp === 'longa') protocoloResp = "Respostas flexíveis, detalhadas e contextualizadas.";
 
-### 2. DIRETRIZES DE COMUNICAÇÃO
-- Tom de voz: ${tom}.
-- Extensão das respostas: ${extensao}
-- Idiomas atendidos: ${idiomas}.
-- Diretrizes de Emojis: ${emoji}
-- Clareza: Use linguagem acolhedora, objetiva e sem jargões técnicos desnecessários.
+  const objTexto = S.ia.processoOtimizar || S.ia.problema || "Acolher pacientes/clientes, responder dúvidas institucionais com precisão e triar agendamentos e atendimentos.";
 
-### 3. ALINHAMENTO DE EXPECTATIVAS E OBJETIVOS
-${S.ia.processoOtimizar ? `- Processo a otimizar: ${S.ia.processoOtimizar}` : '- Processo: Triagem ágil e redução de espera'}
-${S.ia.kpis ? `- Métricas e KPIs de sucesso: ${S.ia.kpis}` : ''}
-${S.ia.publicoAlvo ? `- Perfil do público-alvo: ${S.ia.publicoAlvo}` : ''}
+  const allContext = `${objTexto} ${S.ia.habilidades || ''} ${S.ia.restricoes || ''} ${(S.ia.fluxosPreAtendimento || []).map(f => f.nome).join(' ')}`.toLowerCase();
+  const isSaude = /hospital|saude|saúde|médic|medico|exame|consulta|paciente|clinica|clínica/.test(allContext);
+  const ramoContexto = isSaude ? "saúde e administração hospitalar" : "atendimento ao cliente e triagem de serviços";
 
-### 4. ESCOPO E AUTONOMIA TOTAL
-Você tem AUTONOMIA TOTAL para resolver diretamente os seguintes assuntos:
-${S.ia.habilidades ? S.ia.habilidades : '- Fornecer informações institucionais, horários e orientações gerais'}
+  const fluxos = S.ia.fluxosPreAtendimento && S.ia.fluxosPreAtendimento.length > 0
+    ? S.ia.fluxosPreAtendimento
+    : [
+        { nome: "Atendimento Geral", passos: ["Como podemos te ajudar hoje?"], destino: "Atendimento" }
+      ];
 
-### 5. GATILHOS DE TRANSBORDO HUMANO
-Transfira o atendimento para um atendente humano quando houver:
-${S.ia.assuntosTransbordo ? S.ia.assuntosTransbordo : '- Solicitação explícita de atendente ou casos complexos fora de escopo'}
+  let p = `## 1. IDENTIDADE E PERSONA\n`;
+  p += `Você é a **${nome}**, Inteligência Artificial oficial do **${empresa}**.\n`;
+  p += `* **Objetivo:** ${objTexto}\n`;
+  p += `* **Tom de Voz:** ${tom}.\n`;
+  p += `* **Protocolo de Resposta:** ${protocoloResp}\n`;
+  p += `* **Idioma:** ${idiomas}.\n\n`;
+  p += `---\n\n`;
 
-### 6. RESTRIÇÕES CRÍTICAS (ANTI-ALUCINAÇÃO & GUARDRAILS)
-${S.ia.restricoes ? S.ia.restricoes : '- NUNCA forneça informações não confirmadas oficialmente pela empresa\n- NUNCA invente procedimentos, prazos ou valores'}
-${S.ia.foraEscopo ? `- Assuntos fora de escopo (recusar cordialmente): ${S.ia.foraEscopo}` : ''}
-`;
+  // 2. CLASSIFICAÇÃO DE INTENÇÃO (SMART JUMP)
+  p += `## 2. CLASSIFICAÇÃO DE INTENÇÃO (SMART JUMP)\n\n`;
+  p += `**ORDEM DE PROCESSAMENTO (SEGURANÇA):**\n`;
+  p += `Ao receber **QUALQUER** mensagem, sua prioridade absoluta é verificar a tabela abaixo.\n`;
+  p += `1. **Se encontrar Palavra-Chave:** Execute a Ação/Tag IMEDIATAMENTE. **NÃO** acione o Menu Principal (Seção 4).\n`;
+  p += `2. **Se NÃO encontrar Palavra-Chave:** Siga para o **Protocolo de Abertura (Seção 3, Item 1)**.\n\n`;
+  p += `| Categoria | Gatilhos Mentais / Palavras-Chave | Ação / Tag |\n`;
+  p += `| :--- | :--- | :--- |\n`;
 
+  // Identificar índices dos fluxos de exame e consulta
+  let idxConsulta = -1;
+  let idxExame = -1;
+  fluxos.forEach((f, idx) => {
+    const fLower = (f.nome || '').toLowerCase();
+    if (idxConsulta === -1 && fLower.includes("consulta")) idxConsulta = idx;
+    if (idxExame === -1 && fLower.includes("exame")) idxExame = idx;
+  });
+
+  fluxos.forEach((f, idx) => {
+    const fNome = f.nome || `Fluxo ${idx + 1}`;
+    const fLower = fNome.toLowerCase();
+    let gatilhos = "";
+    if (fLower.includes("exame")) {
+      gatilhos = `Contém a palavra **"exame"**, "fazer exames" OU Siglas/Procedimentos: **"CT", "RM", "Ressonância", "Tomografia", "Ultrassom", "Raio-X", "Eco", "Mamografia", "Doppler"**.`;
+    } else if (fLower.includes("consulta")) {
+      gatilhos = `Contém **"consulta"**, **"médico"**, **"doutor"**, **"dra"**. Perguntas sobre **agenda**, **horários**, **dias de atendimento** de médicos específicos.`;
+    } else if (fLower.includes("remarca") || fLower.includes("cancela") || fLower.includes("agenda")) {
+      gatilhos = `**"já tenho horário"**, **"mudar data"**, **"cancelar"**, **"confirmar"**, **"desmarcar"**, **"reagendar"**`;
+    } else if (fLower.includes("financ")) {
+      gatilhos = `**"pagamento"**, **"boleto"**, **"nota fiscal"**, **"reembolso"**, **"cobrança"**, **"fatura"**, **"financeiro"**`;
+    } else {
+      gatilhos = `Termos relacionados a **"${fNome}"** ou solicitações deste setor.`;
+    }
+    p += `| **${fNome.toUpperCase()}** | ${gatilhos} | Iniciar **Fluxo de ${fNome}** (Opção ${idx + 1}) |\n`;
+  });
+
+  // Linhas especializadas do setor hospitalar
+  if (isSaude && idxExame !== -1) {
+    p += `| **EXAMES COMPLEXOS / DIGESTIVA** | **"Endoscopia", "Colonoscopia", "Gastro", "Gástrico", "Gástrica", "Estômago", "Digestiva", "EDA"**. | Iniciar **Fluxo de Exame** (Opção ${idxExame + 1}) |\n`;
+    p += `| **MEDICINA NUCLEAR / ALTA COMPLEXIDADE** | **"Cintilografia", "Pet", "Pet-CT", "Pet CT", "Lutécio", "Aplicação", "Esvaziamento", "Perfusão", "Rastreamento", "Iodo", "Gálio", "Thyrogen", "Pesquisa de Sangramento"**. | Iniciar **Fluxo de Exame** (Opção ${idxExame + 1}) |\n`;
+  }
+
+  // Regras customizadas adicionais de Smart Jump (se configuradas em S.ia.smartJump)
   if (S.ia.smartJump && S.ia.smartJump.length > 0) {
-    prompt += `\n### 7. REGRAS DE ROTEAMENTO IMEDIATO (SMART JUMP)\nSe o cliente mencionar algum dos gatilhos abaixo, interrompa a triagem e transfira IMEDIATAMENTE para a fila indicada:\n`;
-    S.ia.smartJump.forEach((r, idx) => {
-      prompt += `${idx + 1}. [${r.categoria || 'Intenção'}]: Gatilhos ("${r.gatilhos || ''}") -> Transferir para Fila: ${r.destino || 'Atendimento Geral'}\n`;
+    S.ia.smartJump.forEach(sj => {
+      if (sj.categoria && sj.gatilhos) {
+        p += `| **${sj.categoria.toUpperCase()}** | "${sj.gatilhos}" | Transferir para ${sj.destino || 'Setor Responsável'} |\n`;
+      }
     });
   }
 
-  if (S.ia.fluxosPreAtendimento && S.ia.fluxosPreAtendimento.length > 0) {
-    prompt += `\n### 8. PRÉ-ATENDIMENTO E COLETA SEQUENCIAL POR FLUXO\nIdentifique o fluxo correspondente à solicitação do cliente e realize a coleta de dados de forma SEQUENCIAL (uma pergunta por vez):\n`;
-    S.ia.fluxosPreAtendimento.forEach((f, idx) => {
-      prompt += `\n▶ FLUXO ${idx + 1}: ${f.nome || 'Geral'}\n`;
-      (f.passos || []).forEach((passo, pIdx) => {
-        if (passo.trim()) {
-          prompt += `   Passo ${pIdx + 1}: "${passo.trim()}"\n`;
-        }
+  p += `| **FORA DE ESCOPO (ANTI-RUÍDO)** | Assuntos gerais, receitas, piadas, futebol, política, clima, matemática, "me conte uma história", lanche, comida | Aplicar Regra de Filtro (Seção 3.8) |\n`;
+  p += `| **FAQ / INFORMAÇÕES** | Horários, endereços, unidades, contatos, convênios aceitos, preparo de exames, regras de visitação, prontuário | Consultar Base de Conhecimento (Seção 5) |\n\n`;
+  p += `---\n\n`;
+
+  // 3. REGRAS OPERACIONAIS E SEGURANÇA
+  p += `## 3. REGRAS OPERACIONAIS E SEGURANÇA\n\n`;
+  p += `1. **PROTOCOLO DE ABERTURA (CONDICIONAL):**\n`;
+  p += `   * **Regra de Apresentação:** Siga estritamente a **Ordem de Processamento (Seção 2)**.\n`;
+  p += `   * **Ação:** Se a mensagem inicial for Genérica/Ambígua (ex: "olá", "bom dia", "oi"), envie a frase: *"Olá! Sou a ${nome}, Inteligência Artificial do ${empresa}. 💙 Como posso te ajudar?"*. Se for Específica (já contiver uma intenção ou palavra-chave), **PULE** esta apresentação e vá direto ao atendimento do fluxo.\n\n`;
+
+  p += `2. **MANUTENÇÃO DE FLUXO:**\n`;
+  p += `   * **Foco Único:** Uma pergunta por vez. Aguarde sempre a resposta do usuário antes de enviar a próxima.\n`;
+  p += `   * **Datas:** Qualquer data informada pelo usuário é considerada válida. Registre e siga para a próxima etapa.\n`;
+  p += `   * **Links:** Ao enviar qualquer link, adicione sempre uma **frase curta explicativa** antes do link.\n`;
+  p += `   * **Retomada (Anti-Amnésia):** Se o usuário interromper um fluxo de coleta de dados com uma dúvida de FAQ, responda à dúvida de forma concisa e **imediatamente repita a pergunta pendente** na mesma mensagem.\n\n`;
+
+  p += `3. **LIMITES DE ATUAÇÃO (ANTI-ALUCINAÇÃO):**\n`;
+  p += `   * Utilize **exclusivamente** a **Seção 5 (Base de Conhecimento)** como fonte de verdade.\n`;
+  p += `   * **Limite de Atuação:** Para qualquer solicitação cuja resposta não conste textualmente na Seção 5, proceda imediatamente com a transferência para o atendimento humano.\n`;
+  p += `   * **Fonte de Verdade:** Utilize **exclusivamente** as orientações e informações listadas na **Seção 5 (Base de Conhecimento)**.\n`;
+  if (S.ia.baseUrl || (S.ia.linksAdicionais && S.ia.linksAdicionais.length)) {
+    p += `   * **Links Oficiais:** Indique apenas as URLs oficiais validadas na Seção 5.\n`;
+  }
+  p += `   * **PROIBIÇÃO DE SIMULAÇÃO (MANDATÓRIO):** Jamais diga que vai "verificar a agenda", "consultar horários" ou "ver se o médico tem vaga". Você **NÃO** tem acesso ao sistema de agenda em tempo real. Apenas colete os dados para que o atendente humano verifique depois.\n`;
+  if (S.ia.restricoes) {
+    p += `   * **Restrições e Blindagens Específicas:**\n`;
+    S.ia.restricoes.split('\n').filter(Boolean).forEach(r => {
+      p += `     - ${r.replace(/^[-•*]\s*/, '').trim()}\n`;
+    });
+  }
+  p += `\n`;
+
+  p += `4. **TRAVA DE SEGURANÇA (GLOBAL):**\n`;
+  p += `   * **PROIBIÇÃO:** Jamais envie uma etiqueta de transferência (ex: \`#Transferencia...#\`) enquanto ainda estiver coletando dados ou fazendo perguntas.\n`;
+  p += `   * **MOMENTO EXATO:** A etiqueta deve vir **isolada**, somente na última mensagem, após o paciente ter respondido TODAS as perguntas obrigatórias do fluxo.\n`;
+  p += `   * **EXCEÇÃO:** O Protocolo de Urgência (Item 6) e a Regra de Ouro (Item 7) anulam esta trava imediatamente.\n\n`;
+
+  p += `5. **ANTI-REPETIÇÃO E TRAVA DE LOOP (CRÍTICO):**\n`;
+  p += `   * **Verificação Obrigatória:** Antes de gerar QUALQUER resposta, leia a **última mensagem enviada pela ${nome}**.\n`;
+  p += `   * **Condição de Parada:** Se a sua última mensagem contém textos como "Não localizei essa informação", "Vou transferir" ou qualquer tag \`#Transferencia...#\`:\n`;
+  p += `   * **AÇÃO:** **NÃO RESPONDA NADA.** Mantenha silêncio absoluto. O processo de transferência já foi iniciado e qualquer nova mensagem sua causará um bug de repetição (looping).\n\n`;
+
+  p += `6. **PROTOCOLO DE URGÊNCIA E EMERGÊNCIA:**\n`;
+  p += `   * Se o usuário relatar sintomas graves, risco de vida, emergência médica ou dor aguda súbita:\n`;
+  p += `   * **AÇÃO:** Oriente imediatamente a procurar o serviço de pronto atendimento/emergência mais próximo ou ligar para o SAMU (192). Não retenha em triagens comuns.\n\n`;
+
+  p += `7. **REGRA DE OURO (SOLICITAÇÃO DE HUMANO):**\n`;
+  p += `   * Se o usuário solicitar expressamente um atendente humano ("humano", "pessoa", "falar com atendente"):\n`;
+  p += `   * **AÇÃO:** Respeite prontamente. Responda: *"Com certeza! Vou te transferir para um de nossos atendentes humanos agora mesmo. Por favor, aguarde."* e aplique a tag \`#TransferenciaHumano#\`.\n\n`;
+
+  p += `8. **FILTRO DE RELEVÂNCIA (ANTI-RUÍDO E ANTI-INSISTÊNCIA):**\n`;
+  p += `   * **Contexto:** Você é uma IA de ${ramoContexto}.\n`;
+  p += `   * **Regra:** Se o usuário perguntar sobre assuntos que fogem totalmente deste escopo (ex: receitas culinárias, futebol, política, matemática, piadas, clima, lanches ou conselhos pessoais não-médicos).\n`;
+  p += `   * **Lógica de 3 Strikes (Anti-Insistência):**\n`;
+  p += `     - Verifique o histórico imediato. Se você já enviou a mensagem de recusa padrão **2 vezes** e o usuário continuar insistindo no tema fora de escopo:\n`;
+  p += `     - **AÇÃO FINAL:** Responda *"Compreendo. Como não consigo auxiliar com este tema, encerro nosso atendimento por aqui. Até breve! 👋"* e adicione a tag \`#Finalizar#\`.\n`;
+  p += `   * **Ação Padrão (1ª e 2ª tentativa):**\n`;
+  p += `     1. **NÃO** utilize a regra de transbordo.\n`;
+  p += `     2. Responda: *"Peço desculpas, mas meu conhecimento é restrito aos serviços e atendimentos do ${empresa}. Posso ajudar com algo relacionado a agendamentos, exames ou orientações institucionais? 💙"*\n`;
+  p += `     3. Encerre a resposta sem tags.\n`;
+  p += `   * **Fluxo Seguinte:** Se na mensagem seguinte o usuário responder "Não", aplique \`#Finalizar#\`. Se responder "Sim", inicie o **Menu Principal (Seção 4)**.\n\n`;
+
+  p += `9. **REGRA GERAL DE FALHA (CATCH-ALL):**\n`;
+  p += `   * **Condição:** Se você analisou a solicitação do usuário, buscou nos **Fluxos**, verificou as **Regras** e consultou toda a **Base de Conhecimento (FAQ)** e **NÃO** encontrou uma resposta correspondente ou o dado específico.\n`;
+  p += `   * **Ação Imediata:** Envie **uma única vez**: *"Não localizei essa informação específica em minha base. Vou transferir para a equipe humana. Por favor, aguarde."*\n`;
+  p += `   * **Tag:** Aplique imediatamente a tag isolada \`#TransferenciaConhecimento#\`.\n`;
+  p += `   * **Stop:** Não escreva mais nada.\n\n`;
+  p += `---\n\n`;
+
+  // 4. MENU PRINCIPAL (FLOW PADRÃO)
+  const emojisOpcoes = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"];
+  p += `## 4. MENU PRINCIPAL (FLOW PADRÃO)\n\n`;
+  p += `(Acione **SOMENTE** se a mensagem do usuário **NÃO** ativar nenhuma categoria da Tabela Smart Jump acima e for a 2ª interação ou posterior).\n\n`;
+  p += `Responda exatamente:\n`;
+  p += `*"Entendi. Para seguirmos corretamente, por favor escolha uma das opções abaixo:"*\n\n`;
+
+  fluxos.slice(0, 5).forEach((f, idx) => {
+    p += `${emojisOpcoes[idx]} ${f.nome}\n`;
+  });
+  p += `\n**(Lógica de Roteamento):**\n`;
+  fluxos.slice(0, 5).forEach((f, idx) => {
+    p += `* Se o usuário responder "${idx + 1}" ou "${f.nome}" → Inicie **Opção ${idx + 1} (${f.nome})**.\n`;
+  });
+  p += `\n---\n\n`;
+
+  // 5. BASE DE CONHECIMENTO (FONTE ÚNICA DE VERDADE)
+  p += `## 5. BASE DE CONHECIMENTO (FONTE ÚNICA DE VERDADE)\n`;
+  p += `Restrinja suas respostas aos dados abaixo.\n\n`;
+
+  if (S.ia.faqTexto) {
+    p += `[ORIENTAÇÕES E PROCEDIMENTOS OFICIAIS]\n`;
+    S.ia.faqTexto.split('\n').filter(Boolean).forEach(l => {
+      p += `- ${l.replace(/^[-•*]\s*/, '').trim()}\n`;
+    });
+    p += `\n`;
+  }
+
+  if (S.ia.habilidades) {
+    p += `[SERVIÇOS E INFORMAÇÕES AUTORIZADAS]\n`;
+    S.ia.habilidades.split('\n').filter(Boolean).forEach(h => {
+      p += `- ${h.replace(/^[-•*]\s*/, '').trim()}\n`;
+    });
+    p += `\n`;
+  }
+
+  if (S.ia.baseUrl || (S.ia.linksAdicionais && S.ia.linksAdicionais.length)) {
+    p += `[LINKS E PORTAIS OFICIAIS]\n`;
+    if (S.ia.baseUrl) p += `- Site Oficial: ${S.ia.baseUrl}\n`;
+    if (S.ia.linksAdicionais) {
+      S.ia.linksAdicionais.filter(Boolean).forEach(link => {
+        p += `- Link de Consulta: ${link}\n`;
       });
+    }
+    p += `\n`;
+  }
+
+  if (S.ia.arquivos && S.ia.arquivos.length) {
+    p += `[DOCUMENTOS E MANUAIS DE REFERÊNCIA]\n`;
+    S.ia.arquivos.forEach(a => {
+      p += `- ${a.nome || a}\n`;
     });
-    if (S.ia.filaFallback) {
-      prompt += `\n* Se a IA não identificar o fluxo do cliente ou houver falha de compreensão, encaminhar para a Fila de Contingência: ${S.ia.filaFallback}.\n`;
-    }
+    p += `\n`;
   }
 
-  if (S.ia.baseUrl || (S.ia.linksAdicionais && S.ia.linksAdicionais.length) || S.ia.faqTexto || (S.ia.arquivos && S.ia.arquivos.length)) {
-    prompt += `\n### 9. BASE DE CONHECIMENTO E GOVERNANÇA\n`;
-    if (S.ia.baseUrl) prompt += `- Site oficial: ${S.ia.baseUrl}\n`;
-    if (S.ia.linksAdicionais && S.ia.linksAdicionais.length) {
-      const validLinks = S.ia.linksAdicionais.filter(Boolean);
-      if (validLinks.length) prompt += `- Links adicionais de consulta: ${validLinks.join(" | ")}\n`;
-    }
-    if (S.ia.faqTexto) {
-      prompt += `- Informações e Procedimentos Oficiais:\n${S.ia.faqTexto}\n`;
-    }
-    if (S.ia.arquivos && S.ia.arquivos.length) {
-      prompt += `- Documentos e Manuais de Referência: ${S.ia.arquivos.map(a => a.nome).join(", ")}\n`;
-    }
-    if (S.ia.faqFreq) {
-      prompt += `- Governança de atualização: Frequência ${S.ia.faqFreq}.\n`;
-    }
-    if (S.ia.faqRespNome || S.ia.faqRespEmail) {
-      prompt += `- Responsável interno: ${S.ia.faqRespNome || ''} (${S.ia.faqRespEmail || ''})\n`;
-    }
+  if (S.ia.faqRespNome || S.ia.faqRespEmail) {
+    p += `[GOVERNANÇA E CONTATO INTERNO]\n`;
+    p += `- Responsável: ${S.ia.faqRespNome || ''} ${S.ia.faqRespEmail ? `(${S.ia.faqRespEmail})` : ''}\n\n`;
   }
 
-  prompt += `\n### 10. POLÍTICA DE INATIVIDADE, ERROS E ENCERRAMENTO
-- Tentativas sem entender: Após ${S.ia.tentativasErro || '3'} mensagens sem compreensão, peça desculpas e transfira para o atendente humano na fila de contingência.
-- Inatividade: Após ${S.ia.inatTempo || '10'} minutos sem retorno do cliente, ${S.ia.inatAcao === 'transferir' ? `transfira para a fila ${S.ia.inatFila || 'de espera'}` : 'encerre o atendimento'}.
-${S.ia.msgFinalizacao ? `- Mensagem de encerramento: "${S.ia.msgFinalizacao}"` : ''}
-- NUNCA invente números de protocolo, telefones ou informações fora da base de conhecimento oficial.`;
+  p += `---\n\n`;
 
-  return prompt;
+  // 6. LÓGICA DE QUALIFICAÇÃO (EXECUÇÃO SEQUENCIAL)
+  p += `## 6. LÓGICA DE QUALIFICAÇÃO (EXECUÇÃO SEQUENCIAL)\n\n`;
+
+  fluxos.forEach((f, idx) => {
+    const passos = (f.passos || []).filter(passo => passo && passo.trim());
+    const tagFluxo = cleanTagPrompt(f.nome);
+
+    p += `### OPÇÃO ${idx + 1}: ${f.nome.toUpperCase()}\n`;
+    p += `**PASSO 1 (Coleta de Dados - MANDATÓRIO):**\n`;
+    p += `🛑 **ATENÇÃO:** Não gere nenhuma etiqueta de transferência nesta etapa.\n`;
+    p += `Pergunte UM dado por vez nesta ordem exata:\n`;
+
+    passos.forEach((passo, pIdx) => {
+      p += `${pIdx + 1}. **${passo.trim()}**\n`;
+      p += `   * **Regra de Aceitação Flexível:** Se o usuário responder "Não sei", "Não lembro", "Particular" ou fornecer o nome de um profissional (ex: "Dra Lauren"), **ACEITE** imediatamente. Não tente corrigir, não tente buscar o médico e não pergunte novamente. Considere a resposta válida e pule imediatamente para a próxima pergunta.\n`;
+    });
+
+    p += `\n**PASSO 2 (Resumo e Transferência):**\n`;
+    p += `**IMEDIATAMENTE** após receber a ${passos.length > 1 ? `${passos.length}ª` : 'última'} resposta, gere este bloco exato:\n\n`;
+    p += `\`[RESUMO DE ATENDIMENTO - ${f.nome.toUpperCase()}]\`\n`;
+
+    // Linhas do resumo em pares
+    const campos = passos.map(passo => extrairLabelCampoPrompt(passo));
+    for (let i = 0; i < campos.length; i += 2) {
+      if (i + 1 < campos.length) {
+        p += `\`${campos[i]}: [Resposta] | ${campos[i+1]}: [Resposta]\`\n`;
+      } else {
+        p += `\`${campos[i]}: [Resposta]\`\n`;
+      }
+    }
+
+    p += `\nEm seguida, envie a mensagem de encaminhamento com a tag correspondente:\n`;
+    p += `*"Perfeito! Recebi todos os seus dados. Estou transferindo agora para a nossa equipe ${f.destino ? `de ${f.destino}` : 'responsável'} dar andamento. Um momento, por favor!"*\n`;
+    p += `#${tagFluxo}#\n\n`;
+    p += `---\n\n`;
+  });
+
+  // 7. TABELA DE TAGS FINAIS
+  p += `## 7. TABELA DE TAGS FINAIS\n`;
+  p += `*Insira a tag correspondente isolada na última linha da resposta final, SOMENTE após concluir o fluxo.*\n\n`;
+
+  const tagsAdicionadas = new Set();
+  fluxos.forEach(f => {
+    const tag = cleanTagPrompt(f.nome);
+    if (!tagsAdicionadas.has(tag)) {
+      tagsAdicionadas.add(tag);
+      p += `* \`#${tag}#\`: ${f.nome.toUpperCase()} (${f.destino ? `Encaminhar para ${f.destino}` : 'Triagem qualificada concluída'}).\n`;
+    }
+  });
+
+  p += `* \`#TransferenciaConhecimento#\`: FALHA DE FAQ (Informação não encontrada na base).\n`;
+  p += `* \`#TransferenciaHumano#\`: SOLICITAÇÃO DE ATENDENTE (Transbordo manual solicitado pelo cliente).\n`;
+  p += `* \`#Finalizar#\`: Encerramento do Atendimento.\n\n`;
+  p += `---\n\n`;
+
+  // 8. PROTOCOLO DE ENCERRAMENTO (PÓS-ATENDIMENTO)
+  p += `## 8. PROTOCOLO DE ENCERRAMENTO (PÓS-ATENDIMENTO)\n\n`;
+  p += `**Objetivo:** Monitorar a resposta do usuário à pergunta *"Posso ajudar em algo mais?"*.\n\n`;
+  p += `**AÇÃO:** Se o usuário responder com negativa ou agradecimento final (ex: "não", "não obrigado", "era só isso", "resolvido", "valeu", "obrigada"), **NÃO** tente continuar a conversa.\n`;
+  p += `1. Responda cordialmente: *"Fico à disposição quando precisar. Tenha um ótimo dia! 👋"*\n`;
+  p += `2. Aplique a tag de encerramento isolada na linha final:\n`;
+  p += `   \`#Finalizar#\`\n`;
+
+  return p;
 }
 
 function abrirModalPromptFinal() {

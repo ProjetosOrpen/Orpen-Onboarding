@@ -50,6 +50,19 @@ function draw() {
     main.innerHTML = currentBlock.render();
   }
 
+  if (typeof document !== "undefined" && document.body) {
+    document.body.classList.toggle("is-ia-view", cur === "ia");
+  }
+
+  if (cur === "ia") {
+    setTimeout(() => {
+      const stream = document.getElementById("ia_v2_chat_stream");
+      if (stream) stream.scrollTop = stream.scrollHeight;
+      const input = document.getElementById("ia_v2_input");
+      if (input && typeof input.focus === "function") input.focus();
+    }, 40);
+  }
+
   soft();
   if (typeof lucide !== "undefined") {
     lucide.createIcons();

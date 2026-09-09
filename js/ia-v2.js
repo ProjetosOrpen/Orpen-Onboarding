@@ -126,6 +126,82 @@ function sincronizarVariaveisExtraidas(data) {
   }
 }
 
+// Extração heurística a partir de resumos textuais retornados pelo bot na conversa
+function extrairVariaveisDeTexto(botReply, userText) {
+  if (!botReply || typeof botReply !== "string") return;
+  let updated = false;
+
+  // 1. Extração do Nome da IA (ex: "### Resumo da Ires", "Nome: Ires")
+  const mNome = botReply.match(/###\s*Resumo\s+d[ao]\s+([A-Za-zÀ-ÿ0-9_-]+)/i) ||
+                botReply.match(/(?:nome\s+d[ao]\s+assistente|nome\s+da\s+ia):\s*([A-Za-zÀ-ÿ0-9_-]+)/i);
+  if (mNome && mNome[1]) {
+    const cleanNome = mNome[1].trim();
+    if (cleanNome && cleanNome !== S.ia.nome) {
+      S.ia.nome = cleanNome;
+      updated = true;
+    }
+  }
+
+  // 2. Extração do Tom de Voz
+  const mTom = botReply.match(/Tom:\s*([^\n\r\.]+)/i);
+  if (mTom && mTom[1]) {
+    const tons = mTom[1].split(/,\s*|\s+e\s+|\//).map(t => t.trim()).filter(Boolean);
+    if (tons.length) {
+      S.ia.tom = tons;
+      updated = true;
+    }
+  }
+
+  // 3. Extração da Autonomia / Habilidades
+  const mAutonomia = botReply.match(/Autonomia:\s*([^\n\r]+)/i);
+  if (mAutonomia && mAutonomia[1] && mAutonomia[1].length > 10) {
+    S.ia.habilidades = mAutonomia[1].trim();
+    updated = true;
+  }
+
+  // 4. Extração de Blindagens e Restrições
+  const mBlind = botReply.match(/Blindagens:\s*([^\n\r]+)/i);
+  if (mBlind && mBlind[1] && mBlind[1].length > 10) {
+    S.ia.restricoes = mBlind[1].trim();
+    updated = true;
+  }
+
+  // 5. Extração de Transbordo Humano / Filas
+  const mTrans = botReply.match(/Transbordo\s+humano:\s*([^\n\r]+)/i);
+  if (mTrans && mTrans[1]) {
+    const filas = mTrans[1].match(/Fila\s+de\s+[^,;\.\)]+/gi);
+    if (filas && filas.length) {
+      S.ia.topicosTransbordo = Array.from(new Set(filas.map(f => f.trim())));
+      updated = true;
+    }
+  }
+
+  // 6. Detecção de Hospital / Saúde e ativação dos fluxos padronizados
+  if (/triagem de consultas/i.test(botReply) || /triagem de exames/i.test(botReply) || (userText && /hospital|saude|saúde|consultas e exames/i.test(userText))) {
+    if (!S.ia.fluxosPreAtendimento || S.ia.fluxosPreAtendimento.length === 0 || (S.ia.fluxosPreAtendimento[0] && S.ia.fluxosPreAtendimento[0].passos.length < 5)) {
+      loadPreAtendSaude();
+      updated = true;
+    }
+  }
+
+  // 7. Extração de Destinos das filas se especificados
+  if (mTrans && S.ia.fluxosPreAtendimento) {
+    if (/consultas/i.test(mTrans[1])) {
+      const fConsulta = S.ia.fluxosPreAtendimento.find(f => /consulta/i.test(f.nome));
+      if (fConsulta) fConsulta.destino = "Fila de Consultas";
+    }
+    if (/atendimento/i.test(mTrans[1])) {
+      const fExame = S.ia.fluxosPreAtendimento.find(f => /exame/i.test(f.nome));
+      if (fExame) fExame.destino = "Fila de Atendimento";
+    }
+  }
+
+  if (updated) {
+    soft();
+    drawSum();
+  }
+}
+
 // Envia mensagem para o Webhook N8N
 async function sendIaV2Message(customText) {
   if (IA_V2_LOADING) return;
@@ -140,6 +216,9 @@ async function sendIaV2Message(customText) {
   }
 
   initIaV2Messages();
+
+  const qp = document.getElementById("ia_v2_quick_prompts");
+  if (qp) qp.style.display = "none";
 
   S.ia.v2Messages.push({
     sender: "user",
@@ -298,6 +377,7 @@ async function sendIaV2Message(customText) {
     if (extracted && typeof extracted === "object") {
       sincronizarVariaveisExtraidas(extracted);
     }
+    extrairVariaveisDeTexto(botReply, text);
 
     S.ia.v2Messages.push({
       sender: "bot",
@@ -382,7 +462,9 @@ function renderIaV2ChatStream() {
   const stream = document.getElementById("ia_v2_chat_stream");
   if (stream) {
     stream.innerHTML = renderIaV2MessagesHtml();
-    stream.scrollTop = stream.scrollHeight;
+    setTimeout(() => {
+      stream.scrollTop = stream.scrollHeight;
+    }, 15);
   }
   const btn = document.getElementById("ia_v2_send_btn");
   if (btn) {
@@ -400,16 +482,13 @@ function renderIaV2Chat() {
     <div class="ia-v2-chat-card">
       <div class="ia-v2-header">
         <div class="ia-v2-header-info">
-          <div class="ia-v2-badge-row">
-            <span class="block-badge">Assistente de IA</span>
-          </div>
-          <h2 class="block-hero-title">Entrevista Conversacional com IA</h2>
-          <p class="block-hero-desc">Converse com a IA em tempo real. Ela fará perguntas sobre o seu atendimento e estruturará seu assistente virtual automaticamente.</p>
+          <span class="block-badge">Assistente de IA</span>
+          <h2 class="ia-v2-title">Entrevista Conversacional</h2>
         </div>
 
         <div class="ia-v2-header-actions">
-          <button class="btn btn-s sm" onclick="reiniciarChatIaV2()" title="Limpar mensagens e iniciar do zero">
-            Reiniciar Conversa
+          <button type="button" class="btn btn-s sm" onclick="reiniciarChatIaV2()" title="Limpar mensagens e reiniciar">
+            ${ico('refresh-cw')} Reiniciar Conversa
           </button>
         </div>
       </div>
@@ -419,32 +498,34 @@ function renderIaV2Chat() {
           ${renderIaV2MessagesHtml()}
         </div>
 
-        <div class="ia-v2-quick-prompts">
-          <span class="ia-v2-quick-label">Sugestões de início:</span>
-          <div class="ia-v2-quick-chips">
-            <button type="button" class="ia-v2-chip" onclick="sendIaV2Message('Olá! Gostaria de iniciar o mapeamento do meu assistente de atendimento.')">
-              Iniciar Onboarding
-            </button>
-            <button type="button" class="ia-v2-chip" onclick="sendIaV2Message('Nossa empresa é um hospital/clínica e precisamos otimizar agendamento e dúvidas frequentes.')">
-              Clínica / Saúde
-            </button>
-            <button type="button" class="ia-v2-chip" onclick="sendIaV2Message('Quero definir o tom de voz acolhedor, profissional e direto.')">
-              Estilo e Tom de Voz
-            </button>
-            <button type="button" class="ia-v2-chip" onclick="sendIaV2Message('Quais informações você ainda precisa para concluir meu assistente?')">
-              O que falta preencher?
-            </button>
+        ${(S.ia.v2Messages.length <= 1 && !IA_V2_LOADING) ? `
+          <div class="ia-v2-quick-prompts" id="ia_v2_quick_prompts">
+            <span class="ia-v2-quick-label">Sugestões:</span>
+            <div class="ia-v2-quick-chips">
+              <button type="button" class="ia-v2-chip" onclick="sendIaV2Message('Olá! Gostaria de iniciar o mapeamento do meu assistente de atendimento.')">
+                Iniciar Onboarding
+              </button>
+              <button type="button" class="ia-v2-chip" onclick="sendIaV2Message('Nossa empresa é um hospital/clínica e precisamos otimizar agendamento e dúvidas frequentes.')">
+                Clínica / Saúde
+              </button>
+              <button type="button" class="ia-v2-chip" onclick="sendIaV2Message('Quero definir o tom de voz acolhedor, profissional e direto.')">
+                Estilo e Tom de Voz
+              </button>
+              <button type="button" class="ia-v2-chip" onclick="sendIaV2Message('Quais informações você ainda precisa para concluir meu assistente?')">
+                O que falta preencher?
+              </button>
+            </div>
           </div>
-        </div>
+        ` : ''}
 
         <div class="ia-v2-input-bar">
           <textarea
             id="ia_v2_input"
             class="ia-v2-textarea"
             rows="1"
-            placeholder="Digite sua resposta ou tire uma dúvida sobre o onboarding..."
+            placeholder="Digite sua resposta ou tire uma dúvida sobre o assistente..."
             onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendIaV2Message(); }"
-            oninput="this.style.height='auto';this.style.height=(this.scrollHeight)+'px'"
+            oninput="this.style.height='auto';this.style.height=(Math.min(this.scrollHeight, 90))+'px'"
           ></textarea>
           <button
             type="button"
