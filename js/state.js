@@ -19,10 +19,10 @@ const S = {
     ia: true
   },
   contatos: {
-    projNome: "", projEmail: "", projTel: "", projCargo: "",
-    finNome: "", finEmail: "", finTel: "",
-    legNome: "", legEmail: "", legTel: "",
-    tiNome: "", tiEmail: "", tiTel: ""
+    projNome: "", projEmail: "", projTel: "", projCargo: "", projContatoOpcional: "",
+    finNome: "", finEmail: "", finTel: "", finContatoOpcional: "",
+    legNome: "", legEmail: "", legTel: "", legContatoOpcional: "",
+    tiNome: "", tiEmail: "", tiTel: "", tiContatoOpcional: ""
   },
   operacao: {
     jornada: "comercial",
@@ -42,7 +42,13 @@ const S = {
     pausas: [],
     pesquisa: true,
     pesquisaQuando: "sempre",
-    pesquisaTexto: "Por favor, avalie o atendimento digitando uma das opções abaixo:\n5 - Muito satisfeito\n4 - Satisfeito\n3 - Regular\n2 - Insatisfeito\n1 - Muito insatisfeito"
+    pesquisaPergunta: "Como você avalia o nosso atendimento hoje?",
+    pesquisaOpcoes: [
+      { rotulo: "1 - ⭐⭐⭐⭐⭐ Excelente", valor: "5" },
+      { rotulo: "2 - ⭐⭐⭐ Regular", valor: "3" },
+      { rotulo: "3 - ⭐ Insatisfeito", valor: "1" }
+    ],
+    pesquisaTexto: "Como você avalia o nosso atendimento hoje?\n\n1 - ⭐⭐⭐⭐⭐ Excelente\n2 - ⭐⭐⭐ Regular\n3 - ⭐ Insatisfeito"
   },
   whats: {
     numero: "",
@@ -53,8 +59,37 @@ const S = {
     avisarFim: true,
     m03: "Atendimento finalizado. Obrigado pelo contato!",
     foraHorario: "fila",
-    pre: { backup: false, grupos: false, exclusao: false, contatos: false },
-    preResp: { backup: "", grupos: "", exclusao: "", contatos: "" }
+    pre: { backup: false, exclusao: false },
+    preResp: { backup: "", exclusao: "" }
+  },
+  canaisConfig: {
+    webchat: {
+      url: "",
+      corPrimaria: "#0A2540",
+      logoUrl: "",
+      posicao: "bottom-right",
+      preChat: true,
+      mensagemBoasVindas: "Olá! Como podemos te ajudar hoje?"
+    },
+    teams: {
+      tenantId: "",
+      appId: "",
+      clientSecret: "",
+      canalPadrao: "",
+      suporteTecnico: false
+    },
+    telegram: {
+      botUsername: "",
+      botToken: ""
+    },
+    instagram: {
+      perfil: "",
+      metaBusinessId: ""
+    },
+    facebook: {
+      paginaNome: "",
+      paginaId: ""
+    }
   },
   bot: {
     opcoes: []
@@ -171,13 +206,15 @@ const S = {
     faqResp: ""
   },
   integ: {
-    sistema: "Tasy",
-    temApi: "sim",
-    docUrl: "",
+    desejaIntegrar: "nao", // "sim" | "nao"
+    sistema: "",
+    descricao: "",
     contatoNome: "",
     contatoEmail: "",
     contatoTel: "",
-    casos: ["Consultar agendamentos do paciente", "Identificar o cliente pelo telefone"]
+    temApi: "sim",
+    docUrl: "",
+    casos: []
   },
   obs: { texto: "" }
 };
@@ -267,6 +304,42 @@ function loadTpl(k, f) {
   if (f === "setores") S.operacao.setores = JSON.parse(JSON.stringify(d));
   else S.classif[f] = [...new Set([...S.classif[f], ...d])];
   draw(); toast("Modelo aplicado — ajuste o que quiser");
+}
+
+/* Funções da Pesquisa de Satisfação (Formato WhatsApp) */
+function addPesquisaOpcao() {
+  if (!S.classif.pesquisaOpcoes) S.classif.pesquisaOpcoes = [];
+  const idx = S.classif.pesquisaOpcoes.length + 1;
+  S.classif.pesquisaOpcoes.push({ rotulo: `${idx} - ⭐ Opção ${idx}`, valor: String(idx) });
+  atualizarPesquisaTexto();
+  draw();
+  toast("Nova opção adicionada à pesquisa");
+}
+function delPesquisaOpcao(i) {
+  if (S.classif.pesquisaOpcoes && S.classif.pesquisaOpcoes.length > 1) {
+    S.classif.pesquisaOpcoes.splice(i, 1);
+    atualizarPesquisaTexto();
+    draw();
+  } else {
+    toast("A pesquisa precisa de ao menos uma opção");
+  }
+}
+function setPesquisaOpcao(i, val) {
+  if (S.classif.pesquisaOpcoes && S.classif.pesquisaOpcoes[i]) {
+    S.classif.pesquisaOpcoes[i].rotulo = val;
+    atualizarPesquisaTexto();
+    soft();
+  }
+}
+function setPesquisaPergunta(val) {
+  S.classif.pesquisaPergunta = val;
+  atualizarPesquisaTexto();
+  soft();
+}
+function atualizarPesquisaTexto() {
+  const p = S.classif.pesquisaPergunta || "Como você avalia o nosso atendimento hoje?";
+  const opts = (S.classif.pesquisaOpcoes || []).map(o => o.rotulo).join("\n");
+  S.classif.pesquisaTexto = `${p}\n\n${opts}`;
 }
 function addSetor() { const n = 7001 + S.operacao.setores.length; S.operacao.setores.push({ nome: "", dac: String(n), horario: S.operacao.diasSem || "" }); draw(); }
 function addAgente() { S.equipe.agentes.push({ login: nextLogin(), nome: "", email: "", setor: "" }); draw(); }

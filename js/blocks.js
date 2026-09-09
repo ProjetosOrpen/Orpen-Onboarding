@@ -46,20 +46,23 @@ const BLOCKS = [
   {
     id: "contrato", nome: "Contrato", when: () => true,
     check() {
-      const p = [], c = S.contrato;
+      const p = [], c = S.contrato, ct = S.contatos;
       if (!c.razaoSocial) p.push("Razão Social da empresa");
       if (!c.cnpj) p.push("CNPJ da empresa");
       if (!c.confirmado) p.push("Confirmar os dados do contrato");
+      if (!ct.projNome || !vEmail(ct.projEmail)) p.push("Contato do projeto (nome e e-mail)");
+      if (!ct.finNome || !vEmail(ct.finEmail)) p.push("Responsável financeiro");
+      if (!ct.legNome || !vEmail(ct.legEmail)) p.push("Responsável pela assinatura");
       return p;
     },
     render() {
-      const c = S.contrato;
+      const c = S.contrato, ct = S.contatos;
       const pend = this.check();
       return `<div class="card">
         ${renderBlockHeader({
           badge: "Contrato & Escopo",
-          title: "Dados Cadastrais e Escopo Contratado",
-          desc: "Preencha ou confira os dados cadastrais da empresa, canais contratados, licenças e módulos da operação.",
+          title: "Dados Cadastrais, Escopo e Responsáveis",
+          desc: "Preencha ou confira os dados cadastrais da empresa, canais contratados, licenças e os responsáveis pela implantação.",
           pendList: pend
         })}
         ${subCard({
@@ -78,13 +81,18 @@ const BLOCKS = [
         ${subCard({
           kicker: "Escopo Contratual",
           title: "Canais, Licenças e Módulos",
-          desc: "Configure as licenças de usuários, capacidade operacional e modelo de implantação da sua equipe.",
+          desc: "Configure os canais digitais ativos, capacidade operacional e modelo de implantação da sua equipe.",
           content: `
             <div class="f">
               <label>Canais de Atendimento Ativos</label>
-              <div class="opts">
-                <button type="button" class="opt sm" aria-pressed="${has('WhatsApp')}" onclick="togCanal('WhatsApp')">WhatsApp</button>
-                <button type="button" class="opt sm" aria-pressed="${has('Voz')}" onclick="togCanal('Voz')">Voz / Telefonia</button>
+              <div class="opts" style="flex-wrap:wrap;gap:8px">
+                <button type="button" class="opt sm" aria-pressed="${has('WhatsApp')}" onclick="togCanal('WhatsApp')">${ico('message-square')} WhatsApp</button>
+                <button type="button" class="opt sm" aria-pressed="${has('Voz')}" onclick="togCanal('Voz')">${ico('phone')} Voz / Telefonia</button>
+                <button type="button" class="opt sm" aria-pressed="${has('Webchat')}" onclick="togCanal('Webchat')">${ico('globe')} Webchat</button>
+                <button type="button" class="opt sm" aria-pressed="${has('Instagram')}" onclick="togCanal('Instagram')">${ico('instagram')} Instagram</button>
+                <button type="button" class="opt sm" aria-pressed="${has('Facebook')}" onclick="togCanal('Facebook')">${ico('facebook')} Facebook</button>
+                <button type="button" class="opt sm" aria-pressed="${has('Teams')}" onclick="togCanal('Teams')">${ico('users')} Microsoft Teams</button>
+                <button type="button" class="opt sm" aria-pressed="${has('Telegram')}" onclick="togCanal('Telegram')">${ico('send')} Telegram</button>
               </div>
             </div>
 
@@ -206,99 +214,122 @@ const BLOCKS = [
             </div>
           `
         })}
-        ${nav()}
-      </div>`;
-    }
-  },
-
-  {
-    id: "contatos", nome: "Quem responde", when: () => true,
-    check() {
-      const p = [], c = S.contatos;
-      if (!c.projNome || !vEmail(c.projEmail)) p.push("Contato do projeto (nome e e-mail)");
-      if (!c.finNome || !vEmail(c.finEmail)) p.push("Responsável financeiro");
-      if (!c.legNome || !vEmail(c.legEmail)) p.push("Responsável pela assinatura");
-      if (S.contrato.canais.includes("Voz") && (!c.tiNome || !vEmail(c.tiEmail))) p.push("Contato de TI / rede");
-      return p;
-    },
-    render() {
-      const c = S.contatos;
-      const pend = this.check();
-      return `<div class="card">
-        ${renderBlockHeader({
-          badge: "Pessoas & Responsáveis",
-          title: "Quem responde por cada frente do projeto",
-          desc: "Cada responsável receberá apenas os alinhamentos e convites pertinentes à sua área. Não é necessário preencher tudo sozinho.",
-          pendList: pend
-        })}
         ${subCard({
-          kicker: "Operação & Implantação",
-          title: "Contato Principal do Projeto (Operação & Implantação) *",
-          desc: "Pessoa chave que acompanha os alinhamentos e homologação do dia a dia com a ORPEN.",
-          content: `<div class="grid2">${fi("Nome Completo", "contatos.projNome")}${fi("Cargo / Função", "contatos.projCargo")}${fi("E-mail Corporativo", "contatos.projEmail", "email")}${fi("Telefone / WhatsApp", "contatos.projTel", "tel")}</div>`
-        })}
-        ${subCard({
-          kicker: "Faturamento",
-          title: "Responsável Financeiro *",
-          desc: "Recebe o espelho de faturamento, boletos e trata eventuais reajustes ou aditivos.",
-          content: `<div class="grid3">${fi("Nome Completo", "contatos.finNome")}${fi("E-mail Financeiro", "contatos.finEmail", "email")}${fi("Telefone", "contatos.finTel", "tel")}</div>`
-        })}
-        ${subCard({
-          kicker: "Jurídico",
-          title: "Responsável pela Assinatura do Contrato *",
-          desc: "Representante legal com poderes contratuais e assinatura digital.",
-          content: `<div class="grid3">${fi("Nome Completo", "contatos.legNome")}${fi("E-mail Corporativo", "contatos.legEmail", "email")}${fi("Telefone", "contatos.legTel", "tel")}</div>`
-        })}
-        ${has("Voz") || S.contrato.integracao ? subCard({
-          kicker: "Infraestrutura",
-          title: "Contato de TI / Infraestrutura & Redes",
-          desc: "Responsável por liberação de portas de firewall, apontamento SIP de voz e homologação da API.",
-          content: `<div class="grid3">${fi("Nome do Técnico/Gestor de TI", "contatos.tiNome")}${fi("E-mail de TI", "contatos.tiEmail", "email")}${fi("Telefone / Ramal", "contatos.tiTel", "tel")}</div>`
-        }) : ""}
-        ${nav()}
-      </div>`;
-    }
-  },
-
-  {
-    id: "operacao", nome: "Horário e filas", when: () => true,
-    check() {
-      const p = [];
-      if (!S.operacao.diasSem) p.push("Horário de atendimento em dias úteis");
-      if (!S.operacao.setores.length) p.push("Cadastrar ao menos um setor / fila");
-      if (S.operacao.setores.some(s => !s.nome || !/^\d{3,5}$/.test(s.dac || ""))) p.push("Setor sem nome ou com DAC inválido");
-      return p;
-    },
-    render() {
-      const o = S.operacao;
-      const pend = this.check();
-      return `<div class="card">
-        ${renderBlockHeader({
-          badge: "Operação & Filas",
-          title: "Jornada de Atendimento e Filas (DAC)",
-          desc: "Os setores e códigos DAC cadastrados aqui alimentam automaticamente as filas de transbordo da IA, menus do bot e distribuição dos atendentes.",
-          pendList: pend
-        })}
-        ${subCard({
-          kicker: "Jornada",
-          title: "Jornada de Atendimento",
-          desc: "Selecione o modelo geral de horário da sua empresa.",
+          kicker: "Responsáveis",
+          title: "Responsáveis pelo Projeto",
+          desc: "Cada responsável receberá apenas os alinhamentos e convites pertinentes à sua área.",
           content: `
-            <div class="f"><label>Modelo de Atendimento</label><div class="opts">
-              ${["comercial|Comercial (Seg a Sex)", "estendido|Estendido (Inclui Sábado)", "24x7|24 Horas (Todos os dias)", "custom|Personalizado por Setor"].map(x => {
-                const [v, l] = x.split("|");
-                return `<button class="opt" aria-pressed="${o.jornada === v}" onclick="S.operacao.jornada='${v}';draw()">${l}</button>`;
-              }).join("")}
-            </div></div>
-            ${o.jornada !== "24x7" ? `<div class="grid3" style="margin-top:14px">
-              ${fi("Segunda a Sexta", "operacao.diasSem", "text", "07:30–18:00")}
-              ${o.jornada !== "comercial" ? fi("Sábado", "operacao.sabado", "text", "08:00–12:00") : ""}
-              ${o.jornada === "24x7" ? "" : fi("Domingo e Feriados", "operacao.domingo", "text", "Não atende")}
-            </div>` : ""}
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div class="contact-section-box">
+                <h4 class="contact-section-title">Contato Principal do Projeto (Operação & Implantação) *</h4>
+                <p class="contact-section-desc">Pessoa chave que acompanha os alinhamentos e homologação do dia a dia com a ORPEN.</p>
+                <div class="grid2">
+                  ${fi("Nome Completo *", "contatos.projNome")}
+                  ${fi("Cargo / Função", "contatos.projCargo")}
+                  ${fi("E-mail Corporativo *", "contatos.projEmail", "email")}
+                  ${fi("Telefone / WhatsApp Principal *", "contatos.projTel", "tel")}
+                  ${fi("Contato (Opcional)", "contatos.projContatoOpcional", "tel", "+55 (XX) XXXXX-XXXX")}
+                </div>
+              </div>
+
+              <div class="contact-section-box">
+                <h4 class="contact-section-title">Responsável Financeiro *</h4>
+                <p class="contact-section-desc">Recebe o espelho de faturamento, boletos e trata eventuais reajustes ou aditivos.</p>
+                <div class="grid2">
+                  ${fi("Nome Completo *", "contatos.finNome")}
+                  ${fi("E-mail Financeiro *", "contatos.finEmail", "email")}
+                  ${fi("Telefone *", "contatos.finTel", "tel")}
+                  ${fi("Contato (Opcional)", "contatos.finContatoOpcional", "tel", "+55 (XX) XXXXX-XXXX")}
+                </div>
+              </div>
+
+              <div class="contact-section-box">
+                <h4 class="contact-section-title">Responsável pela Assinatura do Contrato *</h4>
+                <p class="contact-section-desc">Representante legal com poderes contratuais e assinatura digital.</p>
+                <div class="grid2">
+                  ${fi("Nome Completo *", "contatos.legNome")}
+                  ${fi("E-mail Corporativo *", "contatos.legEmail", "email")}
+                  ${fi("Telefone *", "contatos.legTel", "tel")}
+                  ${fi("Contato (Opcional)", "contatos.legContatoOpcional", "tel", "+55 (XX) XXXXX-XXXX")}
+                </div>
+              </div>
+
+              ${has("Voz") || has("Teams") || S.contrato.integracao ? `
+                <div class="contact-section-box">
+                  <h4 class="contact-section-title">Contato de TI / Infraestrutura & Redes</h4>
+                  <p class="contact-section-desc">Responsável por portas de firewall, apontamento SIP de voz e homologação da API.</p>
+                  <div class="grid2">
+                    ${fi("Nome do Técnico/Gestor de TI", "contatos.tiNome")}
+                    ${fi("E-mail de TI", "contatos.tiEmail", "email")}
+                    ${fi("Telefone / Ramal", "contatos.tiTel", "tel")}
+                    ${fi("Contato (Opcional)", "contatos.tiContatoOpcional", "tel", "+55 (XX) XXXXX-XXXX")}
+                  </div>
+                </div>
+              ` : ""}
+            </div>
           `
         })}
+        ${nav()}
+      </div>`;
+    }
+  },
+
+  {
+    id: "licencas",
+    nome: "Licenças",
+    when: () => true,
+    check() {
+      const p = [], e = S.equipe, o = S.operacao;
+      if (!o.setores.length) p.push("Cadastrar ao menos um setor / fila");
+      if (o.setores.some(s => !s.nome || !/^\d{3,5}$/.test(s.dac || ""))) p.push("Setor sem nome ou com DAC inválido");
+      if (!e.agentes.length) p.push("Cadastrar os operadores de atendimento");
+      if (e.agentes.some(a => !vLogin(a.login) || !a.nome || !vEmail(a.email))) p.push("Corrigir operadores com dados inválidos");
+      if (e.agentes.length > S.contrato.licAgente) p.push(`Operadores acima das ${S.contrato.licAgente} licenças contratadas`);
+      return p;
+    },
+    render() {
+      const e = S.equipe, o = S.operacao, c = S.contrato;
+      const pend = this.check();
+      const agCad = e.agentes.length;
+      const gestCad = e.gestores.length;
+      const agMax = c.licAgente || 1;
+      const gestMax = c.licGestor || 1;
+      const agOver = agCad > agMax;
+      const gestOver = gestCad > gestMax;
+      const isOver = agOver || gestOver;
+      const setOpts = v => `<option value="">— Selecione o setor —</option>` + o.setores.map(s => `<option value="${esc(s.nome)}" ${v === s.nome ? "selected" : ""}>${esc(s.nome)}</option>`).join("");
+
+      return `<div class="card">
+        ${renderBlockHeader({
+          badge: "Equipe & Licenças",
+          title: "Dimensionamento de Licenças, Filas e Atendentes",
+          desc: "Cadastre as filas de atendimento (DAC), operadores simultâneos, regras de identificação e supervisores da plataforma.",
+          pendList: pend
+        })}
+
+        <!-- Lembrete Dinâmico de Quantidade de Licenças -->
+        <div class="lic-quota-banner ${isOver ? 'quota-warn' : 'quota-ok'}" style="margin-bottom:20px">
+          <div class="lic-quota-info">
+            <div class="lic-quota-icon">${ico(isOver ? 'alert-triangle' : 'users')}</div>
+            <div>
+              <div class="lic-quota-title">
+                <b>Lembrete de Licenças:</b> Operadores: <b>${agCad}/${agMax}</b> · Administradores: <b>${gestCad}/${gestMax}</b>
+              </div>
+              <div class="lic-quota-sub">
+                ${agOver
+                  ? `Atenção: ${agCad} operadores para ${agMax} licenças contratadas. Usuários adicionais serão faturados como excedente ou necessitam aditivo.`
+                  : `Controle em tempo real de licenças contratadas no Contrato.`}
+              </div>
+            </div>
+          </div>
+          <div class="lic-quota-badges">
+            <span class="lic-quota-pill ${agOver ? 'pill-warn' : 'pill-ok'}">${agCad}/${agMax} Operadores</span>
+            <span class="lic-quota-pill ${gestOver ? 'pill-warn' : 'pill-ok'}">${gestCad}/${gestMax} ADMs</span>
+          </div>
+        </div>
+
         ${subCard({
-          kicker: "Filas DAC",
+          kicker: "Filas de Atendimento",
           title: "Setores e Filas de Atendimento (DAC) *",
           desc: "Cada setor recebe um código numérico DAC (3 a 5 dígitos) para roteamento nas filas e relatórios.",
           actions: `<button type="button" class="btn btn-p" onclick="addSetor()">${ico('plus')} Adicionar Setor</button>`,
@@ -334,38 +365,13 @@ const BLOCKS = [
             </div>
           `
         })}
-        ${nav()}
-      </div>`;
-    }
-  },
 
-  {
-    id: "equipe", nome: "Equipe", when: () => true,
-    check() {
-      const p = [], e = S.equipe;
-      if (!e.agentes.length) p.push("Cadastrar os agentes");
-      if (e.agentes.some(a => !vLogin(a.login) || !a.nome || !vEmail(a.email))) p.push("Corrigir agentes com dado inválido");
-      if (e.agentes.length > S.contrato.licAgente) p.push(`Agentes acima das ${S.contrato.licAgente} licenças`);
-      if (!e.gestores.length) p.push("Cadastrar ao menos um gestor");
-      return p;
-    },
-    render() {
-      const e = S.equipe, over = e.agentes.length > S.contrato.licAgente;
-      const pend = this.check();
-      const setOpts = v => `<option value="">— Selecione o setor —</option>` + S.operacao.setores.map(s => `<option value="${esc(s.nome)}" ${v === s.nome ? "selected" : ""}>${esc(s.nome)}</option>`).join("");
-      return `<div class="card">
-        ${renderBlockHeader({
-          badge: "Equipe & Licenças",
-          title: "Cadastro de Agentes e Gestores",
-          desc: "Importe ou cadastre os usuários que atenderão e gerenciarão as filas. Os logins são validados na hora com controle de licenças contratadas.",
-          pendList: pend
-        })}
         ${subCard({
           kicker: "Operadores",
-          title: `Agentes de Atendimento (${e.agentes.length} de ${S.contrato.licAgente}) *`,
+          title: `Operadores e Agentes de Atendimento (${agCad} de ${agMax}) *`,
           desc: "Cadastre os usuários que atenderão as filas. Os logins numéricos (101, 102...) são gerados automaticamente.",
           actions: `
-            <button type="button" class="btn btn-p" onclick="addAgente()">${ico('plus')} Adicionar Agente</button>
+            <button type="button" class="btn btn-p" onclick="addAgente()">${ico('plus')} Adicionar Operador</button>
             <button type="button" class="btn btn-s" onclick="document.getElementById('import_agentes_file').click()">${ico('upload')} Importar em Lote</button>
             <input type="file" id="import_agentes_file" accept=".xlsx, .xls, .csv, .txt" style="display:none" onchange="importarArquivoAgentes(event)">
           `,
@@ -384,17 +390,38 @@ const BLOCKS = [
             </table>
           ` : `
             <div class="empty-sectors-card">
-              <h4 class="empty-sectors-title">Nenhum agente cadastrado ainda</h4>
-              <p class="empty-sectors-desc">Cadastre manualmente pelo botão acima ou importe um arquivo pelo botão <b>Importar em Lote</b>.</p>
+              <h4 class="empty-sectors-title">Nenhum operador cadastrado ainda</h4>
+              <p class="empty-sectors-desc">Cadastre manualmente pelo botão acima ou importe uma planilha em lote.</p>
             </div>
           `,
-          note: over ? `<div class="note warn" style="margin-top:14px"><b>Atenção: ${e.agentes.length} agentes para ${S.contrato.licAgente} licenças contratadas.</b> Remova ${e.agentes.length - S.contrato.licAgente} ou solicite licenças adicionais ao seu Account Manager.</div>` : ""
+          note: agOver ? `<div class="note warn" style="margin-top:14px"><b>Atenção: ${agCad} operadores cadastrados para ${agMax} licenças contratadas.</b> Ajuste a quantidade ou consulte seu Account Manager.</div>` : ""
         })}
+
+        ${subCard({
+          kicker: "Identificação dos Agentes",
+          title: "Identificação dos Agentes nas Mensagens (Sim / Não)",
+          desc: "Defina se o nome do atendente será exibido para o cliente nas mensagens enviadas.",
+          content: `
+            <div class="opts">
+              <button type="button" class="opt" aria-pressed="${e.nomeVisivel}" onclick="S.equipe.nomeVisivel=true;draw()">Sim, exibir identificação do atendente</button>
+              <button type="button" class="opt" aria-pressed="${!e.nomeVisivel}" onclick="S.equipe.nomeVisivel=false;draw()">Não, manter atendimento corporativo anônimo</button>
+            </div>
+            <span class="hint" style="margin-top:8px;display:block">
+              Quando ativado, o nome do atendente será exibido no início da mensagem para o cliente final, ex: <i>"[João]: Olá, como posso ajudar?"</i>.
+            </span>
+          `
+        })}
+
         ${subCard({
           kicker: "Supervisão",
-          title: `Gestores e Supervisores (${e.gestores.length} de ${S.contrato.licGestor}) *`,
-          desc: "Acessam dashboards em tempo real, relatórios gerenciais, gravação e monitoria de filas.",
-          actions: `<button type="button" class="btn btn-p" onclick="addGestor()">${ico('plus')} Adicionar Gestor</button>`,
+          title: `Supervisores e Administradores (${gestCad} cadastrados)`,
+          desc: "Supervisores com acesso a dashboards em tempo real, monitoria de filas, relatórios e gravação.",
+          actions: `
+            <span class="badge-tag-nolimit" style="display:inline-flex;align-items:center;gap:4px;background:var(--color-success-soft);color:var(--color-success);padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600">
+              ${ico('check')} Sem limite de licenças
+            </span>
+            <button type="button" class="btn btn-p" onclick="addGestor()">${ico('plus')} Adicionar Supervisor</button>
+          `,
           content: e.gestores.length ? `
             <table>
               <thead><tr><th style="width:32%">Nome Completo</th><th style="width:36%">E-mail Corporativo</th><th>Setor Supervisionado</th><th style="width:36px"></th></tr></thead>
@@ -407,154 +434,251 @@ const BLOCKS = [
                 </tr>`).join("")}
               </tbody>
             </table>
-          ` : `<div class="note info">Nenhum gestor cadastrado. Adicione ao menos um gestor responsável.</div>`
+          ` : `<div class="note info">Nenhum supervisor cadastrado. Adicione os supervisores da operação (sem limite de licenças).</div>`
         })}
-        ${subCard({
-          kicker: "Identificação",
-          title: "Identificação dos Agentes no Chat",
-          desc: "Defina se o nome do atendente será exibido para o cliente nas mensagens.",
-          content: `
-            <div class="opts">
-              <button class="opt" aria-pressed="${e.nomeVisivel}" onclick="S.equipe.nomeVisivel=true;draw()">Sim, exibir nome do atendente</button>
-              <button class="opt" aria-pressed="${!e.nomeVisivel}" onclick="S.equipe.nomeVisivel=false;draw()">Não, manter atendimento corporativo anônimo</button>
-            </div>
-          `
-        })}
+
         ${nav()}
       </div>`;
     }
   },
 
   {
-    id: "classif", nome: "Classificação", when: () => true,
+    id: "jornada",
+    nome: "Jornada do Atendimento",
+    when: () => true,
     check() {
-      const p = [];
-      if (S.classif.tabulacoes.length < 3) p.push("Definir ao menos 3 tabulações");
-      if (!S.classif.pausas.length) p.push("Definir as pausas dos agentes");
+      const p = [], o = S.operacao, c = S.classif;
+      if (!o.diasSem) p.push("Horário de atendimento em dias úteis");
+      if (c.tabulacoes.length < 3) p.push("Definir ao menos 3 tabulações");
+      if (!c.pausas.length) p.push("Definir os motivos de pausa");
       return p;
     },
     render() {
-      const c = S.classif;
+      const o = S.operacao, c = S.classif, w = S.whats;
       const pend = this.check();
       return `<div class="card">
         ${renderBlockHeader({
-          badge: "Classificação & Qualidade",
-          title: "Tabulações de Encerramento, Pausas e CSAT",
-          desc: "As tabulações padronizam o encerramento de cada conversa, alimentando relatórios gerenciais e pesquisas de satisfação pós-atendimento.",
+          badge: "Jornada & Qualidade",
+          title: "Calendário, Horários, Tabulações e Pesquisa",
+          desc: "Defina os horários de operação da empresa, motivos de pausa, tabulações de encerramento e a pesquisa de satisfação em formato WhatsApp.",
           pendList: pend
         })}
+
+        ${subCard({
+          kicker: "Calendário & Horários",
+          title: "Calendário de Atendimento e Horários de Expediente *",
+          desc: "Selecione o modelo geral de horário da sua empresa e mensagens de recepção e fora de horário.",
+          content: `
+            <div class="f"><label>Modelo de Atendimento</label><div class="opts">
+              ${["comercial|Comercial (Seg a Sex)", "estendido|Estendido (Inclui Sábado)", "24x7|24 Horas (Todos os dias)", "custom|Personalizado por Setor"].map(x => {
+                const [v, l] = x.split("|");
+                return `<button type="button" class="opt" aria-pressed="${o.jornada === v}" onclick="S.operacao.jornada='${v}';draw()">${l}</button>`;
+              }).join("")}
+            </div></div>
+            ${o.jornada !== "24x7" ? `<div class="grid3" style="margin-top:14px">
+              ${fi("Segunda a Sexta *", "operacao.diasSem", "text", "07:30–18:00")}
+              ${o.jornada !== "comercial" ? fi("Sábado", "operacao.sabado", "text", "08:00–12:00") : ""}
+              ${fi("Domingo e Feriados", "operacao.domingo", "text", "Não atende")}
+            </div>` : ""}
+
+            <div class="grid2" style="margin-top:16px">
+              <div class="f">
+                <label>Mensagem de Recepção Dentro do Horário</label>
+                <textarea data-path="whats.m01" placeholder="Olá! Seja bem-vindo à nossa Central de Atendimento...">${esc(w.m01)}</textarea>
+                <div style="display:flex;justify-content:flex-end;margin-top:6px">
+                  <button type="button" class="btn-text-tpl" onclick="sugerirM01()">${ico('sparkles')} Montar sugestão a partir dos setores</button>
+                </div>
+              </div>
+              <div class="f">
+                <label>Mensagem Fora do Horário de Atendimento</label>
+                <textarea data-path="whats.m02" placeholder="Nosso horário de atendimento é de segunda a sexta...">${esc(w.m02)}</textarea>
+                <div style="display:flex;justify-content:flex-end;margin-top:6px">
+                  <button type="button" class="btn-text-tpl" onclick="sugerirM02()">${ico('sparkles')} Montar sugestão a partir do horário</button>
+                </div>
+              </div>
+            </div>
+            <div class="grid2" style="margin-top:10px">
+              <div class="f"><label>Ação fora do horário</label><div class="opts">
+                <button type="button" class="opt sm" aria-pressed="${w.foraHorario === 'fila'}" onclick="S.whats.foraHorario='fila';draw()">Guardar na fila p/ dia seguinte</button>
+                <button type="button" class="opt sm" aria-pressed="${w.foraHorario === 'encerra'}" onclick="S.whats.foraHorario='encerra';draw()">Encerrar após a mensagem</button>
+              </div></div>
+              <div class="f"><label>Avisar encerramento ao cliente?</label><div class="opts">
+                <button type="button" class="opt sm" aria-pressed="${w.avisarFim}" onclick="S.whats.avisarFim=true;draw()">Sim</button>
+                <button type="button" class="opt sm" aria-pressed="${!w.avisarFim}" onclick="S.whats.avisarFim=false;draw()">Não</button>
+              </div></div>
+            </div>
+          `
+        })}
+
         ${subCard({
           kicker: "Tabulações",
           title: "Tabulações de Atendimento (Motivos de Encerramento) *",
           desc: "Opções que o agente seleciona ao finalizar a conversa. Recomendamos de 4 a 10 opções claras.",
           content: `
             ${tagBox("classif.tabulacoes", "Digite a tabulação e pressione Enter...")}
-            ${!c.tabulacoes.length ? `
-              <div class="empty-sectors-tpl-row" style="justify-content:flex-start;margin-top:10px">
-                <span class="tpl-note">Ou preencha com um modelo pronto:</span>
-                <button type="button" class="btn-tpl-pill" onclick="loadTpl('saude','tabulacoes')">${ico('heart-pulse')} Modelo Saúde</button>
-                <button type="button" class="btn-tpl-pill" onclick="loadTpl('generico','tabulacoes')">${ico('building-2')} Modelo Geral</button>
+            <div style="display:flex;justify-content:flex-end;margin-top:10px">
+              <div class="sectors-tpl-quickload">
+                <span class="tpl-label">Modelos prontos:</span>
+                <button type="button" class="btn-text-tpl" onclick="loadTpl('saude','tabulacoes')">${ico('heart-pulse')} Modelo Saúde</button>
+                <span class="tpl-sep">•</span>
+                <button type="button" class="btn-text-tpl" onclick="loadTpl('generico','tabulacoes')">${ico('building-2')} Modelo Geral</button>
               </div>
-            ` : `
-              <div style="display:flex;justify-content:flex-end;margin-top:10px">
-                <div class="sectors-tpl-quickload">
-                  <span class="tpl-label">Modelos prontos:</span>
-                  <button type="button" class="btn-text-tpl" onclick="loadTpl('saude','tabulacoes')">${ico('heart-pulse')} Modelo Saúde</button>
-                  <span class="tpl-sep">•</span>
-                  <button type="button" class="btn-text-tpl" onclick="loadTpl('generico','tabulacoes')">${ico('building-2')} Modelo Geral</button>
-                </div>
-              </div>
-            `}
+            </div>
           `
         })}
+
         ${subCard({
           kicker: "Pausas",
           title: "Motivos de Pausa dos Atendentes *",
           desc: "Status que os agentes escolhem quando precisam se ausentar das filas de atendimento.",
           content: `
             ${tagBox("classif.pausas", "Digite o motivo de pausa e pressione Enter...")}
-            ${!c.pausas.length ? `
-              <div class="empty-sectors-tpl-row" style="justify-content:flex-start;margin-top:10px">
-                <span class="tpl-note">Ou preencha com um modelo pronto:</span>
-                <button type="button" class="btn-tpl-pill" onclick="loadTpl('saude','pausas')">${ico('heart-pulse')} Modelo Saúde</button>
-                <button type="button" class="btn-tpl-pill" onclick="loadTpl('generico','pausas')">${ico('building-2')} Modelo Geral</button>
+            <div style="display:flex;justify-content:flex-end;margin-top:10px">
+              <div class="sectors-tpl-quickload">
+                <span class="tpl-label">Modelos prontos:</span>
+                <button type="button" class="btn-text-tpl" onclick="loadTpl('saude','pausas')">${ico('heart-pulse')} Modelo Saúde</button>
+                <span class="tpl-sep">•</span>
+                <button type="button" class="btn-text-tpl" onclick="loadTpl('generico','pausas')">${ico('building-2')} Modelo Geral</button>
               </div>
-            ` : `
-              <div style="display:flex;justify-content:flex-end;margin-top:10px">
-                <div class="sectors-tpl-quickload">
-                  <span class="tpl-label">Modelos prontos:</span>
-                  <button type="button" class="btn-text-tpl" onclick="loadTpl('saude','pausas')">${ico('heart-pulse')} Modelo Saúde</button>
-                  <span class="tpl-sep">•</span>
-                  <button type="button" class="btn-text-tpl" onclick="loadTpl('generico','pausas')">${ico('building-2')} Modelo Geral</button>
-                </div>
-              </div>
-            `}
+            </div>
           `
         })}
+
         ${subCard({
-          kicker: "Pesquisa",
-          title: "Pesquisa de Satisfação (CSAT / NPS)",
-          desc: "Envio automático de questionário de avaliação para o cliente após a conclusão do atendimento.",
+          kicker: "Pesquisa de Satisfação",
+          title: "Pesquisa de Satisfação (Menu Interativo no Formato WhatsApp)",
+          desc: "Configure as regras de envio e personalize o texto da pergunta e as opções interativas com visualização de tela do WhatsApp em tempo real.",
           content: `
             <div class="opts" style="margin-bottom:14px">
-              <button class="opt" aria-pressed="${c.pesquisa}" onclick="S.classif.pesquisa=true;draw()">Aplicar pesquisa de satisfação</button>
-              <button class="opt" aria-pressed="${!c.pesquisa}" onclick="S.classif.pesquisa=false;draw()">Não aplicar pesquisa</button>
+              <button type="button" class="opt" aria-pressed="${c.pesquisa}" onclick="S.classif.pesquisa=true;draw()">Aplicar pesquisa de satisfação</button>
+              <button type="button" class="opt" aria-pressed="${!c.pesquisa}" onclick="S.classif.pesquisa=false;draw()">Não aplicar pesquisa</button>
             </div>
+
             ${c.pesquisa ? `
-              <div class="f"><label>Frequência de Envio</label><div class="opts">
-                <button class="opt sm" aria-pressed="${c.pesquisaQuando === 'sempre'}" onclick="S.classif.pesquisaQuando='sempre';draw()">A cada encerramento</button>
-                <button class="opt sm" aria-pressed="${c.pesquisaQuando === 'amostra'}" onclick="S.classif.pesquisaQuando='amostra';draw()">Por amostragem (20%)</button>
-                <button class="opt sm" aria-pressed="${c.pesquisaQuando === '24h'}" onclick="S.classif.pesquisaQuando='24h';draw()">Máximo 1x por dia por cliente</button>
-              </div></div>
-              <div class="f"><label>Mensagem da Pesquisa</label><textarea data-path="classif.pesquisaTexto" style="min-height:100px">${esc(c.pesquisaTexto)}</textarea>
-              <span class="hint">Texto personalizável com escala numérica de 1 a 5 ou 0 a 10.</span></div>
+              <div class="f" style="margin-bottom:14px">
+                <label>Frequência de Envio</label>
+                <div class="opts">
+                  <button type="button" class="opt sm" aria-pressed="${c.pesquisaQuando === 'sempre'}" onclick="S.classif.pesquisaQuando='sempre';draw()">A cada encerramento de ticket</button>
+                  <button type="button" class="opt sm" aria-pressed="${c.pesquisaQuando === '7dias'}" onclick="S.classif.pesquisaQuando='7dias';draw()">Máximo 1x a cada 7 dias por cliente</button>
+                  <button type="button" class="opt sm" aria-pressed="${c.pesquisaQuando === '24h'}" onclick="S.classif.pesquisaQuando='24h';draw()">Máximo 1x por dia por cliente</button>
+                  <button type="button" class="opt sm" aria-pressed="${c.pesquisaQuando === 'amostra'}" onclick="S.classif.pesquisaQuando='amostra';draw()">Por amostragem (20%)</button>
+                </div>
+              </div>
+
+              <!-- Editor e Preview WhatsApp -->
+              <div class="wa-survey-builder">
+                <div class="wa-survey-editor">
+                  <h4 class="wa-survey-subhead">${ico('edit-3')} Configuração dos Textos e Opções</h4>
+                  <div class="f">
+                    <label>Texto da Pergunta / Enunciado</label>
+                    <input type="text" value="${esc(c.pesquisaPergunta || 'Como você avalia o nosso atendimento hoje?')}" oninput="setPesquisaPergunta(this.value)" placeholder="Digite a pergunta da pesquisa...">
+                  </div>
+
+                  <div class="f">
+                    <label>Opções de Resposta do Menu (Botões / Itens):</label>
+                    <div class="wa-survey-options-list">
+                      ${(c.pesquisaOpcoes || []).map((op, oi) => `
+                        <div class="wa-survey-opt-row">
+                          <span class="wa-survey-opt-num">${oi + 1}</span>
+                          <input type="text" value="${esc(op.rotulo)}" placeholder="Ex.: 1 - Excelente" oninput="setPesquisaOpcao(${oi}, this.value)">
+                          <button type="button" class="rowdel" title="Excluir opção" onclick="delPesquisaOpcao(${oi})">×</button>
+                        </div>
+                      `).join("")}
+                    </div>
+                    <button type="button" class="btn btn-s" style="margin-top:8px" onclick="addPesquisaOpcao()">
+                      ${ico('plus')} Adicionar Opção
+                    </button>
+                  </div>
+                </div>
+
+                <div class="wa-survey-preview-wrap">
+                  <div class="wa-preview-header">
+                    <span class="wa-preview-badge">${ico('message-circle')} Prévia no WhatsApp</span>
+                    <span class="wa-preview-status">Tempo Real</span>
+                  </div>
+                  <div class="wa-chat-container">
+                    <div class="wa-msg-balloon">
+                      <div class="wa-msg-body">
+                        <p class="wa-msg-question">${esc(c.pesquisaPergunta || 'Como você avalia o nosso atendimento hoje?')}</p>
+                        <div class="wa-msg-btn-group">
+                          ${(c.pesquisaOpcoes || []).map(op => `
+                            <div class="wa-msg-btn-item">
+                              ${esc(op.rotulo)}
+                            </div>
+                          `).join("")}
+                        </div>
+                      </div>
+                      <div class="wa-msg-meta">
+                        <span>12:00</span>
+                        <span class="wa-checks">✓✓</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ` : ""}
           `
         })}
+
         ${nav()}
       </div>`;
     }
   },
 
+  /* ------------------------------------------------------------
+     4. CANAIS DE ATENDIMENTO
+     ------------------------------------------------------------ */
   {
-    id: "whats", nome: "WhatsApp", when: () => has("WhatsApp"),
+    id: "canais",
+    nome: "Canais de Atendimento",
+    when: () => S.contrato.canais && S.contrato.canais.length > 0,
     check() {
-      const p = [], w = S.whats;
-      if (!/^\d{10,11}$/.test((w.numero || "").replace(/\D/g, ""))) p.push("Número do WhatsApp");
-      if (!w.emUso) p.push("Informar se o número já está em uso");
-      if (!w.m01) p.push("Mensagem de recepção (M01)");
-      if (!w.m02) p.push("Mensagem fora do horário (M02)");
-      if (w.emUso === "sim" && !Object.values(w.pre).every(Boolean)) p.push("Pré-requisitos do número em uso");
+      const p = [], w = S.whats, v = S.voz, cc = S.canaisConfig;
+      if (has("WhatsApp")) {
+        if (!/^\d{10,11}$/.test((w.numero || "").replace(/\D/g, ""))) p.push("Número do WhatsApp");
+        if (!w.emUso) p.push("Informar se o número de WhatsApp está em uso");
+      }
+      if (has("Voz")) {
+        if (!v.operadora) p.push("Operadora de telefonia");
+        if (!v.entroncamento) p.push("Tipo de entroncamento de voz");
+      }
+      if (has("Webchat") && !cc.webchat.url) {
+        p.push("URL do site para instalação do Webchat");
+      }
+      if (has("Telegram") && !cc.telegram.botToken) {
+        p.push("Token do bot do Telegram");
+      }
       return p;
     },
     render() {
-      const w = S.whats;
+      const w = S.whats, v = S.voz, cc = S.canaisConfig, b = S.bot;
       const pend = this.check();
+      const setOpts = val => `<option value="">Escolha o setor…</option>` + S.operacao.setores.map(s => `<option value="${esc(s.nome)}" ${val === s.nome ? "selected" : ""}>${esc(s.nome)} · DAC ${esc(s.dac)}</option>`).join("");
+
       return `<div class="card">
         ${renderBlockHeader({
-          badge: "WhatsApp Oficial (WABA)",
-          title: "Configuração do Canal WhatsApp",
-          desc: "Número corporativo oficial, mensagens automáticas de recepção e diretrizes para a virada e ativação do canal.",
+          badge: "Canais Digitais & Telefonia",
+          title: "Configuração dos Canais de Atendimento",
+          desc: "Preencha os dados técnicos e operacionais específicos de cada canal contratado no Bloco Contrato.",
           pendList: pend
         })}
-        ${subCard({
-          kicker: "Homologação",
-          title: "Número Oficial e Status Atual *",
-          desc: "Informe o número que será homologado na API Oficial da Meta / Orpen.",
+
+        ${has("WhatsApp") ? subCard({
+          kicker: "WhatsApp Oficial (WABA)",
+          title: "Canal WhatsApp Oficial *",
+          desc: "Configuração da linha corporativa homologada na API Oficial da Meta / ORPEN.",
           content: `
             <div class="grid2">
-              ${fi("Número WhatsApp (DDD + Número)", "whats.numero", "tel", "51 3000-0000")}
+              ${fi("Número WhatsApp (DDD + Número) *", "whats.numero", "tel", "51 3000-0000")}
               <div class="f"><label>Este número já está em uso ativo no WhatsApp? <span class="req">*</span></label><div class="opts">
-                <button class="opt" aria-pressed="${w.emUso === 'nao'}" onclick="S.whats.emUso='nao';draw()">Não, é um número novo</button>
-                <button class="opt" aria-pressed="${w.emUso === 'sim'}" onclick="S.whats.emUso='sim';draw()">Sim, já está em uso</button>
+                <button type="button" class="opt" aria-pressed="${w.emUso === 'nao'}" onclick="S.whats.emUso='nao';draw()">Não, é um número novo</button>
+                <button type="button" class="opt" aria-pressed="${w.emUso === 'sim'}" onclick="S.whats.emUso='sim';draw()">Sim, já está em uso</button>
               </div></div>
             </div>
             ${w.emUso === "sim" ? `
               <div class="note warn" style="margin-top:12px"><b>Atenção para a virada do número:</b> Na data de ativação a conta atual do celular é excluída para vinculação na API Oficial. Verifique os pré-requisitos:</div>
-              ${[["backup", "Fazer backup de segurança das conversas", "O histórico anterior não migra para a API."],
-                 ["grupos", "Sair de todos os grupos do número", "Grupos não são suportados na API Oficial da Meta."],
-                 ["exclusao", "Excluir a conta do WhatsApp na data combinada", "Realizado em conjunto com o suporte ORPEN."],
-                 ["contatos", "Exportar a agenda de contatos", "Permite importação em massa na plataforma."]]
+              ${[["backup", "Fazer backup de segurança das conversas", "O histórico anterior não migra para a API Oficial."],
+                 ["exclusao", "Excluir a conta do WhatsApp na data combinada", "Realizado em conjunto com a equipe de suporte da ORPEN."]]
                 .map(([k, t, s]) => `<div class="pre">
                   <input type="checkbox" ${w.pre[k] ? "checked" : ""} onchange="S.whats.pre.${k}=this.checked;draw()">
                   <div><p>${t}</p><p class="sub">${s}</p></div>
@@ -564,68 +688,12 @@ const BLOCKS = [
                 <input type="date" value="${esc(w.dataAtivacao)}" oninput="S.whats.dataAtivacao=this.value;soft()" style="max-width:220px"></div>
             ` : ""}
           `
-        })}
-        ${subCard({
-          kicker: "Respostas Automáticas",
-          title: "Mensagens Automáticas de Atendimento *",
-          desc: "Mensagens de saudação inicial dentro e fora do horário de expediente.",
-          content: `
-            <div class="f">
-              <label>M01 · Mensagem de Recepção Dentro do Horário <span class="req">*</span></label>
-              <textarea data-path="whats.m01" placeholder="Olá! Seja bem-vindo à nossa Central de Atendimento...">${esc(w.m01)}</textarea>
-              <div style="display:flex;justify-content:flex-end;margin-top:6px">
-                <button type="button" class="btn-text-tpl" onclick="sugerirM01()">${ico('sparkles')} Montar sugestão a partir dos setores</button>
-              </div>
-            </div>
-            <div class="f">
-              <label>M02 · Mensagem Fora do Horário de Atendimento <span class="req">*</span></label>
-              <textarea data-path="whats.m02" placeholder="Nosso horário de atendimento é de segunda a sexta...">${esc(w.m02)}</textarea>
-              <div style="display:flex;justify-content:flex-end;margin-top:6px">
-                <button type="button" class="btn-text-tpl" onclick="sugerirM02()">${ico('sparkles')} Montar sugestão a partir do horário</button>
-              </div>
-            </div>
-            <div class="grid2">
-              <div class="f"><label>Ação fora do horário</label><div class="opts">
-                <button class="opt sm" aria-pressed="${w.foraHorario === 'fila'}" onclick="S.whats.foraHorario='fila';draw()">Guardar na fila p/ dia seguinte</button>
-                <button class="opt sm" aria-pressed="${w.foraHorario === 'encerra'}" onclick="S.whats.foraHorario='encerra';draw()">Encerrar após a mensagem</button>
-              </div></div>
-              <div class="f"><label>Avisar encerramento ao cliente?</label><div class="opts">
-                <button class="opt sm" aria-pressed="${w.avisarFim}" onclick="S.whats.avisarFim=true;draw()">Sim</button>
-                <button class="opt sm" aria-pressed="${!w.avisarFim}" onclick="S.whats.avisarFim=false;draw()">Não</button>
-              </div></div>
-            </div>
-            ${w.avisarFim ? `<div class="f" style="margin-top:10px"><label>M03 · Mensagem de Atendimento Finalizado</label><textarea data-path="whats.m03">${esc(w.m03)}</textarea></div>` : ""}
-          `
-        })}
-        ${nav()}
-      </div>`;
-    }
-  },
+        }) : ""}
 
-  {
-    id: "bot", nome: "Menu do bot", when: () => has("WhatsApp"),
-    check() {
-      const p = [];
-      if (!S.bot.opcoes.length) p.push("Montar o menu do chatbot");
-      if (S.bot.opcoes.some(o => !o.rotulo || (o.acao === "transferir" && !o.destino))) p.push("Opção do menu sem rótulo ou destino");
-      return p;
-    },
-    render() {
-      const b = S.bot;
-      const pend = this.check();
-      const setOpts = v => `<option value="">Escolha o setor…</option>` + S.operacao.setores.map(s => `<option value="${esc(s.nome)}" ${v === s.nome ? "selected" : ""}>${esc(s.nome)} · DAC ${esc(s.dac)}</option>`).join("");
-      return `<div class="card">
-        ${renderBlockHeader({
-          badge: "Árvore de Atendimento",
-          title: "Menu Interativo do Chatbot (URA)",
+        ${has("WhatsApp") ? subCard({
+          kicker: "Menu do Bot (WhatsApp)",
+          title: "Menu Interativo do Chatbot (URA de WhatsApp)",
           desc: "Estruture o menu de autoatendimento que o cliente visualiza ao entrar em contato pelo WhatsApp.",
-          pendList: pend
-        })}
-        ${!S.operacao.setores.length ? `<div class="note warn">Cadastre os setores primeiro na aba Operação para vincular as transferências.</div>` : ""}
-        ${subCard({
-          kicker: "Navegação",
-          title: "Opções do Menu Principal",
-          desc: "Cada opção pode transferir para uma fila humana (DAC), abrir um submenu de perguntas ou responder com texto pronto.",
           actions: `<button type="button" class="btn btn-p" onclick="addOpcao()">${ico('plus')} Adicionar Opção</button>`,
           content: b.opcoes.length ? `
             <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
@@ -638,7 +706,7 @@ const BLOCKS = [
                   <div class="opts" style="margin-bottom:9px">
                     ${["transferir|Transferir para setor", "submenu|Abrir submenu", "mensagem|Responder e encerrar"].map(x => {
                       const [v, l] = x.split("|");
-                      return `<button class="opt sm" aria-pressed="${o.acao === v}" onclick="S.bot.opcoes[${i}].acao='${v}';draw()">${l}</button>`;
+                      return `<button type="button" class="opt sm" aria-pressed="${o.acao === v}" onclick="S.bot.opcoes[${i}].acao='${v}';draw()">${l}</button>`;
                     }).join("")}
                   </div>
                   ${o.acao === "transferir" ? `<select onchange="S.bot.opcoes[${i}].destino=this.value;soft()">${setOpts(o.destino)}</select>` : ""}
@@ -659,575 +727,163 @@ const BLOCKS = [
                 </div>
               `).join("")}
             </div>
-            ${S.operacao.setores.length ? `
-              <div style="display:flex;justify-content:flex-end;margin-top:14px">
-                <div class="sectors-tpl-quickload">
-                  <span class="tpl-label">Atalho:</span>
-                  <button type="button" class="btn-text-tpl" onclick="botFromSetores()">${ico('zap')} Gerar menu a partir dos setores</button>
-                </div>
-              </div>
-            ` : ""}
           ` : `
             <div class="empty-sectors-card">
               <h4 class="empty-sectors-title">Nenhuma opção no menu do chatbot</h4>
               <p class="empty-sectors-desc">Adicione opções manualmente pelo botão acima ou gere automaticamente as opções a partir dos setores configurados.</p>
               ${S.operacao.setores.length ? `
                 <div class="empty-sectors-tpl-row">
-                  <span class="tpl-note">Ou monte o menu em um clique:</span>
                   <button type="button" class="btn-tpl-pill" onclick="botFromSetores()">${ico('zap')} Gerar a partir dos setores</button>
                 </div>
               ` : ""}
             </div>
           `
-        })}
-        ${b.opcoes.length ? subCard({
-          kicker: "Simulação",
-          title: "Prévia Visual da URA no WhatsApp",
-          desc: "Simulação de como a mensagem de boas-vindas com o menu interativo será exibida.",
-          content: `<div class="note info" style="white-space:pre-wrap;font-family:'IBM Plex Sans';background:#fff;border:1.5px solid var(--color-border)">${esc(previewBot())}</div>`
         }) : ""}
-        ${nav()}
-      </div>`;
-    }
-  },
 
-  {
-    id: "voz", nome: "Voz", when: () => has("Voz"),
-    check() {
-      const p = [], v = S.voz;
-      if (!v.operadora) p.push("Operadora de telefonia");
-      if (!v.entroncamento) p.push("Tipo de entroncamento");
-      if (!v.unica) p.push("Se a ORPEN será a única central");
-      if (!v.ura) p.push("Se haverá URA");
-      if (v.ura === "nao" && !v.destinoSemUra) p.push("Destino das chamadas de entrada");
-      if (!v.agentesWeb) p.push("Quantidade de agentes de voz");
-      return p;
-    },
-    render() {
-      const v = S.voz;
-      const pend = this.check();
-      return `<div class="card">
-        ${renderBlockHeader({
-          badge: "Telefonia & Voz",
-          title: "Estrutura de Telefonia e Entroncamento",
+        ${has("Voz") ? subCard({
+          kicker: "Telefonia & Voz",
+          title: "Estrutura de Telefonia e Entroncamento SIP *",
           desc: "Defina como as linhas telefônicas da operadora serão conectadas à central Orpen e a estrutura da URA de voz.",
-          pendList: pend
-        })}
-        ${subCard({
-          kicker: "Operadora & SIP",
-          title: "Operadora e Entroncamento SIP *",
-          desc: "Conexão com a sua operadora de telefonia.",
           content: `
             <div class="grid2">
-              ${fi("Operadora de Telefonia Atual", "voz.operadora", "text", "Ex.: Vivo, Algar, Directcall, Embratel")}
+              ${fi("Operadora de Telefonia Atual *", "voz.operadora", "text", "Ex.: Vivo, Algar, Directcall, Embratel")}
               ${fi("Canais Simultâneos Contratados", "voz.simultaneas", "text", "Ex.: 15 canais")}
             </div>
             <div class="f"><label>Tipo de Entroncamento com a ORPEN <span class="req">*</span></label><div class="opts">
-              <button class="opt" aria-pressed="${v.entroncamento === 'sip'}" onclick="S.voz.entroncamento='sip';draw()">SIP Trunk Direto da Operadora</button>
-              <button class="opt" aria-pressed="${v.entroncamento === 'legada'}" onclick="S.voz.entroncamento='legada';draw()">SIP com PABX / Central Existente</button>
-              <button class="opt" aria-pressed="${v.entroncamento === 'nsei'}" onclick="S.voz.entroncamento='nsei';draw()">Não sei — Apoio técnico ORPEN</button>
+              <button type="button" class="opt" aria-pressed="${v.entroncamento === 'sip'}" onclick="S.voz.entroncamento='sip';draw()">SIP Trunk Direto da Operadora</button>
+              <button type="button" class="opt" aria-pressed="${v.entroncamento === 'legada'}" onclick="S.voz.entroncamento='legada';draw()">SIP com PABX / Central Existente</button>
+              <button type="button" class="opt" aria-pressed="${v.entroncamento === 'nsei'}" onclick="S.voz.entroncamento='nsei';draw()">Não sei — Apoio técnico ORPEN</button>
             </div></div>
-            ${v.entroncamento === 'nsei' ? `<div class="note warn">Agendaremos uma call técnica de 30 minutos com seu suporte de TI e a operadora.</div>` : ""}
-            <div class="f" style="margin-top:12px"><label>A ORPEN será a central telefônica única da empresa? <span class="req">*</span></label><div class="opts">
-              <button class="opt" aria-pressed="${v.unica === 'sim'}" onclick="S.voz.unica='sim';draw()">Sim, central única</button>
-              <button class="opt" aria-pressed="${v.unica === 'nao'}" onclick="S.voz.unica='nao';draw()">Não, coexistirá com outra central</button>
+            <div class="f" style="margin-top:12px"><label>Haverá URA de atendimento automático? <span class="req">*</span></label><div class="opts">
+              <button type="button" class="opt" aria-pressed="${v.ura === 'sim'}" onclick="S.voz.ura='sim';draw()">Sim, terá URA de voz</button>
+              <button type="button" class="opt" aria-pressed="${v.ura === 'nao'}" onclick="S.voz.ura='nao';draw()">Não, toque direto nas filas</button>
             </div></div>
-            ${v.unica === 'nao' ? `<div class="f" style="margin-top:10px">${fi("Qual central permanece e qual o escopo", "voz.coexistencia", "text", "Ex.: PABX legado para ramais administrativos")}</div>` : ""}
-          `
-        })}
-        ${subCard({
-          kicker: "URA & Dimensionamento",
-          title: "URA de Voz e Dimensionamento de Agentes *",
-          desc: "Roteamento das chamadas de entrada e quantidade de posições de atendimento.",
-          content: `
-            <div class="f"><label>Haverá URA de atendimento automático? <span class="req">*</span></label><div class="opts">
-              <button class="opt" aria-pressed="${v.ura === 'sim'}" onclick="S.voz.ura='sim';draw()">Sim, terá URA de voz</button>
-              <button class="opt" aria-pressed="${v.ura === 'nao'}" onclick="S.voz.ura='nao';draw()">Não, toque direto nas filas</button>
-            </div></div>
-            ${v.ura === 'sim' ? `<div class="f"><label>Profundidade da URA</label><div class="opts">
-              ${["1|1 Nível (Menu simples)", "2|2 Níveis (Com submenus)", "3|3 ou mais níveis"].map(x => {
-                const [k, l] = x.split("|");
-                return `<button class="opt sm" aria-pressed="${v.uraNiveis === k}" onclick="S.voz.uraNiveis='${k}';draw()">${l}</button>`;
-              }).join("")}
-            </div></div>` : ""}
-            ${v.ura === 'nao' ? fi("Para qual fila direcionar as chamadas", "voz.destinoSemUra", "text", "Ex.: Fila Recepção Geral") : ""}
             <div class="grid2" style="margin-top:12px">
               ${fi("Agentes de Voz Web (Fullchannel)", "voz.agentesWeb", "text", "Ex.: 15")}
               ${fi("Ramais Comuns (Aparelhos IP)", "voz.ramais", "text", "Ex.: 20")}
             </div>
             <div class="f" style="margin-top:12px"><label>Recursos Avançados de Telefonia</label><div class="opts">
-              <button class="opt sm" aria-pressed="${v.callback}" onclick="S.voz.callback=!S.voz.callback;draw()">Callback (Retorno de chamada na fila)</button>
-              <button class="opt sm" aria-pressed="${v.whatsback}" onclick="S.voz.whatsback=!S.voz.whatsback;draw()">Whatsback (Transbordo p/ WhatsApp)</button>
+              <button type="button" class="opt sm" aria-pressed="${v.callback}" onclick="S.voz.callback=!S.voz.callback;draw()">Callback (Retorno na fila)</button>
+              <button type="button" class="opt sm" aria-pressed="${v.whatsback}" onclick="S.voz.whatsback=!S.voz.whatsback;draw()">Whatsback (Transbordo WhatsApp)</button>
             </div></div>
           `
-        })}
+        }) : ""}
+
+        ${has("Webchat") ? subCard({
+          kicker: "Webchat para Site",
+          title: "Requisitos de Instalação do Webchat *",
+          desc: "Widget de atendimento online para inserção em seu website institucional ou portal de clientes.",
+          content: `
+            <div class="grid2">
+              ${fi("URL / Domínio do Site *", "canaisConfig.webchat.url", "text", "https://suaempresa.com.br")}
+              <div class="f">
+                <label>Cor Primária do Chat (HEX)</label>
+                <div style="display:flex;gap:10px;align-items:center">
+                  <input type="color" value="${esc(cc.webchat.corPrimaria || '#0A2540')}" onchange="S.canaisConfig.webchat.corPrimaria=this.value;soft()" style="width:46px;height:38px;padding:2px;cursor:pointer;border-radius:6px;border:1.5px solid var(--color-border)">
+                  <input type="text" value="${esc(cc.webchat.corPrimaria || '#0A2540')}" oninput="S.canaisConfig.webchat.corPrimaria=this.value;soft()" placeholder="#0A2540" style="font-family:var(--font-mono)">
+                </div>
+              </div>
+            </div>
+            <div class="grid2" style="margin-top:12px">
+              <div class="f"><label>Posição do Widget na Tela</label><div class="opts">
+                <button type="button" class="opt sm" aria-pressed="${cc.webchat.posicao === 'bottom-right'}" onclick="S.canaisConfig.webchat.posicao='bottom-right';draw()">Canto Inferior Direito</button>
+                <button type="button" class="opt sm" aria-pressed="${cc.webchat.posicao === 'bottom-left'}" onclick="S.canaisConfig.webchat.posicao='bottom-left';draw()">Canto Inferior Esquerdo</button>
+              </div></div>
+              <div class="f"><label>Formulário Pré-chat (Coleta de Dados)</label><div class="opts">
+                <button type="button" class="opt sm" aria-pressed="${cc.webchat.preChat}" onclick="S.canaisConfig.webchat.preChat=true;draw()">Sim, pedir Nome e E-mail</button>
+                <button type="button" class="opt sm" aria-pressed="${!cc.webchat.preChat}" onclick="S.canaisConfig.webchat.preChat=false;draw()">Não, iniciar conversa direto</button>
+              </div></div>
+            </div>
+            <div class="f" style="margin-top:12px">
+              ${fi("URL da Logo ou Avatar do Chat (Opcional)", "canaisConfig.webchat.logoUrl", "text", "https://suaempresa.com.br/logo.png")}
+            </div>
+            <div class="f" style="margin-top:12px">
+              ${fi("Mensagem Inicial de Boas-Vindas", "canaisConfig.webchat.mensagemBoasVindas", "text", "Olá! Como podemos te ajudar hoje?")}
+            </div>
+          `
+        }) : ""}
+
+        ${has("Teams") ? subCard({
+          kicker: "Microsoft Teams",
+          title: "Integração com Microsoft Teams *",
+          desc: "Conecte a central de atendimento diretamente ao Microsoft 365 e canais corporativos do Teams.",
+          content: `
+            <div class="opts" style="margin-bottom:14px">
+              <button type="button" class="opt sm" aria-pressed="${!cc.teams.suporteTecnico}" onclick="S.canaisConfig.teams.suporteTecnico=false;draw()">Preencher Chaves do Azure</button>
+              <button type="button" class="opt sm" aria-pressed="${cc.teams.suporteTecnico}" onclick="S.canaisConfig.teams.suporteTecnico=true;draw()">Solicitar Apoio Técnico ORPEN</button>
+            </div>
+            ${!cc.teams.suporteTecnico ? `
+              <div class="grid2">
+                ${fi("Tenant ID (Diretório M365)", "canaisConfig.teams.tenantId", "text", "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")}
+                ${fi("Application (Client) ID", "canaisConfig.teams.appId", "text", "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")}
+                ${fi("Client Secret (Valor do Segredo)", "canaisConfig.teams.clientSecret", "password", "Segredo gerado no Azure")}
+                ${fi("Nome da Equipe / Canal de Atendimento", "canaisConfig.teams.canalPadrao", "text", "Ex.: Atendimento Suporte")}
+              </div>
+            ` : `
+              <div class="note info">
+                <b>Apoio Técnico da ORPEN Ativado:</b> Não se preocupe caso não tenha acesso de administrador ao portal Azure. Nossa equipe de engenharia agendará uma sessão de 15 minutos com o seu administrador de TI para homologar o aplicativo na organização.
+              </div>
+            `}
+          `
+        }) : ""}
+
+        ${has("Telegram") ? subCard({
+          kicker: "Telegram Bot",
+          title: "Configuração do Bot no Telegram *",
+          desc: "Crie um bot oficial no Telegram para receber atendimentos centralizados na plataforma.",
+          content: `
+            <div class="grid2">
+              ${fi("Nome de Usuário do Bot (@username) *", "canaisConfig.telegram.botUsername", "text", "Ex.: @meu_atendimento_bot")}
+              ${fi("Token de Acesso da API (BotFather) *", "canaisConfig.telegram.botToken", "password", "123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ")}
+            </div>
+            <div class="note info" style="margin-top:12px">
+              <b>Como gerar o token em 3 passos:</b><br>
+              1. No Telegram, procure por <b>@BotFather</b> e envie o comando <code>/newbot</code>.<br>
+              2. Digite o nome de exibição e depois o @username do bot (obrigatoriamente terminado em <i>bot</i>).<br>
+              3. O BotFather fornecerá o token de API. Cole-o no campo acima.
+            </div>
+          `
+        }) : ""}
+
+        ${has("Instagram") ? subCard({
+          kicker: "Instagram Direct",
+          title: "Integração Oficial com Instagram Direct",
+          desc: "Atendimento de mensagens diretas e comentários do perfil oficial da empresa.",
+          content: `
+            <div class="grid2">
+              ${fi("Perfil do Instagram (@perfil)", "canaisConfig.instagram.perfil", "text", "@suaempresa")}
+              ${fi("ID do Meta Business Manager (Opcional)", "canaisConfig.instagram.metaBusinessId", "text", "Ex.: 123456789012345")}
+            </div>
+            <span class="hint" style="margin-top:8px;display:block">
+              O perfil precisa ser uma <b>Conta Comercial / Profissional</b> vinculada a uma Página do Facebook.
+            </span>
+          `
+        }) : ""}
+
+        ${has("Facebook") ? subCard({
+          kicker: "Facebook Messenger",
+          title: "Integração com Facebook Messenger",
+          desc: "Receba mensagens da página do Facebook diretamente na fila dos atendentes.",
+          content: `
+            <div class="grid2">
+              ${fi("Nome da Página no Facebook", "canaisConfig.facebook.paginaNome", "text", "Ex.: Minha Empresa")}
+              ${fi("ID da Página (Page ID)", "canaisConfig.facebook.paginaId", "text", "Ex.: 1029384756")}
+            </div>
+          `
+        }) : ""}
+
         ${nav()}
       </div>`;
     }
   },
 
+  /* ------------------------------------------------------------
+     5. ASSISTENTE DE IA (VERSÃO 2)
+     ------------------------------------------------------------ */
   {
-    id: "ia", nome: "Assistente de IA", when: () => S.contrato.ia,
-    check() {
-      const p = [], a = S.ia;
-      if (!a.nome) p.push("Nome do assistente de IA");
-      if (!a.tom || !a.tom.length) p.push("Tom de voz da IA");
-      if (!a.habilidades) p.push("Tópicos que a IA resolve sozinha");
-      if (!a.topicosTransbordo || !a.topicosTransbordo.length) p.push("Assuntos de transbordo humano");
-      if (!a.restricoes) p.push("O que a IA está proibida de fazer (Restrições)");
-      if (!a.fluxosPreAtendimento || !a.fluxosPreAtendimento.length) p.push("Ao menos um fluxo de atendimento");
-      if ((a.fluxosPreAtendimento || []).some(f => !f.destino)) p.push("Fila de transferência de todos os fluxos");
-      if (!a.filaFallback) p.push("Fila de transbordo / contingência da IA");
-      return p;
-    },
-    render() {
-      const a = S.ia;
-      const pend = this.check();
-      const isChat = a._mode === "chat";
-      const etapa = a._etapa || 1;
-      const setOpts = v => `<option value="">Escolha a fila / DAC…</option>` + S.operacao.setores.map(s => `<option value="${esc(s.nome)}" ${v === s.nome ? "selected" : ""}>${esc(s.nome)} · DAC ${esc(s.dac)}</option>`).join("");
-      const idi = a.idiomas || ["Português (Brasil)"];
-      const fluxos = a.fluxosPreAtendimento || [];
-      const links = a.linksAdicionais || [];
-      const arquivos = a.arquivos || [];
-      const topicos = a.topicosTransbordo || [];
-
-      const subSteps = [
-        { n: 1, lbl: "1. Expectativas", full: "1. Alinhamento de Expectativas", desc: "Qual o objetivo central e qual indicador define o sucesso do assistente de IA." },
-        { n: 2, lbl: "2. Persona", full: "2. Identidade, Persona e Comunicação", desc: "Como o assistente se apresenta, tom de voz, idiomas e formatação das mensagens." },
-        { n: 3, lbl: "3. Contexto & Regras", full: "3. Contexto do Negócio e Objetivos", desc: "Defina o que a IA resolve com autonomia total, os assuntos de transbordo e o que ela nunca deve fazer." },
-        { n: 4, lbl: "4. Fluxos", full: "4. Fluxos de Atendimento", desc: "Roteiro de perguntas sequenciais (uma por vez) que a IA realiza para qualificar o atendimento antes de transferir ao atendente." },
-        { n: 5, lbl: "5. Inatividade", full: "5. Inatividade e Encerramento", desc: "Controle de tempo e ação quando o cliente para de responder." },
-        { n: 6, lbl: "6. Conhecimento", full: "6. Base de Conhecimento e Governança", desc: "Fontes de dados oficiais, procedimentos, arquivos anexos e responsáveis de contato." }
-      ];
-      const curStep = subSteps[etapa - 1] || subSteps[0];
-
-      let contentHtml = "";
-
-      if (isChat) {
-        contentHtml = renderAuditorChatBox();
-      } else if (etapa === 1) {
-        contentHtml = `
-          ${subCard({
-            kicker: "Alinhamento",
-            title: "Processo Principal a Otimizar *",
-            desc: "Descreva a rotina ou gargalo de atendimento que a IA deve absorver no WhatsApp e canais digitais.",
-            content: `
-              <div class="f">
-                ${fta("ia.processoOtimizar", "Ex.: Atendimento inicial no WhatsApp, esclarecimento de dúvidas repetitivas de convênios/preparo de exames e triagem prévia de agendamento antes de transferir para a equipe humana.")}
-                <div class="chip-row">
-                  <span class="chip-label">Sugestões rápidas:</span>
-                  <button type="button" class="btn-chip" onclick="appendIaField('ia.processoOtimizar','Reduzir o tempo de espera no WhatsApp e triar pacientes')">Triagem de Pacientes</button>
-                  <button type="button" class="btn-chip" onclick="appendIaField('ia.processoOtimizar','Qualificar leads comerciais e agendar demonstrações')">Qualificação de Leads</button>
-                  <button type="button" class="btn-chip" onclick="appendIaField('ia.processoOtimizar','Atendimento de dúvidas frequentes 24/7 sem sobrecarregar a recepção')">Atendimento 24/7</button>
-                </div>
-              </div>
-            `
-          })}
-
-          ${subCard({
-            kicker: "Performance & KPIs",
-            title: "Métricas de Sucesso e KPIs Desejados *",
-            desc: "Indicadores operacionais que definirão a performance e o retorno da implementação.",
-            content: `
-              <div class="f">
-                ${fta("ia.kpis", "Ex.: Taxa de resolução no 1º contato acima de 40%, redução do Tempo Médio de Espera (TME) em 50%, nota CSAT/NPS superior a 4.5 e zero transbordos sem qualificação prévia.")}
-              </div>
-            `
-          })}
-
-          <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1.5px solid var(--color-border)">
-            <button class="btn btn-s" onclick="prev()">← Bloco Anterior</button>
-            <div class="sp"></div>
-            <button class="btn btn-p" onclick="setIaSubStep(2)">Continuar: 2. Persona & Comunicação →</button>
-          </div>
-        `;
-      } else if (etapa === 2) {
-        contentHtml = `
-          ${subCard({
-            kicker: "Identidade",
-            title: "Identidade & Tom de Voz *",
-            desc: "Como o assistente virtual deve se comportar e dialogar com seus clientes.",
-            content: `
-              <div class="grid2">
-                ${fi("Nome do Assistente de IA", "ia.nome", "text", "Ex.: Luna, Ires, Sofia, Max")}
-                <div class="f"><label>Tamanho médio das respostas <span class="req">*</span></label><div class="opts">
-                  ${["curta|Curta (2 a 3 frases)", "media|Média (4 a 6 linhas)", "flexivel|Flexível"].map(x => {
-                    const [v, l] = x.split("|");
-                    return `<button class="opt sm" aria-pressed="${a.extensaoResp === v}" onclick="S.ia.extensaoResp='${v}';draw()">${l}</button>`;
-                  }).join("")}
-                </div></div>
-              </div>
-
-              <div class="f" style="margin-top:12px"><label>Tom de Voz <span class="req">*</span></label><div class="opts">
-                ${["Cordial e acolhedor", "Formal e institucional", "Direto e objetivo", "Técnico e consultivo"].map(t =>
-                  `<button class="opt sm" aria-pressed="${(a.tom || []).includes(t)}" onclick="togIaTom('${t}')">${t}</button>`).join("")}
-              </div></div>
-            `
-          })}
-
-          ${subCard({
-            kicker: "Comunicação",
-            title: "Idiomas e Formatação de Mensagens",
-            desc: "Linguagens suportadas e diretrizes de uso de emojis.",
-            content: `
-              <div class="f">
-                <label>Idiomas Falados pela IA</label>
-                <div class="opts" style="margin-bottom:8px">
-                  ${["Português (Brasil)", "Inglês", "Espanhol", "Francês"].map(lang =>
-                    `<button class="opt sm" aria-pressed="${idi.includes(lang)}" onclick="togIaIdioma('${lang}')">${lang}</button>`).join("")}
-                </div>
-                <input type="text" placeholder="Outro idioma — digite e pressione Enter para adicionar" onkeydown="if(event.key==='Enter'){event.preventDefault();addIaIdiomaCustom(this.value);this.value=''}">
-              </div>
-
-              <div class="grid2" style="margin-top:14px">
-                <div class="f"><label>Uso de Emojis</label><div class="opts">
-                  ${["nenhum|Sem emojis", "moderado|Moderado (máx 1)", "livre|Humanizado / Livre"].map(x => {
-                    const [v, l] = x.split("|");
-                    return `<button class="opt sm" aria-pressed="${a.emojiUso === v}" onclick="S.ia.emojiUso='${v}';draw()">${l}</button>`;
-                  }).join("")}
-                </div></div>
-                ${a.emojiUso !== "nenhum" ? fi("Emojis permitidos / restrições", "ia.emojisPermitidos", "text", "Ex.: Permitidos: 💙, 👋, 🏥, ✅ | Proibidos: ❤️, 😂") : ""}
-              </div>
-            `
-          })}
-
-          <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1.5px solid var(--color-border)">
-            <button class="btn btn-s" onclick="setIaSubStep(1)">← 1. Expectativas</button>
-            <div class="sp"></div>
-            <button class="btn btn-p" onclick="setIaSubStep(3)">Continuar: 3. Contexto & Regras →</button>
-          </div>
-        `;
-      } else if (etapa === 3) {
-        contentHtml = `
-          ${subCard({
-            kicker: "Autonomia",
-            title: "Autonomia Total (Resolução Direta) *",
-            desc: "Assuntos em que a IA responde e conclui a dúvida do cliente sem precisar de atendente humano.",
-            content: `
-              <div class="f">
-                ${fta("ia.habilidades", "Ex.:\n- Endereço e horários de funcionamento das unidades\n- Relação de convênios atendidos e planos aceitos\n- Orientações e preparos básicos de exames\n- Envio de links seguros para agendamento online")}
-                <span class="hint">Tópicos determinísticos com respostas baseadas exclusivamente na documentação oficial.</span>
-              </div>
-            `
-          })}
-
-          ${subCard({
-            kicker: "Transbordo",
-            title: "Assuntos de Transbordo Humano *",
-            desc: "Adicione os temas que exigem transferência para um atendente humano. Cada assunto gera automaticamente um fluxo na próxima etapa.",
-            content: `
-              <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-                ${topicos.map((topico, ti) => `
-                  <div class="step-item">
-                    <span class="step-num-badge">${ti + 1}</span>
-                    <input type="text" value="${esc(topico)}" placeholder="Ex.: Consultas e Agendamentos" oninput="setIaTopicoTransbordo(${ti}, this.value)">
-                    <button class="rowdel" title="Remover assunto" onclick="delIaTopicoTransbordo(${ti})">×</button>
-                  </div>
-                `).join("")}
-              </div>
-
-              <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-                <input type="text" id="novo_topico_input" placeholder="Digite um novo assunto e pressione Enter..." onkeydown="if(event.key==='Enter'){event.preventDefault();addIaTopicoTransbordo(this.value);this.value='';}">
-                <button type="button" class="btn btn-s" onclick="const inp=document.getElementById('novo_topico_input');if(inp.value.trim()){addIaTopicoTransbordo(inp.value.trim());inp.value='';}">+ Adicionar Assunto</button>
-              </div>
-
-              <div class="chip-row">
-                <span class="chip-label">Sugestões rápidas:</span>
-                <button type="button" class="btn-chip" onclick="addIaTopicoTransbordo('Consultas e Agendamentos')">Consultas e Agendamentos</button>
-                <button type="button" class="btn-chip" onclick="addIaTopicoTransbordo('Exames e Preparos')">Exames e Preparos</button>
-                <button type="button" class="btn-chip" onclick="addIaTopicoTransbordo('Remarcações e Cancelamentos')">Remarcações e Cancelamentos</button>
-                <button type="button" class="btn-chip" onclick="addIaTopicoTransbordo('Financeiro e Faturamento')">Financeiro e Faturamento</button>
-                <button type="button" class="btn-chip" onclick="addIaTopicoTransbordo('Cirurgias e Procedimentos')">Cirurgias e Procedimentos</button>
-              </div>
-            `
-          })}
-
-          ${subCard({
-            kicker: "Guardrails",
-            title: "Guardrails & Segurança Anti-Alucinação *",
-            desc: "Regras mandatárias de segurança jurídica, operacional e filtro anti-ruído.",
-            content: `
-              <div class="grid2">
-                <div class="f"><label>O que ela NUNCA deve fazer (Restrições Críticas) <span class="req">*</span></label>
-                  ${fta("ia.restricoes", "Ex.:\n- Proibido dar parecer médico, diagnósticos ou interpretar exames\n- Não confirmar cobertura sem consulta à operadora\n- Não prometer procedimentos cirúrgicos ou descontos fora da tabela")}
-                  <span class="hint">Blindagem contra alucinações e respostas imprecisas.</span>
-                </div>
-                <div class="f"><label>Assuntos Fora de Escopo (Filtro Anti-Ruído)</label>
-                  ${fta("ia.foraEscopo", "Ex.: Política, futebol, receitas caseiras, assuntos pessoais não relacionados à instituição.")}
-                  <span class="hint">A IA recusa educadamente assuntos sem relação com o negócio.</span>
-                </div>
-              </div>
-            `
-          })}
-
-          <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1.5px solid var(--color-border)">
-            <button class="btn btn-s" onclick="setIaSubStep(2)">← 2. Persona</button>
-            <div class="sp"></div>
-            <button class="btn btn-p" onclick="setIaSubStep(4)">Continuar: 4. Fluxos de Atendimento →</button>
-          </div>
-        `;
-      } else if (etapa === 4) {
-        contentHtml = `
-          ${!S.operacao.setores.length ? `<div class="note warn" style="margin-bottom:14px">Cadastre os setores no bloco de Horário e Filas para vinculá-los aqui como destinos de transbordo.</div>` : ""}
-          
-          ${subCard({
-            kicker: "Triagem Prévia",
-            title: "Fluxos de Qualificação e Triagem Prévia *",
-            desc: "Roteiro de perguntas sequenciais (uma por vez) que a IA realiza para qualificar a conversa antes de transferir ao setor correto.",
-            actions: `<button type="button" class="btn btn-p" onclick="addIaFluxo()">${ico('plus')} Adicionar Fluxo</button>`,
-            content: fluxos.length ? `
-              <div style="margin-bottom:16px">
-                ${fluxos.map((f, fi) => `
-                  <div class="flow-card">
-                    <div class="flow-card-head">
-                      <div style="display:flex;align-items:center;gap:10px;flex:1">
-                        <div style="flex:1">
-                          <label style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--color-muted);font-weight:700;margin-bottom:2px;display:block">Nome do Fluxo ${fi + 1}</label>
-                          <input type="text" class="flow-title-input" value="${esc(f.nome)}" placeholder="Ex.: Consultas, Exames, Remarcações, Financeiro" oninput="setIaFluxoNome(${fi}, this.value)">
-                        </div>
-                      </div>
-                      <button class="rowdel" title="Excluir fluxo inteiro" onclick="delIaFluxo(${fi})" style="font-size:18px;margin-top:14px">×</button>
-                    </div>
-
-                    <div style="margin-bottom:12px">
-                      <label style="font-size:11.5px;font-weight:600;color:var(--color-fg-2);margin-bottom:6px;display:block">Perguntas Sequenciais (coletadas uma a uma pela IA antes do transbordo):</label>
-                      ${(f.passos || []).map((step, pi) => `
-                        <div class="step-item">
-                          <span class="step-num-badge">${pi + 1}</span>
-                          <input type="text" value="${esc(step)}" placeholder="Ex.: Qual o CPF do paciente? / Qual o convênio?" oninput="setIaPasso(${fi}, ${pi}, this.value)">
-                          <button class="rowdel" title="Remover este passo" onclick="delIaPasso(${fi}, ${pi})">×</button>
-                        </div>
-                      `).join("")}
-                    </div>
-
-                    <button type="button" class="btn-add-step" onclick="addIaPasso(${fi})">
-                      ${ico('plus')} Adicionar Passo a este fluxo
-                    </button>
-
-                    <div style="margin-top:16px;padding:14px 16px;background:var(--color-surface-3);border-radius:8px;border:1px solid var(--color-border)">
-                      <label style="font-size:12px;font-weight:700;color:var(--color-brand-primary);display:flex;align-items:center;gap:6px;margin:0 0 4px">
-                        Fila de Destino da Transferência <span class="req">*</span>
-                      </label>
-                      <p style="font-size:11.5px;color:var(--color-muted);margin:0 0 8px">
-                        Para qual setor / fila humana o cliente será transferido automaticamente após responder a este fluxo?
-                      </p>
-                      <select onchange="setIaFluxoDestino(${fi}, this.value)" style="background:#fff;border:1.5px solid ${f.destino ? 'var(--color-border)' : 'var(--color-warning)'}">
-                        ${setOpts(f.destino)}
-                      </select>
-                      ${!f.destino ? `<span style="font-size:11.5px;color:var(--color-warning);margin-top:4px;display:block;font-weight:600">Atenção: Selecione a fila de transbordo para este fluxo para avançar.</span>` : ""}
-                    </div>
-                  </div>
-                `).join("")}
-              </div>
-              <div style="display:flex;justify-content:flex-end;margin-top:14px">
-                <div class="sectors-tpl-quickload">
-                  <span class="tpl-label">Modelos prontos:</span>
-                  <button type="button" class="btn-text-tpl" onclick="loadPreAtendSaude()">${ico('heart-pulse')} Modelo Saúde</button>
-                  <span class="tpl-sep">•</span>
-                  <button type="button" class="btn-text-tpl" onclick="loadPreAtendComercial()">${ico('briefcase')} Modelo Comercial</button>
-                </div>
-              </div>
-            ` : `
-              <div class="empty-sectors-card">
-                <h4 class="empty-sectors-title">Nenhum fluxo de qualificação cadastrado</h4>
-                <p class="empty-sectors-desc">Adicione um fluxo personalizado pelo botão acima ou preencha com um modelo pronto.</p>
-                <div class="empty-sectors-tpl-row">
-                  <span class="tpl-note">Ou preencha com um modelo pronto:</span>
-                  <button type="button" class="btn-tpl-pill" onclick="loadPreAtendSaude()">${ico('heart-pulse')} Modelo Saúde</button>
-                  <button type="button" class="btn-tpl-pill" onclick="loadPreAtendComercial()">${ico('briefcase')} Modelo Comercial</button>
-                </div>
-              </div>
-            `
-          })}
-
-          ${subCard({
-            kicker: "Contingência",
-            title: "Fila de Contingência & Fallback (Catch-All) *",
-            desc: "Destino padrão caso o cliente fique fora dos fluxos previstos ou a IA não entenda a solicitação.",
-            content: `
-              <div class="grid2">
-                <div class="f">
-                  <label>Fila de transbordo por falha de entendimento <span class="req">*</span></label>
-                  <select onchange="S.ia.filaFallback=this.value;soft()" style="background:#fff">${setOpts(a.filaFallback)}</select>
-                </div>
-                <div class="f">
-                  <label>Tentativas sem entender antes de transferir</label>
-                  <div class="opts">
-                    ${["1|1 tentativa (imediato)", "2|2 tentativas", "3|3 tentativas (recomendado)"].map(x => {
-                      const [v, l] = x.split("|");
-                      return `<button class="opt sm" aria-pressed="${a.tentativasErro === v}" onclick="S.ia.tentativasErro='${v}';draw()">${l}</button>`;
-                    }).join("")}
-                  </div>
-                </div>
-              </div>
-            `
-          })}
-
-          <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1.5px solid var(--color-border)">
-            <button class="btn btn-s" onclick="setIaSubStep(3)">← 3. Contexto & Regras</button>
-            <div class="sp"></div>
-            <button class="btn btn-p" onclick="setIaSubStep(5)">Continuar: 5. Inatividade & Encerramento →</button>
-          </div>
-        `;
-      } else if (etapa === 5) {
-        contentHtml = `
-          ${subCard({
-            kicker: "Inatividade",
-            title: "Regras de Tempo Limite e Inatividade *",
-            desc: "Ação executada quando o usuário deixa de responder a conversa no WhatsApp.",
-            content: `
-              <div class="grid3">
-                <div class="f"><label>Tempo limite de inatividade</label><div class="opts">
-                  ${["5|5 min", "10|10 min", "15|15 min", "30|30 min"].map(x => {
-                    const [v, l] = x.split("|");
-                    return `<button class="opt sm" aria-pressed="${a.inatTempo === v}" onclick="S.ia.inatTempo='${v}';draw()">${l}</button>`;
-                  }).join("")}
-                </div></div>
-                <div class="f"><label>Ação ao esgotar o tempo</label><div class="opts">
-                  ${["finalizar|Encerrar atendimento", "transferir|Transferir para fila"].map(x => {
-                    const [v, l] = x.split("|");
-                    return `<button class="opt sm" aria-pressed="${a.inatAcao === v}" onclick="S.ia.inatAcao='${v}';draw()">${l}</button>`;
-                  }).join("")}
-                </div></div>
-                ${a.inatAcao === "transferir" ? `<div class="f"><label>Fila de destino</label><select onchange="S.ia.inatFila=this.value;soft()">${setOpts(a.inatFila)}</select></div>` : ""}
-              </div>
-
-              <div class="f" style="margin-top:14px">
-                <label>Mensagem de finalização de atendimento (Opcional)</label>
-                ${fta("ia.msgFinalizacao", "Ex.: Atendimento finalizado por inatividade. Caso precise de mais alguma informação, basta nos enviar uma nova mensagem! Tenha um ótimo dia. 😊")}
-                <span class="hint">Enviada automaticamente caso o atendimento seja encerrado pela IA.</span>
-              </div>
-            `
-          })}
-
-          <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1.5px solid var(--color-border)">
-            <button class="btn btn-s" onclick="setIaSubStep(4)">← 4. Fluxos de Atendimento</button>
-            <div class="sp"></div>
-            <button class="btn btn-p" onclick="setIaSubStep(6)">Continuar: 6. Base de Conhecimento →</button>
-          </div>
-        `;
-      } else if (etapa === 6) {
-        contentHtml = `
-          ${subCard({
-            kicker: "Fontes Oficiais",
-            title: "Fontes de Consulta Oficiais & Links",
-            desc: "Páginas oficiais da instituição utilizadas como fonte de verdade pelo assistente.",
-            content: `
-              <div class="grid2">
-                ${fi("Site ou página com as informações oficiais", "ia.baseUrl", "text", "https://suaempresa.com.br")}
-                <div class="f"><label>Qual a frequência de atualização da FAQ?</label><div class="opts">
-                  ${["diaria|Diária", "semanal|Semanal / Quinzenal", "mensal|Mensal", "demanda|Sob Demanda", "api|Tempo Real (API)"].map(x => {
-                    const [v, l] = x.split("|");
-                    return `<button class="opt sm" aria-pressed="${a.faqFreq === v}" onclick="S.ia.faqFreq='${v}';draw()">${l}</button>`;
-                  }).join("")}
-                </div></div>
-              </div>
-
-              <div class="f" style="margin-top:12px">
-                <label>Links adicionais de consulta</label>
-                ${links.map((l, li) => `
-                  <div style="display:flex;gap:8px;margin-bottom:6px">
-                    <input type="text" value="${esc(l)}" placeholder="https://suaempresa.com.br/preparo-de-exames" oninput="setIaLink(${li}, this.value)">
-                    <button class="rowdel" title="Remover link" onclick="delIaLink(${li})">×</button>
-                  </div>
-                `).join("")}
-                <button type="button" class="btn-chip" style="margin-top:4px" onclick="addIaLink()">+ Adicionar Link Adicional</button>
-              </div>
-
-              <div class="f" style="margin-top:12px">
-                <label>Texto escrito / Procedimentos e FAQ Manual</label>
-                ${fta("ia.faqTexto", "Insira aqui textos informativos, listas de exames, tabelas de valores particulares, rotinas de preparo ou respostas prontas para perguntas frequentes...")}
-                <span class="hint">Textos inseridos aqui são incorporados diretamente ao conhecimento da IA.</span>
-              </div>
-            `
-          })}
-
-          ${subCard({
-            kicker: "Documentos",
-            title: "Upload de Documentos e Manuais de Treinamento",
-            desc: "Anexe arquivos em PDF, DOCX, XLSX ou TXT para a base de conhecimento RAG da IA.",
-            content: `
-              <div class="file-upload-zone" onclick="document.getElementById('ia_file_upload_input').click()">
-                <input type="file" id="ia_file_upload_input" style="display:none" onchange="if(this.files[0]){addIaArquivo(this.files[0].name, Math.round(this.files[0].size/1024)+' KB');this.value=''}">
-                <b>Clique para selecionar arquivos</b> (PDFs, Tabelas, Manuais, Documentos)
-                <span class="hint">Suporta arquivos PDF, DOCX, XLSX ou TXT para treinamento e consulta do assistente</span>
-              </div>
-              ${arquivos.length ? `
-                <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
-                  ${arquivos.map((arq, ai) => `
-                    <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--color-border);border-radius:6px;padding:6px 12px;font-size:12.5px">
-                      <span><b>${esc(arq.nome)}</b> <small style="color:var(--color-muted)">(${esc(arq.tamanho)})</small></span>
-                      <button class="rowdel" title="Remover arquivo" onclick="delIaArquivo(${ai})">×</button>
-                    </div>
-                  `).join("")}
-                </div>
-              ` : ""}
-            `
-          })}
-
-          ${subCard({
-            kicker: "Governança",
-            title: "Governança & Responsável Interno",
-            desc: "Pessoa de contato na sua empresa caso o time da ORPEN precise alinhar respostas da IA.",
-            content: `
-              <div class="grid2">
-                ${fi("Nome do Responsável", "ia.faqRespNome", "text", "Ex.: Mariana Souza")}
-                ${fi("E-mail do Responsável", "ia.faqRespEmail", "email", "Ex.: mariana.souza@hospitalexemplo.com.br")}
-              </div>
-            `
-          })}
-
-          <div class="navrow" style="margin-top:24px;padding-top:18px;border-top:1.5px solid var(--color-border)">
-            <button class="btn btn-s" onclick="setIaSubStep(5)">← 5. Inatividade</button>
-            <div class="sp"></div>
-            <button class="btn btn-p" onclick="next()">Concluir Assistente de IA e Avançar →</button>
-          </div>
-        `;
-      }
-
-      return `<div class="card">
-        ${renderBlockHeader({
-          badge: "Assistente de IA",
-          title: "Configuração do Agente Virtual Inteligente",
-          desc: "Defina o comportamento, autonomia, personas, guardrails e fluxos de atendimento do seu assistente de IA para WhatsApp e canais digitais.",
-          pendList: pend
-        })}
-
-        ${!isChat ? `
-          <div class="ia-step-header">
-            <div class="ia-step-header-top">
-              <div class="ia-step-badge-group">
-                <span class="ia-step-tag">Etapa ${etapa} de 6</span>
-                <h2 class="ia-step-title-text">${curStep.full}</h2>
-              </div>
-              <div class="ia-step-progress-container" title="${Math.round((etapa / 6) * 100)}% concluído">
-                <div class="ia-step-line-track">
-                  <div class="ia-step-line-fill" style="width: ${Math.round((etapa / 6) * 100)}%"></div>
-                </div>
-                <span class="ia-step-pct-val">${Math.round((etapa / 6) * 100)}%</span>
-              </div>
-            </div>
-
-            <div class="ia-mini-steps">
-              ${subSteps.map(s => `
-                <button type="button" class="ia-mini-step-btn ${etapa === s.n ? 'active' : ''} ${isIaStepDone(s.n) ? 'done' : ''}" onclick="setIaSubStep(${s.n})" title="${esc(s.full)}">
-                  <span class="ia-mini-step-dot">${isIaStepDone(s.n) ? '✓' : s.n}</span>
-                  <span class="ia-mini-step-name">${esc(s.lbl.replace(/^\d+\.\s*/, ''))}</span>
-                </button>
-              `).join("")}
-            </div>
-          </div>
-          <p class="lede" style="margin-top:-6px;margin-bottom:18px;font-size:13px;color:var(--color-muted)">${curStep.desc}</p>
-        ` : ""}
-
-        ${contentHtml}
-      </div>`;
-    }
-  },
-
-  {
-    id: "ia_v2", nome: "Assistente de IA (V2)", when: () => S.contrato.ia,
+    id: "ia",
+    nome: "Assistente de IA",
+    when: () => S.contrato.ia,
     check() {
       const p = [];
       if (!S.ia.v2Messages || S.ia.v2Messages.length === 0) {
@@ -1240,14 +896,19 @@ const BLOCKS = [
     }
   },
 
+  /* ------------------------------------------------------------
+     6. INTEGRAÇÕES
+     ------------------------------------------------------------ */
   {
-    id: "integ", nome: "Integração", when: () => S.contrato.integracao,
+    id: "integ",
+    nome: "Integrações",
+    when: () => true,
     check() {
       const p = [], g = S.integ;
-      if (!g.sistema) p.push("Nome do sistema a integrar");
-      if (!g.temApi) p.push("Informar se o sistema tem API");
-      if (!g.contatoNome || !vEmail(g.contatoEmail)) p.push("Contato técnico da integração");
-      if (!g.casos.length) p.push("O que a integração precisa fazer");
+      if (g.desejaIntegrar === "sim") {
+        if (!g.sistema) p.push("Nome do sistema a integrar");
+        if (!g.contatoNome || !vEmail(g.contatoEmail)) p.push("Contato técnico da integração");
+      }
       return p;
     },
     render() {
@@ -1255,53 +916,53 @@ const BLOCKS = [
       const pend = this.check();
       return `<div class="card">
         ${renderBlockHeader({
-          badge: "Sistemas & APIs",
-          title: "Integração com Sistema de Gestão / CRM",
-          desc: "Conexão com ERPs, CRMs e sistemas legados para consulta de dados, agendamento de consultas ou atualização de cadastros.",
+          badge: "Sistemas & Engenharia",
+          title: "Integração com Sistemas Externos (CRM / ERP)",
+          desc: "Conexão com plataformas legadas, CRMs e ERPs para automação de processos e consulta de dados.",
           pendList: pend
         })}
         ${subCard({
-          kicker: "Conexão",
-          title: "Sistema e Documentação de API *",
-          desc: "Identificação da plataforma e disponibilidade de endpoints.",
+          kicker: "Alinhamento",
+          title: "Deseja integrar a plataforma ORPEN com algum sistema externo? *",
+          desc: "Conectamos sua operação aos principais CRMs, ERPs e sistemas do mercado.",
           content: `
-            <div class="grid2">
-              ${fi("Nome do Sistema / Software", "integ.sistema", "text", "Ex.: IRIS, Tasy, MV, Protheus, Totvs, Salesforce")}
-              <div class="f"><label>Possui API REST / Webhook disponível? <span class="req">*</span></label><div class="opts">
-                <button class="opt sm" aria-pressed="${g.temApi === 'sim'}" onclick="S.integ.temApi='sim';draw()">Sim, tem API aberta</button>
-                <button class="opt sm" aria-pressed="${g.temApi === 'nao'}" onclick="S.integ.temApi='nao';draw()">Não tem API</button>
-                <button class="opt sm" aria-pressed="${g.temApi === 'nsei'}" onclick="S.integ.temApi='nsei';draw()">Não sei</button>
-              </div></div>
+            <div class="opts" style="margin-bottom:16px">
+              <button type="button" class="opt" aria-pressed="${g.desejaIntegrar === 'sim'}" onclick="S.integ.desejaIntegrar='sim';S.contrato.integracao=true;draw()">Sim, temos interesse em integrar</button>
+              <button type="button" class="opt" aria-pressed="${g.desejaIntegrar === 'nao'}" onclick="S.integ.desejaIntegrar='nao';S.contrato.integracao=false;draw()">Não, usaremos apenas a plataforma ORPEN</button>
             </div>
-            ${g.temApi === 'nao' ? `<div class="note warn" style="margin-top:10px">Sem API aberta, a viabilidade técnica será analisada diretamente com o fornecedor do software.</div>` : ""}
-            ${g.temApi === 'sim' ? `<div style="margin-top:10px">${fi("Link da Documentação Técnica da API", "integ.docUrl", "text", "https://api.seusistema.com.br/docs")}</div>` : ""}
+
+            ${g.desejaIntegrar === 'sim' ? `
+              <div class="grid2">
+                ${fi("Nome do Sistema / Software *", "integ.sistema", "text", "Ex.: Salesforce, Tasy, MV, HubSpot, Totvs, Bling")}
+                ${fi("O que a integração precisa fazer?", "integ.descricao", "text", "Ex.: Consultar cadastro, agendamentos, registrar tickets")}
+              </div>
+              <div class="grid3" style="margin-top:14px">
+                ${fi("Nome do Responsável Técnico *", "integ.contatoNome", "text", "Ex.: Carlos TI")}
+                ${fi("E-mail Técnico *", "integ.contatoEmail", "email", "carlos@suaempresa.com.br")}
+                ${fi("Telefone / WhatsApp", "integ.contatoTel", "tel", "(11) 99999-9999")}
+              </div>
+              <div class="note info" style="margin-top:14px">
+                <b>Alinhamento com a Engenharia ORPEN:</b> A equipe de integrações da ORPEN entrará em contato diretamente com o responsável técnico indicado para realizar a homologação e a validação de escopo sob medida.
+              </div>
+            ` : `
+              <div class="note info">
+                Nenhuma integração externa será necessária neste momento. A plataforma ORPEN operará de forma 100% autônoma. Caso mude de ideia, integrações podem ser adicionadas futuramente.
+              </div>
+            `}
           `
-        })}
-        ${subCard({
-          kicker: "Automação",
-          title: "Casos de Uso Desejados na Integração *",
-          desc: "Selecione quais ações automáticas devem ser integradas ao fluxo da ORPEN e da IA.",
-          content: `
-            <div class="opts">
-              ${["Consultar agendamentos do paciente", "Marcar ou remarcar consulta", "Consultar status de exame", "Identificar o cliente pelo telefone", "Enviar documento ou laudo", "Registrar o atendimento no sistema"].map(c =>
-                `<button class="opt sm" aria-pressed="${g.casos.includes(c)}" onclick="togCaso('${c}')">${c}</button>`).join("")}
-            </div>
-            <div class="note info" style="margin-top:14px"><b>Segurança e Credenciais:</b> Chaves de API e senhas não devem ser enviadas neste formulário. A ORPEN disponibilizará um cofre seguro e temporário para o time de TI homologar os tokens.</div>
-          `
-        })}
-        ${subCard({
-          kicker: "Suporte Técnico",
-          title: "Contato Técnico do Fornecedor / Sistema *",
-          desc: "Especialista técnico ou suporte do software responsável pela liberação das APIs.",
-          content: `<div class="grid3">${fi("Nome Completo", "integ.contatoNome")}${fi("E-mail Técnico", "integ.contatoEmail", "email")}${fi("Telefone", "integ.contatoTel", "tel")}</div>`
         })}
         ${nav()}
       </div>`;
     }
   },
 
+  /* ------------------------------------------------------------
+     7. REVISÃO
+     ------------------------------------------------------------ */
   {
-    id: "revisao", nome: "Revisão", when: () => true,
+    id: "revisao",
+    nome: "Revisão",
+    when: () => true,
     check() { return []; },
     render() {
       const pend = allPending();
@@ -1322,7 +983,7 @@ const BLOCKS = [
                 <div class="pre">
                   <input type="checkbox" disabled>
                   <div style="flex:1"><p style="font-weight:600;color:var(--ink)">${esc(p.txt)}</p><p class="sub">${esc(p.bloco)}</p></div>
-                  <button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="go('${p.id}')">Preencher Agora</button>
+                  <button type="button" class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="go('${p.id}')">Preencher Agora</button>
                 </div>
               `).join("")}
             </div>
@@ -1347,8 +1008,8 @@ const BLOCKS = [
           content: `<div class="f">${fta("obs.texto", "Ex.: Gostaríamos de priorizar a ativação do WhatsApp Comercial antes do Suporte...")}</div>`
         })}
         <div class="navrow" style="margin-top:20px;padding-top:16px;border-top:1.5px solid var(--color-border)">
-          <button class="btn btn-p" onclick="enviar()">Enviar para a ORPEN</button>
-          <button class="btn btn-s" onclick="baixarJSON()">Baixar JSON do Setup</button>
+          <button type="button" class="btn btn-p" onclick="enviar()">Enviar para a ORPEN</button>
+          <button type="button" class="btn btn-s" onclick="baixarJSON()">Baixar JSON do Setup</button>
           <span class="hint sp">Provisionamento automático ORPEN.</span>
         </div>
       </div>`;

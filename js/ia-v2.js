@@ -491,11 +491,7 @@ function renderIaV2Chat() {
         </div>
       </div>
 
-      <div class="navrow" style="margin-top:20px;padding-top:16px;border-top:1.5px solid var(--color-border)">
-        <button class="btn btn-s" onclick="go('ia')">← 9. Assistente de IA</button>
-        <div class="sp"></div>
-        <button class="btn btn-p" onclick="go('integ')">Avançar para Integração →</button>
-      </div>
+      ${nav()}
     </div>
   `;
 }

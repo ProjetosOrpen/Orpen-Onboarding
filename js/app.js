@@ -124,91 +124,67 @@ function drawSum() {
       </button>
     `;
   } else if (cur === "contrato") {
+    const preenchidos = [S.contatos.projNome, S.contatos.finNome, S.contatos.legNome, (has("Voz")||c.integracao ? S.contatos.tiNome : true)].filter(Boolean).length;
+    const totalResp = has("Voz") || c.integracao ? 4 : 3;
     contextCardHtml = `
       <div class="side-context-card">
         <span class="side-context-kicker">Resumo do Contrato</span>
-        ${line("Canais", c.canais.join(" · "))}
+        ${line("Canais", c.canais.join(" · ") || "Nenhum selecionado", !c.canais.length)}
         ${line("Licenças Agente", c.licAgente)}
         ${line("Licenças Gestor", c.licGestor)}
-        ${line("WhatsApp", `${c.numerosWhats} número(s)`)}
+        ${line("Responsáveis", `${preenchidos} de ${totalResp} definidos`, preenchidos < totalResp)}
         ${line("Status", c.confirmado ? "Confirmado" : "Aguardando confirmação", !c.confirmado)}
       </div>
     `;
-  } else if (cur === "contatos") {
-    const preenchidos = [S.contatos.projNome, S.contatos.finNome, S.contatos.legNome, (has("Voz")||c.integracao ? S.contatos.tiNome : true)].filter(Boolean).length;
-    const total = has("Voz") || c.integracao ? 4 : 3;
+  } else if (cur === "licencas") {
+    const qtdAg = S.equipe.agentes.length;
+    const maxAg = c.licAgente || 0;
+    const qtdGest = S.equipe.gestores.length;
+    const maxGest = c.licGestor || 0;
+    const qtdSup = (S.equipe.supervisores || []).length;
     contextCardHtml = `
       <div class="side-context-card">
-        <span class="side-context-kicker">Responsáveis do Projeto</span>
-        ${line("Contatos Definidos", `${preenchidos} de ${total}`)}
-        ${line("Projeto", S.contatos.projNome || "Pendente", !S.contatos.projNome)}
-        ${line("Financeiro", S.contatos.finNome || "Pendente", !S.contatos.finNome)}
-        ${line("Assinatura", S.contatos.legNome || "Pendente", !S.contatos.legNome)}
-        ${has("Voz") || c.integracao ? line("TI / Redes", S.contatos.tiNome || "Pendente", !S.contatos.tiNome) : ""}
+        <span class="side-context-kicker">Estrutura & Licenças</span>
+        ${line("Filas / DACs", `${S.operacao.setores.length} cadastrada(s)`, !S.operacao.setores.length)}
+        ${line("Operadores", `${qtdAg} / ${maxAg} ${qtdAg > maxAg ? '(! Acima da cota)' : 'alocados'}`, qtdAg === 0 || qtdAg > maxAg)}
+        ${line("Gestores (ADMs)", `${qtdGest} / ${maxGest} ${qtdGest > maxGest ? '(! Acima da cota)' : 'alocados'}`, qtdGest === 0 || qtdGest > maxGest)}
+        ${line("Supervisores", `${qtdSup} cadastrado(s) (Ilimitado)`)}
+        ${line("Identificação", S.equipe.nomeVisivel ? "Nome Visível" : "Nome Oculto")}
       </div>
     `;
-  } else if (cur === "operacao") {
+  } else if (cur === "jornada") {
     contextCardHtml = `
       <div class="side-context-card">
-        <span class="side-context-kicker">Estrutura de Filas</span>
-        ${line("Jornada", S.operacao.jornada === '24x7' ? '24 Horas' : (S.operacao.jornada === 'estendido' ? 'Seg a Sáb' : 'Comercial'))}
-        ${line("Filas / DACs", `${S.operacao.setores.length} cadastrada(s)`)}
-        ${line("Horário Úteis", S.operacao.diasSem || "Pendente", !S.operacao.diasSem)}
+        <span class="side-context-kicker">Jornada do Atendimento</span>
+        ${line("Calendário", S.operacao.jornada === '24x7' ? '24 Horas' : (S.operacao.jornada === 'estendido' ? 'Seg a Sáb' : 'Comercial'))}
+        ${line("Horários", S.operacao.diasSem || "Pendente", !S.operacao.diasSem)}
+        ${line("Tabulações", `${S.classif.tabulacoes.length} cadastrada(s)`, !S.classif.tabulacoes.length)}
+        ${line("Motivos de Pausa", `${S.classif.pausas.length} cadastrado(s)`, !S.classif.pausas.length)}
+        ${line("Pesquisa CSAT", S.classif.pesquisa ? "Ativa (WhatsApp)" : "Desativada")}
       </div>
     `;
-  } else if (cur === "equipe") {
+  } else if (cur === "canais") {
+    const canaisAtivos = c.canais || [];
     contextCardHtml = `
       <div class="side-context-card">
-        <span class="side-context-kicker">Dimensionamento de Equipe</span>
-        ${line("Agentes", `${S.equipe.agentes.length} / ${c.licAgente} licença(s)`)}
-        ${line("Gestores", `${S.equipe.gestores.length} / ${c.licGestor} licença(s)`)}
-        ${line("Identificação", S.equipe.nomeVisivel ? "Nome Visível" : "Anônimo")}
-      </div>
-    `;
-  } else if (cur === "classif") {
-    contextCardHtml = `
-      <div class="side-context-card">
-        <span class="side-context-kicker">Qualidade & Encerramento</span>
-        ${line("Tabulações", `${S.classif.tabulacoes.length} criada(s)`)}
-        ${line("Pausas", `${S.classif.pausas.length} criada(s)`)}
-        ${line("Pesquisa CSAT", S.classif.pesquisa ? "Ativa" : "Desativada")}
-      </div>
-    `;
-  } else if (cur === "whats") {
-    contextCardHtml = `
-      <div class="side-context-card">
-        <span class="side-context-kicker">Canal WhatsApp</span>
-        ${line("Número", S.whats.numero || "Pendente", !S.whats.numero)}
-        ${line("Status Atual", S.whats.emUso === 'sim' ? 'Em uso (Virada)' : (S.whats.emUso === 'nao' ? 'Número Novo' : 'Pendente'))}
-        ${line("Recepção M01", S.whats.m01 ? "Configurada" : "Pendente", !S.whats.m01)}
-        ${line("Fora Horário M02", S.whats.m02 ? "Configurada" : "Pendente", !S.whats.m02)}
-      </div>
-    `;
-  } else if (cur === "bot") {
-    contextCardHtml = `
-      <div class="side-context-card">
-        <span class="side-context-kicker">Autoatendimento (Bot)</span>
-        ${line("Opções do Menu", `${S.bot.opcoes.length} configurada(s)`)}
-        ${line("Destinos DAC", `${S.bot.opcoes.filter(o => o.acao === 'transferir').length} transferências`)}
-      </div>
-    `;
-  } else if (cur === "voz") {
-    contextCardHtml = `
-      <div class="side-context-card">
-        <span class="side-context-kicker">Telefonia & Voz</span>
-        ${line("Operadora", S.voz.operadora || "Pendente", !S.voz.operadora)}
-        ${line("Entroncamento", S.voz.entroncamento === 'sip' ? 'SIP Direto' : (S.voz.entroncamento === 'legada' ? 'Central Legada' : 'Apoio ORPEN'))}
-        ${line("Agentes Voz", S.voz.agentesWeb || "—")}
-        ${line("URA de Voz", S.voz.ura === 'sim' ? `${S.voz.uraNiveis || 1} nível(is)` : "Sem URA")}
+        <span class="side-context-kicker">Canais de Atendimento</span>
+        ${line("Canais Ativos", canaisAtivos.join(" · ") || "Nenhum", !canaisAtivos.length)}
+        ${has("WhatsApp") ? line("WhatsApp", S.whats.numero || "Pendente", !S.whats.numero) : ""}
+        ${has("Voz") ? line("Voz / Telefonia", S.voz.operadora || "Pendente", !S.voz.operadora) : ""}
+        ${has("Webchat") ? line("Webchat", S.canaisConfig?.webchat?.urlSite || "Configurado", !S.canaisConfig?.webchat?.urlSite) : ""}
+        ${has("Teams") ? line("Teams", S.canaisConfig?.teams?.tenantId ? "Configurado" : "Pendente", !S.canaisConfig?.teams?.tenantId) : ""}
+        ${has("Telegram") ? line("Telegram", S.canaisConfig?.telegram?.botUsername || "Pendente", !S.canaisConfig?.telegram?.botUsername) : ""}
+        ${has("Instagram") ? line("Instagram", S.canaisConfig?.instagram?.perfil || "Pendente", !S.canaisConfig?.instagram?.perfil) : ""}
+        ${has("Facebook") ? line("Facebook", S.canaisConfig?.facebook?.pagina || "Pendente", !S.canaisConfig?.facebook?.pagina) : ""}
       </div>
     `;
   } else if (cur === "integ") {
     contextCardHtml = `
       <div class="side-context-card">
-        <span class="side-context-kicker">Integração de Sistemas</span>
-        ${line("Software", S.integ.sistema || "Pendente", !S.integ.sistema)}
-        ${line("Suporte a API", S.integ.temApi === 'sim' ? 'Disponível' : (S.integ.temApi === 'nao' ? 'Sem API' : 'Não informado'))}
-        ${line("Casos de Uso", `${S.integ.casos.length} selecionado(s)`)}
+        <span class="side-context-kicker">Integrações de Sistemas</span>
+        ${line("Deseja Integrar", S.integ.desejaIntegrar === 'sim' ? 'Sim (Sob Medida)' : (S.integ.desejaIntegrar === 'nao' ? 'Não no momento' : 'Não informado'), !S.integ.desejaIntegrar)}
+        ${S.integ.desejaIntegrar === 'sim' ? line("Sistema / ERP", S.integ.sistema || "Pendente", !S.integ.sistema) : ""}
+        ${S.integ.desejaIntegrar === 'sim' ? line("Contato Técnico", S.integ.contatoNome || "Pendente", !S.integ.contatoNome) : ""}
       </div>
     `;
   } else if (cur === "revisao") {
