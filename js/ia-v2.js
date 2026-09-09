@@ -401,11 +401,7 @@ function renderIaV2Chat() {
       <div class="ia-v2-header">
         <div class="ia-v2-header-info">
           <div class="ia-v2-badge-row">
-            <span class="block-badge">Assistente de IA · Versão 2</span>
-            <span class="ia-v2-status-pill online" title="Webhook N8N oficial ativo">
-              <span class="dot" style="width:6px;height:6px;background:var(--color-success)"></span>
-              N8N Webhook Conectado
-            </span>
+            <span class="block-badge">Assistente de IA</span>
           </div>
           <h2 class="block-hero-title">Entrevista Conversacional com IA</h2>
           <p class="block-hero-desc">Converse com a IA em tempo real. Ela fará perguntas sobre o seu atendimento e estruturará seu assistente virtual automaticamente.</p>
@@ -446,7 +442,7 @@ function renderIaV2Chat() {
             id="ia_v2_input"
             class="ia-v2-textarea"
             rows="1"
-            placeholder="Digite sua resposta ou tire uma dúvida sobre o onboarding... (Shift+Enter para pular linha)"
+            placeholder="Digite sua resposta ou tire uma dúvida sobre o onboarding..."
             onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendIaV2Message(); }"
             oninput="this.style.height='auto';this.style.height=(this.scrollHeight)+'px'"
           ></textarea>
@@ -459,11 +455,6 @@ function renderIaV2Chat() {
           >
             ${IA_V2_LOADING ? 'Enviando…' : 'Enviar'}
           </button>
-        </div>
-
-        <div class="ia-v2-footer-info">
-          <span>Pressione <strong>Enter</strong> para enviar e <strong>Shift + Enter</strong> para quebra de linha.</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px">Webhook: automate.orpen.com.br/webhook/Orpen_IA_Onboarding</span>
         </div>
       </div>
 
