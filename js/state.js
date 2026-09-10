@@ -120,97 +120,49 @@ const S = {
     acaoSistemas: "triagem_humano", // "triagem_humano" (triagem para humano) | "mcp_automatico" (IA executa ações via MCP)
     tokensPrompt: 0,
     planoIdentificado: "", // Inicialmente vazio até o prompt ser desbloqueado e criado
+    activeTab: "chat", // "chat" | "prompt"
     v2SessionId: "",
     v2Messages: [],
 
     // 1. Alinhamento de Expectativas
-    processoOtimizar: "Atendimento inicial, triagem ágil de agendamentos e esclarecimento de dúvidas frequentes sobre convênios e preparo de exames.",
-    kpis: "Resolução rápida no 1º contato (>40%), redução do tempo médio de espera e dados 100% qualificados antes do transbordo.",
+    processoOtimizar: "",
+    kpis: "",
 
     // 2. Persona
-    nome: "Luna",
+    nome: "",
     extensaoResp: "curta",
-    tom: ["Cordial e acolhedor", "Direto e objetivo"],
+    tom: [],
     idiomas: ["Português (Brasil)"],
     emojiUso: "moderado",
-    emojisPermitidos: "💙, 👋, 🏥, ✅",
+    emojisPermitidos: "",
 
     // 3. Contexto do Negócio e Objetivos
-    habilidades: "- Horários de funcionamento e endereços das unidades\n- Relação de convênios atendidos\n- Orientações e preparos básicos de exames\n- Envio de links de agendamento online",
-    topicosTransbordo: [
-      "Consultas e Agendamentos",
-      "Exames e Laudos",
-      "Remarcações e Cancelamentos",
-      "Financeiro e Faturamento"
-    ],
-    restricoes: "- Proibido fornecer diagnóstico médico ou prescrever condutas\n- Não confirmar cobertura sem checagem de plano\n- Não prometer procedimentos cirúrgicos ou horários sem confirmação",
-    publicoAlvo: "Pacientes e clientes buscando agendamento, exames e orientações gerais.",
-    problema: "Alto tempo de espera no WhatsApp e dúvidas repetitivas sobre preparo e convênios.",
-    foraEscopo: "Política, receitas caseiras, conselhos pessoais não médicos.",
+    habilidades: "",
+    topicosTransbordo: [],
+    restricoes: "",
+    publicoAlvo: "",
+    problema: "",
+    foraEscopo: "",
 
     // 4. Fluxos de Atendimento (por Assunto / Tópico)
-    fluxosPreAtendimento: [
-      {
-        nome: "Consultas e Agendamentos",
-        passos: [
-          "Qual a especialidade desejada ou médico de preferência?",
-          "Qual o nome completo e CPF do paciente?",
-          "Qual o convênio ou prefere atendimento particular?",
-          "Qual a preferência de data e período (manhã/tarde)?"
-        ],
-        destino: "Recepção / Agendamento"
-      },
-      {
-        nome: "Exames e Laudos",
-        passos: [
-          "Qual exame você precisa realizar?",
-          "Você já possui o pedido médico em mãos?",
-          "Qual o convênio para realização do exame?",
-          "Qual a unidade de preferência?"
-        ],
-        destino: "Recepção / Agendamento"
-      },
-      {
-        nome: "Remarcações e Cancelamentos",
-        passos: [
-          "Qual o nome completo e CPF cadastrado?",
-          "Qual consulta ou exame você deseja remarcar ou cancelar?",
-          "Qual a nova data ou horário de sua preferência?"
-        ],
-        destino: "Recepção / Agendamento"
-      },
-      {
-        nome: "Financeiro e Faturamento",
-        passos: [
-          "Qual o número da fatura, guia ou boleto?",
-          "Qual o nome e CPF do titular responsável?",
-          "Qual a dúvida ou solicitação sobre o pagamento?"
-        ],
-        destino: "Financeiro"
-      }
-    ],
-    filaFallback: "Recepção / Agendamento",
+    fluxosPreAtendimento: [],
+    filaFallback: "",
     tentativasErro: "3",
 
     // 5. Inatividade e Encerramento
     inatTempo: "10",
     inatAcao: "finalizar",
     inatFila: "",
-    msgFinalizacao: "Atendimento finalizado por inatividade. Caso precise de mais alguma informação, basta nos enviar uma nova mensagem! Tenha um ótimo dia. 😊",
+    msgFinalizacao: "",
 
     // 7. Base de Conhecimento e Governança
-    baseUrl: "https://hospitalexemplo.com.br",
-    linksAdicionais: [
-      "https://hospitalexemplo.com.br/convenios",
-      "https://hospitalexemplo.com.br/preparo-de-exames"
-    ],
-    faqTexto: "Horário de Coleta de Exames: Segunda a Sexta, das 06:30 às 11:00. Sábados das 07:00 às 10:30.\nEstacionamento gratuito no local por até 1h para pacientes em atendimento.",
-    arquivos: [
-      { nome: "Guia_de_Preparo_Exames_2026.pdf", tamanho: "1.4 MB" }
-    ],
+    baseUrl: "",
+    linksAdicionais: [],
+    faqTexto: "",
+    arquivos: [],
     faqFreq: "semanal",
-    faqRespNome: "Mariana Souza",
-    faqRespEmail: "mariana.souza@hospitalexemplo.com.br",
+    faqRespNome: "",
+    faqRespEmail: "",
     faqResp: ""
   },
   integ: {
@@ -257,15 +209,15 @@ const ico = (name, extraClass = "") => `<i data-lucide="${name}" class="ui-icon 
 function get(p) { return p.split(".").reduce((o, k) => o?.[k], S); }
 function set(p, v) { const k = p.split("."), l = k.pop(); k.reduce((o, x) => o[x], S)[l] = v; }
 
-const vEmail = v => /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(v || "");
+const vEmail = v => /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(String(v || "").trim());
 const vEmailOuId = v => {
   const str = String(v || "").trim();
   if (!str) return false;
   if (str.includes("@")) return vEmail(str);
   return str.length >= 2;
 };
-const vTel = v => (v || "").replace(/\D/g, "").length >= 10;
-const vLogin = v => /^[1-9]\d{2,}$/.test(v || "");
+const vTel = v => String(v || "").replace(/\D/g, "").length >= 10;
+const vLogin = v => String(v || "").trim().length >= 2;
 
 function mascaraTelefone(el) {
   let v = el.value.replace(/\D/g, "");

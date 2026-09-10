@@ -49,7 +49,6 @@ const BLOCKS = [
       const p = [], c = S.contrato, ct = S.contatos;
       if (!c.razaoSocial) p.push("Razão Social da empresa");
       if (!c.cnpj) p.push("CNPJ da empresa");
-      if (!c.confirmado) p.push("Confirmar os dados do contrato");
       if (!ct.projNome || !vEmail(ct.projEmail)) p.push("Contato do projeto (nome e e-mail)");
       if (!ct.finNome || !vEmail(ct.finEmail)) p.push("Responsável financeiro");
       if (!ct.legNome || !vEmail(ct.legEmail)) p.push("Responsável pela assinatura");
@@ -277,10 +276,9 @@ const BLOCKS = [
     check() {
       const p = [], e = S.equipe, o = S.operacao;
       if (!o.setores.length) p.push("Cadastrar ao menos um setor / fila");
-      if (o.setores.some(s => !s.nome || !/^\d{3,5}$/.test(s.dac || ""))) p.push("Setor sem nome ou com DAC inválido");
+      if (o.setores.some(s => !s.nome || !String(s.nome).trim())) p.push("Setor sem nome cadastrado");
       if (!e.agentes.length) p.push("Cadastrar os operadores de atendimento");
-      if (e.agentes.some(a => !vLogin(a.login) || !a.nome || (a.email && !vEmail(a.email)))) p.push("Corrigir operadores com dados inválidos (login e nome obrigatórios)");
-      if (e.agentes.length > S.contrato.licAgente) p.push(`Operadores acima das ${S.contrato.licAgente} licenças contratadas`);
+      if (e.agentes.some(a => !vLogin(a.login) || !a.nome || !String(a.nome).trim() || (a.email && !vEmail(a.email)))) p.push("Corrigir operadores com dados inválidos (login e nome obrigatórios)");
       return p;
     },
     render() {
@@ -443,7 +441,7 @@ const BLOCKS = [
     when: () => true,
     check() {
       const p = [], o = S.operacao, c = S.classif;
-      if (!o.diasSem) p.push("Horário de atendimento em dias úteis");
+      if (o.jornada !== "24x7" && !String(o.diasSem || "").trim()) p.push("Horário de atendimento em dias úteis");
       if (c.tabulacoes.length < 3) p.push("Definir ao menos 3 tabulações");
       if (!c.pausas.length) p.push("Definir os motivos de pausa");
       return p;
@@ -630,7 +628,8 @@ const BLOCKS = [
     check() {
       const p = [], w = S.whats, v = S.voz, cc = S.canaisConfig;
       if (has("WhatsApp")) {
-        if (!/^\d{10,11}$/.test((w.numero || "").replace(/\D/g, ""))) p.push("Número do WhatsApp");
+        const numWhats = (w.numero || "").replace(/\D/g, "");
+        if (numWhats.length < 10 || numWhats.length > 13) p.push("Número do WhatsApp");
         if (!w.emUso) p.push("Informar se o número de WhatsApp está em uso");
       }
       if (has("Voz")) {

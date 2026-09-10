@@ -579,3 +579,239 @@
   }
 }
 
+/* ============================================================
+   ON-SCREEN SYSTEM PROMPT EDITOR & TABS
+   ============================================================ */
+
+/* Barra de Abas Superiores (Editor vs Chat) */
+.ia-tabs-nav {
+  display: flex;
+  background: oklch(14% .01 280);
+  border: 1px solid oklch(28% .008 280);
+  border-radius: var(--radius-lg);
+  padding: 4px;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.ia-tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--color-muted-2);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all .2s ease;
+}
+
+.ia-tab-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ia-tab-btn.active {
+  background: var(--brand-gradient);
+  color: #fff;
+  box-shadow: var(--shadow-brand);
+}
+
+.ia-tab-badge {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10B981;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.ia-tab-btn.active .ia-tab-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+/* Hero Header do Editor de Prompt na Tela */
+.ia-prompt-hero-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.ia-prompt-hero-main {
+  flex: 1;
+  min-width: 280px;
+}
+
+.ia-prompt-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.ia-prompt-hero-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 6px 0;
+  letter-spacing: -0.02em;
+}
+
+.ia-prompt-hero-desc {
+  font-size: 13px;
+  color: var(--color-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.ia-prompt-metrics-box {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ia-metric-pill {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ia-metric-lbl {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-muted-2);
+  letter-spacing: 0.05em;
+}
+
+.ia-metric-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-brand-primary);
+}
+
+/* Toolbar de Ações */
+.ia-prompt-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.ia-prompt-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ia-prompt-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Textarea de Edição Direta */
+.ia-prompt-editor-wrap {
+  position: relative;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--color-border);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: border-color .2s ease;
+}
+
+.ia-prompt-editor-wrap:focus-within {
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.ia-prompt-editor-textarea {
+  width: 100%;
+  min-height: 520px;
+  box-sizing: border-box;
+  padding: 18px 20px;
+  background: oklch(14% .01 280);
+  color: #E2E8F0;
+  font-family: 'IBM Plex Mono', Consolas, Monaco, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  border: none;
+  resize: vertical;
+  outline: none;
+  white-space: pre-wrap;
+  tab-size: 2;
+}
+
+.ia-prompt-editor-textarea::selection {
+  background: rgba(37, 99, 235, 0.35);
+  color: #fff;
+}
+
+/* Rodapé com Explicação do Plano e Salvamento */
+.ia-prompt-footer-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--color-border);
+  font-size: 12px;
+}
+
+.ia-plan-explanation {
+  color: var(--color-muted);
+  flex: 1;
+  min-width: 250px;
+}
+
+.ia-editor-save-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #10B981;
+  font-weight: 600;
+  font-size: 11.5px;
+}
+
+.save-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+  display: inline-block;
+}
+
+/* Loading Spinner Animation */
+.spin-icon {
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+

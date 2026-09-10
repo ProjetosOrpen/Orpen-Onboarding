@@ -184,19 +184,11 @@ function extrairVariaveisDeTexto(botReply, userText) {
     }
   }
 
-  // 6. Detecção de Hospital / Saúde e ativação dos fluxos padronizados
-  if (/triagem de consultas/i.test(botReply) || /triagem de exames/i.test(botReply) || (userText && /hospital|saude|saúde|consultas e exames/i.test(userText))) {
-    if (!S.ia.fluxosPreAtendimento || S.ia.fluxosPreAtendimento.length === 0 || (S.ia.fluxosPreAtendimento[0] && S.ia.fluxosPreAtendimento[0].passos.length < 5)) {
-      loadPreAtendSaude();
-      updated = true;
-    }
-  }
-
   // 7. Extração de Destinos das filas se especificados
   const mDestConsulta = botReply.match(/Triagem\s+de\s+consultas[\s\S]*?Destino:\s*([^\n\r\.]+)/i);
   const mDestExame = botReply.match(/Triagem\s+de\s+exames[\s\S]*?Destino:\s*([^\n\r\.]+)/i);
 
-  if (S.ia.fluxosPreAtendimento) {
+  if (S.ia.fluxosPreAtendimento && S.ia.fluxosPreAtendimento.length) {
     if (mDestConsulta && mDestConsulta[1]) {
       const fConsulta = S.ia.fluxosPreAtendimento.find(f => /consulta/i.test(f.nome));
       if (fConsulta) fConsulta.destino = mDestConsulta[1].trim();
@@ -220,8 +212,14 @@ function extrairVariaveisDeTexto(botReply, userText) {
 
   if (isConcluidoTexto && !S.ia.triagemConcluida) {
     S.ia.triagemConcluida = true;
+    S.ia.activeTab = "prompt";
     updated = true;
-    toast("🎉 Triagem da IA concluída com sucesso! O System Prompt foi liberado.");
+    toast("🎉 Triagem da IA concluída com sucesso! Gerando System Prompt corporativo...");
+    setTimeout(() => {
+      if (typeof solicitarPromptIaEspecialista === "function") {
+        solicitarPromptIaEspecialista();
+      }
+    }, 40);
   }
 
   // 9. Detecção de Automação MCP vs Triagem de Perguntas para Atendente Humano
@@ -461,17 +459,206 @@ function reiniciarChatIaV2() {
   S.ia.acaoSistemas = "triagem_humano";
   S.ia.tokensPrompt = 0;
   S.ia.planoIdentificado = "";
+  S.ia.activeTab = "chat";
   IA_V2_LOADING = false;
+  soft();
   draw();
   toast("Conversa reiniciada com nova sessão!");
 }
 
-function finalizarTriagemManual() {
-  S.ia.triagemConcluida = true;
-  toast("✅ Triagem finalizada com sucesso! O System Prompt foi liberado.");
+function setIaTab(tab) {
+  S.ia.activeTab = tab;
+  if (tab === "prompt" && !S.ia.promptGeradoIa && !S.ia.promptIaLoading && S.ia.triagemConcluida) {
+    if (typeof solicitarPromptIaEspecialista === "function") {
+      solicitarPromptIaEspecialista();
+    }
+  }
   soft();
   draw();
-  abrirModalPromptFinal();
+}
+
+function finalizarTriagemManual() {
+  S.ia.triagemConcluida = true;
+  S.ia.activeTab = "prompt";
+  toast("✅ Triagem finalizada com sucesso! Gerando System Prompt corporativo...");
+  soft();
+  draw();
+  if (typeof solicitarPromptIaEspecialista === "function") {
+    solicitarPromptIaEspecialista();
+  }
+}
+
+function handlePromptEditorInput(val) {
+  S.ia.promptGeradoIa = val;
+  S.ia.promptFonteAtiva = "ia";
+  const tokensEst = typeof calcularTokensPrompt === "function" ? calcularTokensPrompt(val) : 0;
+  S.ia.tokensPrompt = tokensEst;
+  const diag = typeof avaliarTierIa === "function" ? avaliarTierIa(val) : { tier: "Prata", badgeClass: "tier-prata" };
+  S.ia.planoIdentificado = diag.tier;
+
+  const countEl = document.getElementById("screen_prompt_token_count");
+  if (countEl) countEl.textContent = `~${tokensEst.toLocaleString('pt-BR')} tokens`;
+
+  const planEl = document.getElementById("screen_prompt_plan_name");
+  if (planEl) planEl.textContent = diag.tier;
+
+  const tierTag = document.getElementById("screen_prompt_tier_tag");
+  if (tierTag) {
+    tierTag.textContent = diag.tier.toUpperCase();
+    tierTag.className = `tier-badge ${diag.badgeClass}`;
+  }
+
+  if (typeof drawSum === "function") drawSum();
+  soft();
+}
+
+function copiarPromptNaTela() {
+  const el = document.getElementById("ia_screen_prompt_editor");
+  const text = el ? el.value : (S.ia.promptGeradoIa || (typeof gerarPromptFinalCompilado === "function" ? gerarPromptFinalCompilado() : ""));
+  navigator.clipboard.writeText(text).then(() => {
+    toast("Prompt copiado para a área de transferência!");
+  }).catch(() => {
+    toast("Prompt selecionado!");
+  });
+}
+
+function baixarPromptTxtNaTela() {
+  const el = document.getElementById("ia_screen_prompt_editor");
+  const text = el ? el.value : (S.ia.promptGeradoIa || (typeof gerarPromptFinalCompilado === "function" ? gerarPromptFinalCompilado() : ""));
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `system-prompt-${(S.ia.nome || S.contrato.razaoSocial || 'orpen').toLowerCase().replace(/\s+/g, '-')}.txt`;
+  a.click();
+  toast("Arquivo do System Prompt baixado com sucesso!");
+}
+
+function alternarFontePromptNaTela(fonte) {
+  S.ia.promptFonteAtiva = fonte;
+  if (fonte === "ia" && !S.ia.promptGeradoIa && !S.ia.promptIaLoading) {
+    if (typeof solicitarPromptIaEspecialista === "function") {
+      solicitarPromptIaEspecialista();
+    }
+  } else {
+    soft();
+    draw();
+  }
+}
+
+function renderIaV2PromptEditor() {
+  const isIa = S.ia.promptFonteAtiva === "ia";
+  let currentPrompt = "";
+  if (isIa) {
+    currentPrompt = S.ia.promptGeradoIa || (S.ia.promptIaLoading ? "" : (typeof gerarPromptFinalCompilado === "function" ? gerarPromptFinalCompilado() : ""));
+  } else {
+    currentPrompt = typeof gerarPromptFinalCompilado === "function" ? gerarPromptFinalCompilado() : "";
+  }
+
+  const tokensEst = typeof calcularTokensPrompt === "function" ? calcularTokensPrompt(currentPrompt) : 0;
+  S.ia.tokensPrompt = tokensEst;
+  const diag = typeof avaliarTierIa === "function" ? avaliarTierIa(currentPrompt) : { tier: "Prata", badgeClass: "tier-prata", desc: "" };
+  S.ia.planoIdentificado = diag.tier;
+
+  return `
+    <div class="ia-screen-prompt-card card">
+      <!-- Abas Superiores de Alternância da Tela de IA -->
+      <div class="ia-tabs-nav">
+        <button type="button" class="ia-tab-btn active" onclick="setIaTab('prompt')">
+          ${ico('sparkles')} Editor do System Prompt <span class="ia-tab-badge">Pronto</span>
+        </button>
+        <button type="button" class="ia-tab-btn" onclick="setIaTab('chat')">
+          ${ico('message-square')} Ver Conversa da Triagem (${(S.ia.v2Messages || []).length})
+        </button>
+      </div>
+
+      <!-- Header Hero do Prompt -->
+      <div class="ia-prompt-hero-header">
+        <div class="ia-prompt-hero-main">
+          <div class="ia-prompt-badge-row">
+            <span class="block-badge">System Prompt Corporativo</span>
+            <span class="tier-badge ${diag.badgeClass}" id="screen_prompt_tier_tag">${diag.tier.toUpperCase()}</span>
+            <span class="prompt-source-tag ${isIa ? 'ia' : 'local'}" id="screen_prompt_source_badge">
+              ${isIa ? '✨ IA Especialista (N8N)' : '⚙️ Compilador Determinístico'}
+            </span>
+          </div>
+          <h2 class="ia-prompt-hero-title">Editor do System Prompt de Atendimento</h2>
+          <p class="ia-prompt-hero-desc">
+            Este é o prompt corporativo compilado a partir da entrevista com a IA. Você pode editar diretamente qualquer instrução abaixo. Todas as alterações e métricas de tokens são salvas em tempo real.
+          </p>
+        </div>
+
+        <div class="ia-prompt-metrics-box">
+          <div class="ia-metric-pill">
+            <span class="ia-metric-lbl">Tokens Estimados</span>
+            <span class="ia-metric-val mono" id="screen_prompt_token_count">~${tokensEst.toLocaleString('pt-BR')} tokens</span>
+          </div>
+          <div class="ia-metric-pill">
+            <span class="ia-metric-lbl">Plano Identificado</span>
+            <span class="ia-metric-val" id="screen_prompt_plan_name">${diag.tier}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toolbar com Ações Rápidas -->
+      <div class="ia-prompt-toolbar">
+        <div class="ia-prompt-actions-left">
+          <button type="button" class="btn btn-p sm" onclick="copiarPromptNaTela()">
+            ${ico('copy')} Copiar Prompt
+          </button>
+          <button type="button" class="btn btn-s sm" onclick="baixarPromptTxtNaTela()">
+            ${ico('download')} Baixar .txt
+          </button>
+          <button type="button" class="btn btn-s sm ${S.ia.promptIaLoading ? 'disabled' : ''}" onclick="solicitarPromptIaEspecialista()" id="btn_regerar_ia_tela">
+            ${ico(S.ia.promptIaLoading ? 'loader' : 'sparkles')} ${S.ia.promptIaLoading ? 'Gerando via IA…' : 'Regerar com IA Especialista'}
+          </button>
+        </div>
+
+        <div class="ia-prompt-actions-right">
+          <div class="prompt-tab-group">
+            <button type="button" class="prompt-tab-btn ${isIa ? 'active' : ''}" onclick="alternarFontePromptNaTela('ia')">
+              ${ico('sparkles')} Versão IA
+            </button>
+            <button type="button" class="prompt-tab-btn ${!isIa ? 'active' : ''}" onclick="alternarFontePromptNaTela('local')">
+              ${ico('code')} Versão Compilada
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Área do Editor ou Loading -->
+      ${S.ia.promptIaLoading ? `
+        <div class="prompt-loading-overlay">
+          <div class="ia-loading-spinner">${ico('loader', 'spin-icon')}</div>
+          <h4 style="margin:14px 0 6px;color:#fff;font-size:15px">IA Especialista em Engenharia de Prompts Ativa</h4>
+          <p style="margin:0;font-size:13px;color:var(--color-muted-2);max-width:480px">
+            Processando o histórico da entrevista, diretrizes anti-alucinação, fluxos de transbordo e regras operacionais no N8N. O System Prompt aparecerá aqui em instantes...
+          </p>
+        </div>
+      ` : `
+        <div class="ia-prompt-editor-wrap">
+          <textarea
+            id="ia_screen_prompt_editor"
+            class="ia-prompt-editor-textarea"
+            spellcheck="false"
+            placeholder="Digite ou personalize as instruções do System Prompt..."
+            oninput="handlePromptEditorInput(this.value)"
+          >${esc(currentPrompt)}</textarea>
+        </div>
+      `}
+
+      <!-- Rodapé do Editor com Explicação do Plano e Status -->
+      <div class="ia-prompt-footer-info">
+        <div class="ia-plan-explanation">
+          <b>Critério do Plano:</b> ${esc(diag.criterio || diag.desc)}
+        </div>
+        <div class="ia-editor-save-indicator">
+          <span class="save-dot"></span> Salvo automaticamente no setup
+        </div>
+      </div>
+
+      ${nav()}
+    </div>
+  `;
 }
 
 function renderIaV2MessagesHtml() {
@@ -527,11 +714,11 @@ function renderIaV2MessagesHtml() {
         </div>
         <h3 class="ia-triagem-card-title">Mapeamento da ${esc(S.ia.nome || 'IA')} Concluído!</h3>
         <p class="ia-triagem-card-desc">
-          Todas as diretrizes de persona, autonomia, restrições e filas foram apuradas. Ao clicar abaixo, todo o histórico e contexto da conversa serão enviados automaticamente para a IA Especialista gerar o System Prompt corporativo.
+          Todas as diretrizes de persona, autonomia, restrições e filas foram apuradas. O System Prompt corporativo já foi compilado e está disponível para edição direta.
         </p>
         <div class="ia-triagem-actions-row">
-          <button type="button" class="btn btn-p ia-btn-pulse" onclick="abrirModalPromptFinal()">
-            ${ico('sparkles')} Visualizar System Prompt Final
+          <button type="button" class="btn btn-p ia-btn-pulse" onclick="setIaTab('prompt')">
+            ${ico('sparkles')} Abrir Editor do System Prompt
           </button>
         </div>
       </div>
@@ -557,12 +744,28 @@ function renderIaV2ChatStream() {
 }
 
 function renderIaV2Chat() {
+  // Se a triagem foi concluída e a aba ativa é o prompt (ou padrão), exibe diretamente o Editor do System Prompt
+  if (S.ia.triagemConcluida && S.ia.activeTab !== "chat") {
+    return renderIaV2PromptEditor();
+  }
+
   initIaV2Messages();
   const sessionId = getIaV2SessionId();
   const webhookUrl = S.ia.v2WebhookUrl || IA_V2_CONFIG.webhookUrl;
 
   return `
-    <div class="ia-v2-chat-card">
+    <div class="ia-v2-chat-card card">
+      ${S.ia.triagemConcluida ? `
+        <div class="ia-tabs-nav">
+          <button type="button" class="ia-tab-btn" onclick="setIaTab('prompt')">
+            ${ico('sparkles')} Editor do System Prompt <span class="ia-tab-badge">Pronto</span>
+          </button>
+          <button type="button" class="ia-tab-btn active" onclick="setIaTab('chat')">
+            ${ico('message-square')} Ver Conversa da Triagem (${(S.ia.v2Messages || []).length})
+          </button>
+        </div>
+      ` : ''}
+
       <div class="ia-v2-header">
         <div class="ia-v2-header-info">
           <span class="block-badge">Assistente de IA</span>
@@ -572,8 +775,8 @@ function renderIaV2Chat() {
         <div class="ia-v2-header-actions">
           ${S.ia.triagemConcluida ? `
             <span class="badge-status-concluido">${ico('check-circle')} Triagem Concluída</span>
-            <button type="button" class="btn btn-p sm ia-btn-pulse" onclick="abrirModalPromptFinal()" title="Visualizar System Prompt Final">
-              ${ico('sparkles')} Ver Prompt Final
+            <button type="button" class="btn btn-p sm ia-btn-pulse" onclick="setIaTab('prompt')" title="Abrir Editor do System Prompt">
+              ${ico('sparkles')} Abrir Editor do Prompt
             </button>
           ` : `
             <span class="badge-status-em-andamento">${ico('clock')} Triagem em Andamento</span>
@@ -601,8 +804,8 @@ function renderIaV2Chat() {
               <button type="button" class="ia-v2-chip" onclick="sendIaV2Message('Olá! Gostaria de iniciar o mapeamento do meu assistente de atendimento.')">
                 Iniciar Onboarding
               </button>
-              <button type="button" class="ia-v2-chip" onclick="sendIaV2Message('Nossa empresa é um hospital/clínica e precisamos otimizar agendamento e dúvidas frequentes.')">
-                Clínica / Saúde
+              <button type="button" class="ia-v2-chip" onclick="sendIaV2Message('Nossa empresa precisa otimizar agendamento e esclarecer dúvidas frequentes.')">
+                Qualificação e Dúvidas
               </button>
               <button type="button" class="ia-v2-chip" onclick="sendIaV2Message('Quero definir o tom de voz acolhedor, profissional e direto.')">
                 Estilo e Tom de Voz

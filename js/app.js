@@ -69,6 +69,55 @@ function draw() {
   }
 }
 
+const STORAGE_KEY = "orpen_onboarding_state_v2";
+
+function salvarEstadoLocal() {
+  try {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(S));
+    }
+  } catch (e) {
+    console.warn("Falha ao salvar estado no localStorage:", e);
+  }
+}
+
+function carregarEstadoLocal() {
+  try {
+    if (typeof localStorage === "undefined") return false;
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      // Sanitização ativa de dados mockados herdados de versões anteriores
+      if (data.contrato && data.contrato.razaoSocial === "Hospital Exemplo Ltda.") {
+        data.contrato.razaoSocial = "";
+      }
+      if (data.ia) {
+        if (data.ia.baseUrl && data.ia.baseUrl.includes("hospitalexemplo")) data.ia.baseUrl = "";
+        if (data.ia.faqRespEmail && data.ia.faqRespEmail.includes("hospitalexemplo")) data.ia.faqRespEmail = "";
+        if (data.ia.faqRespNome === "Mariana Souza") data.ia.faqRespNome = "";
+        if (data.ia.nome === "Luna" || data.ia.nome === "Ires") data.ia.nome = "";
+        if (Array.isArray(data.ia.arquivos)) {
+          data.ia.arquivos = data.ia.arquivos.filter(a => !(typeof a === "string" ? a : a.nome || "").includes("Hospital"));
+        }
+      }
+      Object.keys(data).forEach(k => {
+        if (typeof data[k] === "object" && data[k] !== null && !Array.isArray(data[k]) && S[k]) {
+          Object.assign(S[k], data[k]);
+        } else {
+          S[k] = data[k];
+        }
+      });
+      return true;
+    }
+  } catch (e) {
+    console.warn("Falha ao carregar estado do localStorage:", e);
+  }
+  return false;
+}
+
+// Carregar imediatamente se já estiver no browser
+carregarEstadoLocal();
+
 function soft() {
   const pc = progress();
   const pbar = document.getElementById("pbar");
@@ -76,6 +125,7 @@ function soft() {
   if (pbar) pbar.style.width = pc + "%";
   if (ppct) ppct.textContent = pc + "%";
   drawSum();
+  salvarEstadoLocal();
 }
 
 function drawSum() {
@@ -133,8 +183,8 @@ function drawSum() {
           <button class="btn-g" style="color:var(--color-brand-primary);font-size:12px;margin-top:6px;padding:0" onclick="otimizarIaAuditora()">Otimizar regras com a Auditora</button>
         </div>
 
-        <button class="btn btn-p" style="width:100%;margin-top:12px;justify-content:center;" onclick="abrirModalPromptFinal()">
-          ${ico('sparkles')} Visualizar Prompt Final da IA
+        <button class="btn btn-p" style="width:100%;margin-top:12px;justify-content:center;" onclick="if(typeof setIaTab==='function')setIaTab('prompt');go('ia')">
+          ${ico('sparkles')} Abrir Editor do System Prompt
         </button>
       `;
     } else {
@@ -232,7 +282,7 @@ function drawSum() {
 
   sumEl.innerHTML = `
     <h3>Resumo do Setup</h3>
-    <p class="cli">${esc(c.razaoSocial || "Hospital Exemplo Ltda.")}</p>
+    <p class="cli">${esc(c.razaoSocial || "Empresa não informada")}</p>
 
     <div class="side-context-card" style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-muted);font-weight:600;margin-bottom:4px">
@@ -267,19 +317,39 @@ function toast(m) {
   t._t = setTimeout(() => t.classList.remove("on"), 2600);
 }
 
-document.addEventListener("input", e => {
+function handleInputOrChange(e) {
   const p = e.target.dataset.path;
   if (!p) return;
-  set(p, e.target.value);
+  const val = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+  set(p, val);
   soft();
-});
+}
+
+document.addEventListener("input", handleInputOrChange);
+document.addEventListener("change", handleInputOrChange);
 
 function enviar() {
   const p = allPending();
   toast(p.length ? `Enviado com ${p.length} item(ns) pendente(s) — a ORPEN vai cobrar por aqui.` : "Setup enviado. A ORPEN inicia o provisionamento.");
 }
 
+function sanitizarEstadoParaExportacao() {
+  if (S.contrato && S.contrato.razaoSocial === "Hospital Exemplo Ltda.") {
+    S.contrato.razaoSocial = "";
+  }
+  if (S.ia) {
+    if (S.ia.baseUrl && S.ia.baseUrl.includes("hospitalexemplo")) S.ia.baseUrl = "";
+    if (S.ia.faqRespEmail && S.ia.faqRespEmail.includes("hospitalexemplo")) S.ia.faqRespEmail = "";
+    if (S.ia.faqRespNome === "Mariana Souza") S.ia.faqRespNome = "";
+    if (S.ia.nome === "Luna" || S.ia.nome === "Ires") S.ia.nome = "";
+    if (Array.isArray(S.ia.arquivos)) {
+      S.ia.arquivos = S.ia.arquivos.filter(a => !(typeof a === "string" ? a : a.nome || "").includes("Hospital"));
+    }
+  }
+}
+
 function baixarJSON() {
+  sanitizarEstadoParaExportacao();
   const blob = new Blob([JSON.stringify(S, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -290,6 +360,7 @@ function baixarJSON() {
 
 // Inicialização automática
 document.addEventListener("DOMContentLoaded", () => {
+  carregarEstadoLocal();
   draw();
 });
 

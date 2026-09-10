@@ -240,7 +240,6 @@ function processarFluxoAuditoraSimulado(userText) {
 }
 
 function processarExtracaoConversacional(userText) {
-  if (userText.length > 3 && !S.ia.nome) S.ia.nome = "Ires";
   if (userText.length > 20 && !S.ia.habilidades) S.ia.habilidades = userText;
   soft();
 }
@@ -833,6 +832,7 @@ function unwrapPromptResponse(raw) {
 async function solicitarPromptIaEspecialista() {
   const webhookUrl = S.ia.promptWebhookUrl || "https://automate.orpen.com.br/webhook/Orpen_IA_Onboarding_Criador_Prompt";
   const btnGerar = document.getElementById("btn_gerar_ia_modal");
+  const btnGerarTela = document.getElementById("btn_regerar_ia_tela");
   const loadingBox = document.getElementById("prompt_loading_box");
   const codeBox = document.getElementById("prompt_final_code");
 
@@ -842,22 +842,38 @@ async function solicitarPromptIaEspecialista() {
     btnGerar.disabled = true;
     btnGerar.innerHTML = `${ico('loader')} Consultando IA...`;
   }
+  if (btnGerarTela) {
+    btnGerarTela.disabled = true;
+    btnGerarTela.innerHTML = `${ico('loader')} Gerando via IA...`;
+  }
 
   S.ia.promptIaLoading = true;
+  if (typeof cur !== "undefined" && cur === "ia" && S.ia.activeTab === "prompt") {
+    if (typeof draw === "function") draw();
+  }
+
   const payload = montarPayloadIaEspecialista();
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s de timeout
+    const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+    let timeoutId = null;
+    if (controller) {
+      timeoutId = setTimeout(() => {
+        try { controller.abort(); } catch(e){}
+      }, 45000); // 45s de timeout
+    }
 
-    const resp = await fetch(webhookUrl, {
+    const fetchOptions = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      signal: controller.signal
-    });
+      body: JSON.stringify(payload)
+    };
+    if (controller && controller.signal) {
+      fetchOptions.signal = controller.signal;
+    }
 
-    clearTimeout(timeoutId);
+    const resp = await fetch(webhookUrl, fetchOptions);
+    if (timeoutId) clearTimeout(timeoutId);
 
     const raw = await resp.text();
     let promptGerado = unwrapPromptResponse(raw);
@@ -872,21 +888,44 @@ async function solicitarPromptIaEspecialista() {
 
     S.ia.promptGeradoIa = promptGerado;
     S.ia.promptFonteAtiva = "ia";
-    renderPromptModalConteudo();
+
+    // Recalcula métricas e persiste IMEDIATAMENTE no localStorage
+    const tokens = calcularTokensPrompt(promptGerado);
+    S.ia.tokensPrompt = tokens;
+    const diag = avaliarTierIa(promptGerado);
+    S.ia.planoIdentificado = diag.tier;
+
+    if (typeof soft === "function") soft();
+    if (typeof renderPromptModalConteudo === "function") renderPromptModalConteudo();
     toast("✨ System Prompt gerado com sucesso pela IA Especialista!");
 
   } catch (err) {
     console.warn("Falha ao consultar Webhook da IA Especialista:", err);
     toast("Webhook da IA indisponível. Exibindo versão compilada local.");
     S.ia.promptFonteAtiva = "local";
-    renderPromptModalConteudo();
+    const localPrompt = gerarPromptFinalCompilado();
+    const tokens = calcularTokensPrompt(localPrompt);
+    S.ia.tokensPrompt = tokens;
+    const diag = avaliarTierIa(localPrompt);
+    S.ia.planoIdentificado = diag.tier;
+    if (typeof soft === "function") soft();
+    if (typeof renderPromptModalConteudo === "function") renderPromptModalConteudo();
   } finally {
     S.ia.promptIaLoading = false;
+    if (typeof cur !== "undefined" && cur === "ia") {
+      if (typeof draw === "function") draw();
+    } else if (typeof soft === "function") {
+      soft();
+    }
     if (loadingBox) loadingBox.style.display = "none";
     if (codeBox) codeBox.style.opacity = "1";
     if (btnGerar) {
       btnGerar.disabled = false;
       btnGerar.innerHTML = `${ico('sparkles')} Gerar via IA`;
+    }
+    if (btnGerarTela) {
+      btnGerarTela.disabled = false;
+      btnGerarTela.innerHTML = `${ico('sparkles')} Regerar com IA Especialista`;
     }
   }
 }
