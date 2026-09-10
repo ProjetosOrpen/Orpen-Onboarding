@@ -224,6 +224,25 @@ function extrairVariaveisDeTexto(botReply, userText) {
     toast("🎉 Triagem da IA concluída com sucesso! O System Prompt foi liberado.");
   }
 
+  // 9. Detecção de Automação MCP vs Triagem de Perguntas para Atendente Humano
+  const isMcpTexto = /reagendamento autom[aá]tico por ia|agendamento autom[aá]tico por ia|execu[cç][aã]o direta em sistema|via mcp|acessar sequ[eê]ncia de sistemas|alterar agenda autom[aá]tica/i.test(userText || '') ||
+                     /reagendamento autom[aá]tico por ia|agendamento autom[aá]tico por ia|execu[cç][aã]o direta em sistema|via mcp/i.test(botReply || '');
+
+  const isTriagemTexto = /apenas triagem|triagem para atendente|triagem de perguntas para o reagendamento humano|transbordo humano|triagem de consultas|triagem de exames/i.test(userText || '') ||
+                         /triagem de consultas e exames|apenas coleta|triagem com transbordo/i.test(botReply || '');
+
+  if (isMcpTexto && !isTriagemTexto) {
+    if (S.ia.acaoSistemas !== 'mcp_automatico') {
+      S.ia.acaoSistemas = 'mcp_automatico';
+      updated = true;
+    }
+  } else if (isTriagemTexto) {
+    if (S.ia.acaoSistemas !== 'triagem_humano') {
+      S.ia.acaoSistemas = 'triagem_humano';
+      updated = true;
+    }
+  }
+
   if (updated) {
     soft();
     drawSum();
@@ -439,6 +458,9 @@ function reiniciarChatIaV2() {
   S.ia.triagemConcluida = false;
   S.ia.promptGeradoIa = "";
   S.ia.promptFonteAtiva = "local";
+  S.ia.acaoSistemas = "triagem_humano";
+  S.ia.tokensPrompt = 0;
+  S.ia.planoIdentificado = "Plano Prata";
   IA_V2_LOADING = false;
   draw();
   toast("Conversa reiniciada com nova sessão!");
@@ -589,7 +611,7 @@ function renderIaV2Chat() {
                 Estilo e Tom de Voz
               </button>
               <button type="button" class="ia-v2-chip" onclick="sendIaV2Message('Quais informações você ainda precisa para concluir meu assistente?')">
-                O que falta preencher?
+                Próximos Passos
               </button>
             </div>
           </div>

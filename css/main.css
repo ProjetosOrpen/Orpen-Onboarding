@@ -874,7 +874,8 @@ td input, td select {
   border: 1px solid var(--color-border);
 }
 
-.tier-gold {
+.tier-gold,
+.tier-ouro {
   background: var(--color-warning-soft);
   color: oklch(40% .15 70);
   border: 1px solid oklch(from var(--color-warning) l c h / .3);

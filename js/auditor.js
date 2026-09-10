@@ -255,91 +255,132 @@ function reiniciarChatAuditora() {
 }
 
 /* ============================================================
-   DIAGNÓSTICO E COMPLEXIDADE DO PROMPT
+   DIAGNÓSTICO, CÁLCULO DE TOKENS E CLASSIFICAÇÃO DE PLANO
+   (PRATA: até 5.500 tokens | OURO: >5.500 tokens ou RAG | DIAMANTE: MCP / Ações em Sistemas)
    ============================================================ */
-function avaliarTierIa() {
-  const temInteg = S.contrato.integracao && S.integ.sistema;
-  const temApi = S.integ.temApi === 'sim';
-  const temCasosComplexos = S.integ.casos.some(c => /marcar|remarcar|laudo|exame/i.test(c));
-  const temSmartJump = S.ia.smartJump && S.ia.smartJump.length >= 2;
-  const totalPassosFluxos = (S.ia.fluxosPreAtendimento || []).reduce((acc, f) => acc + (f.passos || []).filter(Boolean).length, 0);
-  const temPreColeta = totalPassosFluxos >= 2;
-  const temRestricoes = (S.ia.restricoes || "").length > 20;
-  const temBaseExtensa = (S.ia.habilidades || "").length > 100 || (S.ia.faqTexto || "").length > 100;
-  const temArquivosOuLinks = (S.ia.arquivos && S.ia.arquivos.length > 0) || (S.ia.linksAdicionais && S.ia.linksAdicionais.length > 0);
 
-  let score = 20;
+function calcularTokensPrompt(texto) {
+  if (!texto || typeof texto !== "string") return 0;
+  const t = texto.trim();
+  if (!t) return 0;
+  // Média ponderada de precisão para português: ~3.8 caracteres por token e 1.35 tokens por palavra
+  const words = t.split(/\s+/).length;
+  const chars = t.length;
+  const estChar = chars / 3.8;
+  const estWords = words * 1.35;
+  return Math.round((estChar + estWords) / 2);
+}
+
+function avaliarTierIa(promptParam) {
+  let promptTexto = promptParam;
+  if (!promptTexto) {
+    if (S.ia.promptFonteAtiva === 'ia' && S.ia.promptGeradoIa) {
+      promptTexto = S.ia.promptGeradoIa;
+    } else if (typeof gerarPromptFinalCompilado === 'function') {
+      promptTexto = gerarPromptFinalCompilado();
+    } else {
+      promptTexto = "";
+    }
+  }
+
+  const tokens = calcularTokensPrompt(promptTexto);
+  S.ia.tokensPrompt = tokens;
+
+  // 1. Verificação de Automação Transacional / Sequência de Sistemas via MCP (Diamante)
+  // Reagendamento automático executado pela própria IA via MCP / APIs
+  // Nota: Se a IA apenas faz triagem de perguntas para encaminhar ao reagendamento humano, NÃO é Diamante.
+  const isApenasTriagemHumana = S.ia.acaoSistemas === 'triagem_humano' || (
+    !S.ia.acaoSistemas && !/reagendamento autom[aá]tico por ia|execu[cç][aã]o direta em sistema|via mcp/i.test(promptTexto)
+  );
+
+  const temAutomacaoMcp = S.ia.acaoSistemas === 'mcp_automatico' || (
+    !isApenasTriagemHumana && (
+      /reagendamento autom[aá]tico por ia|execu[cç][aã]o direta em sistema|via mcp/i.test(promptTexto) ||
+      (S.contrato.integracao && S.integ.desejaIntegrar === 'sim' && S.integ.tipoUso === 'mcp_ia')
+    )
+  );
+
+  // 2. Verificação de Base de Conhecimento Extensa / RAG (Ouro)
+  // RAG ativo com documentos, múltiplos links ou base de dados extensa
+  const temBaseExtensaRag = (
+    (S.ia.arquivos && S.ia.arquivos.length > 0) ||
+    (S.ia.linksAdicionais && S.ia.linksAdicionais.length > 0) ||
+    (S.ia.baseUrl && S.ia.baseUrl.length > 10 && !S.ia.baseUrl.includes('exemplo')) ||
+    (S.ia.faqTexto && S.ia.faqTexto.length > 150)
+  );
+
+  // 3. Critério de Tokens
+  // Prata: margem de até 5.500 tokens
+  // Ouro: acima de 5.500 tokens e/ou base RAG extensa
+  const isAcimaMargemTokens = tokens > 5500;
+
+  // Score de complexidade (0 - 100)
+  let score = 25;
   if (S.ia.nome) score += 5;
   if (S.ia.tom && S.ia.tom.length > 1) score += 5;
-  if (S.ia.idiomas && S.ia.idiomas.length > 1) score += 5;
-  if (temRestricoes) score += 10;
-  if (temSmartJump) score += 15;
-  if (temPreColeta) score += 15;
-  if (temBaseExtensa || temArquivosOuLinks) score += 10;
-  if (temInteg) score += 15;
+  if (tokens > 2500) score += 10;
+  if (tokens > 4000) score += 15;
+  if (tokens > 5500) score += 15;
+  if (temBaseExtensaRag) score += 15;
+  if (temAutomacaoMcp) score += 20;
   if (score > 100) score = 100;
 
-  let complexidadeNivel = "Baixa";
-  if (score > 35) complexidadeNivel = "Moderada";
+  let complexidadeNivel = "Leve";
+  if (score > 40) complexidadeNivel = "Moderada";
   if (score > 65) complexidadeNivel = "Avançada";
-  if (score > 85) complexidadeNivel = "Alta Densidade";
+  if (score > 85) complexidadeNivel = "Alta Performance";
 
   const ambiguidades = [];
+  const temRestricoes = (S.ia.restricoes || "").length > 20;
   if (!temRestricoes) {
     ambiguidades.push({ tipo: "warn", txt: "Restrições vagas: Adicione limites claros anti-alucinação." });
   } else {
     ambiguidades.push({ tipo: "ok", txt: "Limites e regras anti-alucinação bem definidos." });
   }
 
-  if (!temSmartJump) {
-    ambiguidades.push({ tipo: "warn", txt: "Transbordo sensível: Poucos gatilhos de Smart Jump cadastrados." });
-  } else {
-    ambiguidades.push({ tipo: "ok", txt: `${S.ia.smartJump.length} regras de transbordo inteligente ativas.` });
+  if (isApenasTriagemHumana) {
+    ambiguidades.push({ tipo: "ok", txt: "Triagem para transbordo humano: IA não altera banco ou agendas diretamente." });
+  } else if (temAutomacaoMcp) {
+    ambiguidades.push({ tipo: "ok", txt: "Automação MCP: IA com permissão para executar ações diretas em múltiplos sistemas." });
   }
 
-  if (!temPreColeta) {
-    ambiguidades.push({ tipo: "warn", txt: "Sem pré-qualificação: Nenhum passo configurado nos fluxos de triagem." });
-  } else {
-    ambiguidades.push({ tipo: "ok", txt: `${(S.ia.fluxosPreAtendimento || []).length} fluxo(s) de pré-atendimento com ${totalPassosFluxos} passo(s) ao todo.` });
+  if (temBaseExtensaRag) {
+    ambiguidades.push({ tipo: "ok", txt: "Base de conhecimento RAG extensa conectada ao assistente." });
   }
 
-  if (temInteg && temCasosComplexos && temBaseExtensa && temPreColeta && temSmartJump) {
-    return {
-      tier: "Plano Diamante+",
-      badgeClass: "tier-consultor",
-      score,
-      complexidadeNivel,
-      ambiguidades,
-      desc: "Arquitetura com integração a ERP/APIs em tempo real, transbordo multi-departamental e validação contínua."
-    };
+  // Classificação do Plano
+  let tier = "Plano Prata";
+  let badgeClass = "tier-prata";
+  let criterio = "Prompt dentro da margem de até 5.500 tokens";
+  let desc = `Triagem ágil de perguntas para transbordo humano. Prompt dentro da margem de 5.500 tokens (~${tokens.toLocaleString('pt-BR')} tokens estimados).`;
+
+  if (temAutomacaoMcp) {
+    tier = "Plano Diamante";
+    badgeClass = "tier-diamante";
+    criterio = "Acesso e execução em sequência de sistemas via MCP";
+    desc = `Arquitetura autônoma via MCP com integração e alteração direta em múltiplos sistemas. Prompt estimado em ~${tokens.toLocaleString('pt-BR')} tokens.`;
+  } else if (isAcimaMargemTokens || temBaseExtensaRag) {
+    tier = "Plano Ouro";
+    badgeClass = "tier-ouro";
+    criterio = isAcimaMargemTokens
+      ? `Prompt denso com ~${tokens.toLocaleString('pt-BR')} tokens (acima da margem de 5.500)`
+      : `Acesso a base de conhecimento extensa com RAG (~${tokens.toLocaleString('pt-BR')} tokens)`;
+    desc = isAcimaMargemTokens
+      ? `Prompt acima de 5.500 tokens (~${tokens.toLocaleString('pt-BR')} tokens) com regras aprofundadas e transbordo humano.`
+      : `Base de conhecimento extensa conectada (RAG) com ~${tokens.toLocaleString('pt-BR')} tokens e transbordo humano.`;
   }
-  if (temInteg || temApi || temCasosComplexos) {
-    return {
-      tier: "Plano Diamante",
-      badgeClass: "tier-diamante",
-      score,
-      complexidadeNivel,
-      ambiguidades,
-      desc: "Capacidade transacional com chamadas de ferramentas/APIs, consulta a bancos de dados e roteamento prioritário."
-    };
-  }
-  if (temBaseExtensa || S.ia.baseUrl || temSmartJump || temArquivosOuLinks) {
-    return {
-      tier: "Plano Gold",
-      badgeClass: "tier-gold",
-      score,
-      complexidadeNivel,
-      ambiguidades,
-      desc: "Estrutura com base de conhecimento (RAG), regras anti-alucinação e triagem inteligente para múltiplos setores."
-    };
-  }
+
+  S.ia.planoIdentificado = tier;
+
   return {
-    tier: "Plano Prata",
-    badgeClass: "tier-prata",
+    tier,
+    badgeClass,
     score,
     complexidadeNivel,
     ambiguidades,
-    desc: "Atendimento direto alimentado com regras ágeis de triagem e respostas em system prompt."
+    tokens,
+    criterio,
+    desc
   };
 }
 
@@ -889,18 +930,26 @@ function renderPromptModalConteudo() {
       : "System prompt determinístico estruturado em 8 seções pronto para WhatsApp:";
   }
 
-  const diag = avaliarTierIa();
+  // CÁLCULO DINÂMICO DE TOKENS & RECLASSIFICAÇÃO DO PLANO NO FINAL
+  const tokensEst = calcularTokensPrompt(promptCode);
+  S.ia.tokensPrompt = tokensEst;
+
+  const diag = avaliarTierIa(promptCode);
+  S.ia.planoIdentificado = diag.tier;
+
   const tierTag = document.getElementById("prompt_tier_tag");
   if (tierTag) {
     tierTag.textContent = diag.tier.toUpperCase();
     tierTag.className = `tier-badge ${diag.badgeClass}`;
   }
 
-  const tokensEst = Math.round(promptCode.length / 4);
   const tokenBadge = document.getElementById("prompt_token_count");
   if (tokenBadge) {
-    tokenBadge.textContent = `~${tokensEst} tokens`;
+    tokenBadge.textContent = `~${tokensEst.toLocaleString('pt-BR')} tokens · ${diag.tier}`;
   }
+
+  // Sincroniza o painel lateral com o novo plano identificado
+  drawSum();
 }
 
 function toggleConfigWebhookPrompt() {

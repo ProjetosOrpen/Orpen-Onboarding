@@ -91,14 +91,20 @@ function drawSum() {
 
   if ((cur === "ia" || cur === "ia_v2") && c.ia) {
     const diag = avaliarTierIa();
-    const totalFluxos = (S.ia.fluxosPreAtendimento || []).length;
-    const totalPassos = (S.ia.fluxosPreAtendimento || []).reduce((acc, f) => acc + (f.passos || []).filter(Boolean).length, 0);
 
     contextCardHtml = `
       <div class="tier-box">
-        <span class="side-context-kicker">Plano Compreendido</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span class="side-context-kicker" style="margin:0">Plano do Cliente</span>
+          <span style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--color-muted-2)">~${(diag.tokens || 0).toLocaleString('pt-BR')} tokens</span>
+        </div>
         <span class="tier-badge ${diag.badgeClass}">${diag.tier}</span>
-        <p style="margin-top:4px">${diag.desc}</p>
+        <p style="margin-top:6px;font-size:12px;line-height:1.4">${diag.desc}</p>
+        ${diag.criterio ? `
+          <div style="margin-top:8px;padding-top:6px;border-top:1px dashed rgba(255,255,255,0.14);font-size:10.5px;color:var(--color-muted-2)">
+            <b>Critério:</b> ${diag.criterio}
+          </div>
+        ` : ''}
       </div>
 
       <div class="side-context-card" style="margin:10px 0">
@@ -125,12 +131,6 @@ function drawSum() {
         `).join("")}
         <button class="btn-g" style="color:var(--color-brand-primary);font-size:12px;margin-top:6px;padding:0" onclick="otimizarIaAuditora()">Otimizar regras com a Auditora</button>
       </div>
-
-      ${line("Nome do Agente", S.ia.nome || "—", !S.ia.nome)}
-      ${line("Assuntos de Transbordo", `${(S.ia.topicosTransbordo || []).length} cadastrado(s)`, !(S.ia.topicosTransbordo && S.ia.topicosTransbordo.length))}
-      ${line("Fluxos de Atendimento", `${totalFluxos} fluxo(s) · ${totalPassos} passo(s)`, !totalPassos)}
-      ${line("Base Conhecimento", S.ia.baseUrl ? "Vinculada" : "Pendente", !S.ia.baseUrl)}
-      ${line("Integração", S.contrato.integracao ? (S.integ.sistema || "Aguardando") : "Não contratado", !S.integ.sistema)}
 
       ${S.ia.triagemConcluida ? `
         <button class="btn btn-p" style="width:100%;margin-top:12px;justify-content:center;" onclick="abrirModalPromptFinal()">
@@ -232,7 +232,7 @@ function drawSum() {
 
     ${contextCardHtml}
 
-    ${pend.length ? `
+    ${(cur === "ia" || cur === "ia_v2") ? "" : (pend.length ? `
       <div class="pend" style="margin-top:10px">
         <h4>Falta preencher (${pend.length})</h4>
         ${pend.slice(0, 5).map(p => `<button onclick="go('${p.id}')">→ ${esc(p.txt)}</button>`).join("")}
@@ -240,7 +240,7 @@ function drawSum() {
       </div>
     ` : `
       <div class="done-box">Tudo pronto! Setup 100% preenchido.</div>
-    `}
+    `)}
   `;
 }
 
