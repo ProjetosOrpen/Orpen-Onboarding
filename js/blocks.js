@@ -899,13 +899,11 @@ const BLOCKS = [
   {
     id: "integ",
     nome: "Integrações",
-    when: () => true,
+    when: () => S.contrato.integracao,
     check() {
       const p = [], g = S.integ;
-      if (g.desejaIntegrar === "sim") {
-        if (!g.sistema) p.push("Nome do sistema a integrar");
-        if (!g.contatoNome || !vEmail(g.contatoEmail)) p.push("Contato técnico da integração");
-      }
+      if (!g.sistema) p.push("Nome do sistema / ERP a integrar");
+      if (!g.contatoNome || !vEmail(g.contatoEmail)) p.push("Contato técnico da integração");
       return p;
     },
     render() {
@@ -919,33 +917,22 @@ const BLOCKS = [
           pendList: pend
         })}
         ${subCard({
-          kicker: "Alinhamento",
-          title: "Deseja integrar a plataforma ORPEN com algum sistema externo? *",
-          desc: "Conectamos sua operação aos principais CRMs, ERPs e sistemas do mercado.",
+          kicker: "Alinhamento Técnico",
+          title: "Configuração do Sistema / ERP *",
+          desc: "Especifique o software que será integrado e os dados do responsável técnico da sua empresa.",
           content: `
-            <div class="opts" style="margin-bottom:16px">
-              <button type="button" class="opt" aria-pressed="${g.desejaIntegrar === 'sim'}" onclick="S.integ.desejaIntegrar='sim';S.contrato.integracao=true;draw()">Sim, temos interesse em integrar</button>
-              <button type="button" class="opt" aria-pressed="${g.desejaIntegrar === 'nao'}" onclick="S.integ.desejaIntegrar='nao';S.contrato.integracao=false;draw()">Não, usaremos apenas a plataforma ORPEN</button>
+            <div class="grid2">
+              ${fi("Nome do Sistema / Software *", "integ.sistema", "text", "Ex.: Salesforce, Tasy, MV, HubSpot, Totvs, Bling")}
+              ${fi("O que a integração precisa fazer?", "integ.descricao", "text", "Ex.: Consultar cadastro, agendamentos, registrar tickets")}
             </div>
-
-            ${g.desejaIntegrar === 'sim' ? `
-              <div class="grid2">
-                ${fi("Nome do Sistema / Software *", "integ.sistema", "text", "Ex.: Salesforce, Tasy, MV, HubSpot, Totvs, Bling")}
-                ${fi("O que a integração precisa fazer?", "integ.descricao", "text", "Ex.: Consultar cadastro, agendamentos, registrar tickets")}
-              </div>
-              <div class="grid3" style="margin-top:14px">
-                ${fi("Nome do Responsável Técnico *", "integ.contatoNome", "text", "Ex.: Carlos TI")}
-                ${fi("E-mail Técnico *", "integ.contatoEmail", "email", "carlos@suaempresa.com.br")}
-                ${fi("Telefone / WhatsApp", "integ.contatoTel", "tel", "(11) 99999-9999")}
-              </div>
-              <div class="note info" style="margin-top:14px">
-                <b>Alinhamento com a Engenharia ORPEN:</b> A equipe de integrações da ORPEN entrará em contato diretamente com o responsável técnico indicado para realizar a homologação e a validação de escopo sob medida.
-              </div>
-            ` : `
-              <div class="note info">
-                Nenhuma integração externa será necessária neste momento. A plataforma ORPEN operará de forma 100% autônoma. Caso mude de ideia, integrações podem ser adicionadas futuramente.
-              </div>
-            `}
+            <div class="grid3" style="margin-top:14px">
+              ${fi("Nome do Responsável Técnico *", "integ.contatoNome", "text", "Ex.: Carlos TI")}
+              ${fi("E-mail Técnico *", "integ.contatoEmail", "email", "carlos@suaempresa.com.br")}
+              ${fi("Telefone / WhatsApp", "integ.contatoTel", "tel", "(11) 99999-9999")}
+            </div>
+            <div class="note info" style="margin-top:14px">
+              <b>Alinhamento com a Engenharia ORPEN:</b> A equipe de integrações da ORPEN entrará em contato diretamente com o responsável técnico indicado para realizar a homologação e a validação de escopo sob medida.
+            </div>
           `
         })}
         ${nav()}
@@ -987,8 +974,8 @@ const BLOCKS = [
           ` : `<div class="note info">Ambiente 100% configurado! Ao enviar, a ORPEN iniciará o provisionamento automático e liberará o acesso aos testes.</div>`
         })}
         ${subCard({
-          kicker: "Documentação Suplementar",
-          title: "Anexos & Documentação Suplementar",
+          kicker: "Documentação Complementar",
+          title: "Anexos & Documentação Complementar",
           desc: "Envie arquivos adicionais úteis para o setup (planilhas de contatos, áudios da URA, manuais).",
           content: `
             <div class="file-upload-zone" onclick="document.getElementById('rev_file_upload').click()">

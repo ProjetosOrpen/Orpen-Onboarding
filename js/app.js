@@ -215,9 +215,9 @@ function drawSum() {
     contextCardHtml = `
       <div class="side-context-card">
         <span class="side-context-kicker">Integrações de Sistemas</span>
-        ${line("Deseja Integrar", S.integ.desejaIntegrar === 'sim' ? 'Sim (Sob Medida)' : (S.integ.desejaIntegrar === 'nao' ? 'Não no momento' : 'Não informado'), !S.integ.desejaIntegrar)}
-        ${S.integ.desejaIntegrar === 'sim' ? line("Sistema / ERP", S.integ.sistema || "Pendente", !S.integ.sistema) : ""}
-        ${S.integ.desejaIntegrar === 'sim' ? line("Contato Técnico", S.integ.contatoNome || "Pendente", !S.integ.contatoNome) : ""}
+        ${line("Sistema / ERP", S.integ.sistema || "Pendente", !S.integ.sistema)}
+        ${line("Responsável Técnico", S.integ.contatoNome || "Pendente", !S.integ.contatoNome)}
+        ${line("E-mail Técnico", S.integ.contatoEmail || "Pendente", !S.integ.contatoEmail)}
       </div>
     `;
   } else if (cur === "revisao") {

@@ -214,7 +214,7 @@ const S = {
     faqResp: ""
   },
   integ: {
-    desejaIntegrar: "nao", // "sim" | "nao"
+    desejaIntegrar: "sim", // "sim" | "nao"
     sistema: "",
     descricao: "",
     contatoNome: "",
