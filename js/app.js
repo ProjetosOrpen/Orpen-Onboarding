@@ -90,58 +90,72 @@ function drawSum() {
   let contextCardHtml = "";
 
   if ((cur === "ia" || cur === "ia_v2") && c.ia) {
-    const diag = avaliarTierIa();
+    if (S.ia.triagemConcluida) {
+      const diag = avaliarTierIa();
 
-    contextCardHtml = `
-      <div class="tier-box">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span class="side-context-kicker" style="margin:0">Plano do Cliente</span>
-          <span style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--color-muted-2)">~${(diag.tokens || 0).toLocaleString('pt-BR')} tokens</span>
-        </div>
-        <span class="tier-badge ${diag.badgeClass}">${diag.tier}</span>
-        <p style="margin-top:6px;font-size:12px;line-height:1.4">${diag.desc}</p>
-        ${diag.criterio ? `
-          <div style="margin-top:8px;padding-top:6px;border-top:1px dashed rgba(255,255,255,0.14);font-size:10.5px;color:var(--color-muted-2)">
-            <b>Critério:</b> ${diag.criterio}
+      contextCardHtml = `
+        <div class="tier-box">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span class="side-context-kicker" style="margin:0">Plano do Cliente</span>
+            <span style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--color-muted-2)">~${(diag.tokens || 0).toLocaleString('pt-BR')} tokens</span>
           </div>
-        ` : ''}
-      </div>
+          <span class="tier-badge ${diag.badgeClass}">${diag.tier}</span>
+          <p style="margin-top:6px;font-size:12px;line-height:1.4">${diag.desc}</p>
+          ${diag.criterio ? `
+            <div style="margin-top:8px;padding-top:6px;border-top:1px dashed rgba(255,255,255,0.14);font-size:10.5px;color:var(--color-muted-2)">
+              <b>Critério:</b> ${diag.criterio}
+            </div>
+          ` : ''}
+        </div>
 
-      <div class="side-context-card" style="margin:10px 0">
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-muted);font-weight:600">
-          <span>Complexidade do Prompt</span>
-          <span style="color:var(--color-brand-primary);font-weight:700">${diag.complexidadeNivel} · ${diag.score}/100</span>
-        </div>
-        <div class="meter-track">
-          <div class="meter-fill" style="width:${diag.score}%"></div>
-        </div>
-        <div style="font-size:11px;color:var(--color-muted);display:flex;justify-content:space-between">
-          <span>Densidade: ${S.ia.habilidades.length > 120 ? 'Alta' : 'Moderada'}</span>
-          <span>Transbordo: ${(S.ia.topicosTransbordo || []).length} assuntos</span>
-        </div>
-      </div>
-
-      <div class="side-context-card" style="margin:10px 0">
-        <div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-brand-primary);font-family:'IBM Plex Mono',monospace;font-weight:700;margin-bottom:6px">Diagnóstico de Ambiguidades</div>
-        ${diag.ambiguidades.map(a => `
-          <div class="ambig-item">
-            <span class="${a.tipo === 'ok' ? 'ambig-ok' : 'ambig-warn'}">${a.tipo === 'ok' ? '✓' : '!'}</span>
-            <span style="color:${a.tipo === 'ok' ? 'var(--color-fg-1)' : 'var(--color-warning)'}">${esc(a.txt)}</span>
+        <div class="side-context-card" style="margin:10px 0">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-muted);font-weight:600">
+            <span>Complexidade do Prompt</span>
+            <span style="color:var(--color-brand-primary);font-weight:700">${diag.complexidadeNivel} · ${diag.score}/100</span>
           </div>
-        `).join("")}
-        <button class="btn-g" style="color:var(--color-brand-primary);font-size:12px;margin-top:6px;padding:0" onclick="otimizarIaAuditora()">Otimizar regras com a Auditora</button>
-      </div>
+          <div class="meter-track">
+            <div class="meter-fill" style="width:${diag.score}%"></div>
+          </div>
+          <div style="font-size:11px;color:var(--color-muted);display:flex;justify-content:space-between">
+            <span>Densidade: ${S.ia.habilidades.length > 120 ? 'Alta' : 'Moderada'}</span>
+            <span>Transbordo: ${(S.ia.topicosTransbordo || []).length} assuntos</span>
+          </div>
+        </div>
 
-      ${S.ia.triagemConcluida ? `
+        <div class="side-context-card" style="margin:10px 0">
+          <div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-brand-primary);font-family:'IBM Plex Mono',monospace;font-weight:700;margin-bottom:6px">Diagnóstico de Ambiguidades</div>
+          ${diag.ambiguidades.map(a => `
+            <div class="ambig-item">
+              <span class="${a.tipo === 'ok' ? 'ambig-ok' : 'ambig-warn'}">${a.tipo === 'ok' ? '✓' : '!'}</span>
+              <span style="color:${a.tipo === 'ok' ? 'var(--color-fg-1)' : 'var(--color-warning)'}">${esc(a.txt)}</span>
+            </div>
+          `).join("")}
+          <button class="btn-g" style="color:var(--color-brand-primary);font-size:12px;margin-top:6px;padding:0" onclick="otimizarIaAuditora()">Otimizar regras com a Auditora</button>
+        </div>
+
         <button class="btn btn-p" style="width:100%;margin-top:12px;justify-content:center;" onclick="abrirModalPromptFinal()">
           ${ico('sparkles')} Visualizar Prompt Final da IA
         </button>
-      ` : `
+      `;
+    } else {
+      contextCardHtml = `
+        <div class="side-context-card" style="margin:10px 0;border:1px dashed var(--color-border);background:var(--color-surface-2)">
+          <div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-muted-2);font-family:'IBM Plex Mono',monospace;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+            ${ico('clock')} Triagem em Andamento
+          </div>
+          <p style="font-size:12px;line-height:1.45;color:var(--color-fg-2);margin:0 0 8px 0">
+            O <b>Plano do Cliente</b> (Prata, Ouro ou Diamante) e o <b>diagnóstico do assistente</b> serão exibidos assim que o prompt for desbloqueado e criado.
+          </p>
+          <div style="font-size:11px;color:var(--color-muted-2);line-height:1.4">
+            Responda às perguntas da IA no chat para estruturar as regras e fluxos de atendimento da sua empresa.
+          </div>
+        </div>
+
         <button class="btn btn-s" style="width:100%;margin-top:12px;justify-content:center;opacity:0.75;" onclick="toast('⚠️ Conclua a triagem no chat da IA para estruturar as informações e liberar o System Prompt.')" title="Disponível após a conclusão da triagem">
           ${ico('lock')} Prompt Bloqueado (Aguardando Triagem)
         </button>
-      `}
-    `;
+      `;
+    }
   } else if (cur === "contrato") {
     const preenchidos = [S.contatos.projNome, S.contatos.finNome, S.contatos.legNome, (has("Voz")||c.integracao ? S.contatos.tiNome : true)].filter(Boolean).length;
     const totalResp = has("Voz") || c.integracao ? 4 : 3;

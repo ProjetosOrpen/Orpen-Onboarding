@@ -272,6 +272,20 @@ function calcularTokensPrompt(texto) {
 }
 
 function avaliarTierIa(promptParam) {
+  // Se a triagem não foi concluída e não há prompt explícito, o plano ainda não foi identificado
+  if (!S.ia.triagemConcluida && !promptParam) {
+    return {
+      tier: "Aguardando Conclusão",
+      badgeClass: "tier-prata",
+      score: 0,
+      complexidadeNivel: "Em triagem",
+      ambiguidades: [],
+      tokens: 0,
+      criterio: "Aguardando conclusão da entrevista conversacional e geração do prompt",
+      desc: "O plano do cliente será definido após a triagem ser concluída e o prompt desbloqueado e criado."
+    };
+  }
+
   let promptTexto = promptParam;
   if (!promptTexto) {
     if (S.ia.promptFonteAtiva === 'ia' && S.ia.promptGeradoIa) {

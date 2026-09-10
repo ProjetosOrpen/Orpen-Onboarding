@@ -460,7 +460,7 @@ function reiniciarChatIaV2() {
   S.ia.promptFonteAtiva = "local";
   S.ia.acaoSistemas = "triagem_humano";
   S.ia.tokensPrompt = 0;
-  S.ia.planoIdentificado = "Plano Prata";
+  S.ia.planoIdentificado = "";
   IA_V2_LOADING = false;
   draw();
   toast("Conversa reiniciada com nova sessão!");
@@ -577,9 +577,6 @@ function renderIaV2Chat() {
             </button>
           ` : `
             <span class="badge-status-em-andamento">${ico('clock')} Triagem em Andamento</span>
-            <button type="button" class="btn btn-s sm" style="opacity:0.65;cursor:not-allowed;" onclick="toast('⚠️ Conclua a triagem no chat da IA para estruturar as informações e liberar o System Prompt.')" title="Disponível após a conclusão da triagem">
-              ${ico('lock')} Prompt Bloqueado
-            </button>
             ${(S.ia.v2Messages && S.ia.v2Messages.length >= 2) ? `
               <button type="button" class="btn btn-s sm" onclick="finalizarTriagemManual()" title="Concluir triagem e liberar prompt">
                 ${ico('check')} Concluir Triagem

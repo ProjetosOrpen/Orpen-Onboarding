@@ -1570,6 +1570,7 @@ td input, td select {
   height: calc(100vh - 120px);
   min-height: 480px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 body.is-ia-view {
@@ -1585,17 +1586,21 @@ body.is-ia-view .wrap {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
   margin-bottom: 10px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .ia-v2-header-info {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .ia-v2-title {
@@ -1605,12 +1610,15 @@ body.is-ia-view .wrap {
   margin: 0;
   font-family: "Archivo", "IBM Plex Sans", sans-serif;
   letter-spacing: -.015em;
+  white-space: nowrap;
 }
 
 .ia-v2-header-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
-  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .ia-v2-chat-box {

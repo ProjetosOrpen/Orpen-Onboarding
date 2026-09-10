@@ -119,7 +119,7 @@ const S = {
     triagemConcluida: false, // Flag que controla se a entrevista/triagem foi finalizada pela IA
     acaoSistemas: "triagem_humano", // "triagem_humano" (triagem para humano) | "mcp_automatico" (IA executa ações via MCP)
     tokensPrompt: 0,
-    planoIdentificado: "Plano Prata",
+    planoIdentificado: "", // Inicialmente vazio até o prompt ser desbloqueado e criado
     v2SessionId: "",
     v2Messages: [],
 
