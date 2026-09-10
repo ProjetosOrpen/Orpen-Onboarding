@@ -47,11 +47,40 @@ const BLOCKS = [
     id: "contrato", nome: "Contrato", when: () => true,
     check() {
       const p = [], c = S.contrato, ct = S.contatos;
-      if (!c.razaoSocial) p.push("Razão Social da empresa");
-      if (!c.cnpj) p.push("CNPJ da empresa");
-      if (!ct.projNome || !vEmail(ct.projEmail)) p.push("Contato do projeto (nome e e-mail)");
-      if (!ct.finNome || !vEmail(ct.finEmail)) p.push("Responsável financeiro");
-      if (!ct.legNome || !vEmail(ct.legEmail)) p.push("Responsável pela assinatura");
+      if (!c.razaoSocial || !String(c.razaoSocial).trim()) p.push("Razão Social da empresa");
+      if (!c.cnpj || !String(c.cnpj).trim()) p.push("CNPJ da empresa");
+
+      // Contato Principal do Projeto
+      if (!ct.projNome && !ct.projEmail) {
+        p.push("Contato do projeto (nome e e-mail)");
+      } else if (!ct.projNome || !String(ct.projNome).trim()) {
+        p.push("Nome do contato do projeto");
+      } else if (!vEmail(ct.projEmail)) {
+        p.push("E-mail corporativo do contato do projeto");
+      }
+
+      // Responsável Financeiro
+      const finNome = ct.finMesmoProj ? (ct.projNome || ct.finNome) : ct.finNome;
+      const finEmail = ct.finMesmoProj ? (ct.projEmail || ct.finEmail) : ct.finEmail;
+      if (!finNome && !finEmail) {
+        p.push("Responsável financeiro (nome e e-mail)");
+      } else if (!finNome || !String(finNome).trim()) {
+        p.push("Nome do responsável financeiro");
+      } else if (!vEmail(finEmail)) {
+        p.push("E-mail do responsável financeiro");
+      }
+
+      // Responsável pela Assinatura
+      const legNome = ct.legMesmoProj ? (ct.projNome || ct.legNome) : ct.legNome;
+      const legEmail = ct.legMesmoProj ? (ct.projEmail || ct.legEmail) : ct.legEmail;
+      if (!legNome && !legEmail) {
+        p.push("Responsável pela assinatura (nome e e-mail)");
+      } else if (!legNome || !String(legNome).trim()) {
+        p.push("Nome do responsável pela assinatura");
+      } else if (!vEmail(legEmail)) {
+        p.push("E-mail do responsável pela assinatura");
+      }
+
       return p;
     },
     render() {
@@ -228,24 +257,46 @@ const BLOCKS = [
               </div>
 
               <div class="contact-section-box">
-                <h4 class="contact-section-title">Responsável Financeiro *</h4>
-                <p class="contact-section-desc">Recebe o espelho de faturamento, boletos e trata eventuais reajustes ou aditivos.</p>
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+                  <div>
+                    <h4 class="contact-section-title">Responsável Financeiro *</h4>
+                    <p class="contact-section-desc">Recebe o espelho de faturamento, boletos e trata eventuais reajustes ou aditivos.</p>
+                  </div>
+                  <button type="button" class="btn-text-tpl" onclick="copiarContato('proj','fin')">${ico('copy')} Copiar do Contato Principal</button>
+                </div>
+                <div style="margin:4px 0 10px 0">
+                  <label style="font-size:12px;color:var(--color-fg-2);cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+                    <input type="checkbox" ${ct.finMesmoProj ? 'checked' : ''} onchange="togglarMesmoProj('fin')">
+                    Mesma pessoa do Contato Principal
+                  </label>
+                </div>
                 <div class="grid2">
-                  ${fi("Nome Completo *", "contatos.finNome")}
-                  ${fi("Cargo / Área", "contatos.finCargo")}
-                  ${fi("E-mail Financeiro *", "contatos.finEmail", "email")}
-                  ${fi("Telefone / WhatsApp (Opcional)", "contatos.finTel", "tel")}
+                  ${fi("Nome Completo *", "contatos.finNome", "text", "", ct.finMesmoProj ? "readonly style='background:var(--color-surface-2)'" : "")}
+                  ${fi("Cargo / Área", "contatos.finCargo", "text", "", ct.finMesmoProj ? "readonly style='background:var(--color-surface-2)'" : "")}
+                  ${fi("E-mail Financeiro *", "contatos.finEmail", "email", "", ct.finMesmoProj ? "readonly style='background:var(--color-surface-2)'" : "")}
+                  ${fi("Telefone / WhatsApp (Opcional)", "contatos.finTel", "tel", "", ct.finMesmoProj ? "readonly style='background:var(--color-surface-2)'" : "")}
                 </div>
               </div>
 
               <div class="contact-section-box">
-                <h4 class="contact-section-title">Responsável pela Assinatura do Contrato *</h4>
-                <p class="contact-section-desc">Representante legal com poderes contratuais e assinatura digital.</p>
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+                  <div>
+                    <h4 class="contact-section-title">Responsável pela Assinatura do Contrato *</h4>
+                    <p class="contact-section-desc">Representante legal com poderes contratuais e assinatura digital.</p>
+                  </div>
+                  <button type="button" class="btn-text-tpl" onclick="copiarContato('proj','leg')">${ico('copy')} Copiar do Contato Principal</button>
+                </div>
+                <div style="margin:4px 0 10px 0">
+                  <label style="font-size:12px;color:var(--color-fg-2);cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+                    <input type="checkbox" ${ct.legMesmoProj ? 'checked' : ''} onchange="togglarMesmoProj('leg')">
+                    Mesma pessoa do Contato Principal
+                  </label>
+                </div>
                 <div class="grid2">
-                  ${fi("Nome Completo *", "contatos.legNome")}
-                  ${fi("Cargo / Função", "contatos.legCargo")}
-                  ${fi("E-mail Corporativo *", "contatos.legEmail", "email")}
-                  ${fi("Telefone / WhatsApp (Opcional)", "contatos.legTel", "tel")}
+                  ${fi("Nome Completo *", "contatos.legNome", "text", "", ct.legMesmoProj ? "readonly style='background:var(--color-surface-2)'" : "")}
+                  ${fi("Cargo / Função", "contatos.legCargo", "text", "", ct.legMesmoProj ? "readonly style='background:var(--color-surface-2)'" : "")}
+                  ${fi("E-mail Corporativo *", "contatos.legEmail", "email", "", ct.legMesmoProj ? "readonly style='background:var(--color-surface-2)'" : "")}
+                  ${fi("Telefone / WhatsApp (Opcional)", "contatos.legTel", "tel", "", ct.legMesmoProj ? "readonly style='background:var(--color-surface-2)'" : "")}
                 </div>
               </div>
 
@@ -278,7 +329,7 @@ const BLOCKS = [
       if (!o.setores.length) p.push("Cadastrar ao menos um setor / fila");
       if (o.setores.some(s => !s.nome || !String(s.nome).trim())) p.push("Setor sem nome cadastrado");
       if (!e.agentes.length) p.push("Cadastrar os operadores de atendimento");
-      if (e.agentes.some(a => !vLogin(a.login) || !a.nome || !String(a.nome).trim() || (a.email && !vEmail(a.email)))) p.push("Corrigir operadores com dados inválidos (login e nome obrigatórios)");
+      if (e.agentes.some(a => !vLogin(a.login) || !a.nome || !String(a.nome).trim() || (String(a.email || "").trim() && !vEmail(a.email)))) p.push("Corrigir operadores com dados inválidos (login e nome obrigatórios)");
       return p;
     },
     render() {
@@ -421,7 +472,7 @@ const BLOCKS = [
               <tbody>
                 ${e.gestores.map((g, i) => `<tr>
                   <td><input type="text" value="${esc(g.nome)}" oninput="S.equipe.gestores[${i}].nome=this.value;soft()"></td>
-                  <td><input type="text" class="${vEmail(g.email) ? "" : "bad"}" value="${esc(g.email)}" oninput="S.equipe.gestores[${i}].email=this.value;soft()"></td>
+                  <td><input type="email" class="${(g.email && !vEmail(g.email)) ? "bad" : ""}" placeholder="email@empresa.com" value="${esc(g.email)}" oninput="S.equipe.gestores[${i}].email=this.value;soft()"></td>
                   <td><select onchange="S.equipe.gestores[${i}].setor=this.value;soft()">${setOpts(g.setor)}</select></td>
                   <td><button class="rowdel" title="Excluir gestor" onclick="S.equipe.gestores.splice(${i},1);draw()">×</button></td>
                 </tr>`).join("")}
@@ -442,8 +493,8 @@ const BLOCKS = [
     check() {
       const p = [], o = S.operacao, c = S.classif;
       if (o.jornada !== "24x7" && !String(o.diasSem || "").trim()) p.push("Horário de atendimento em dias úteis");
-      if (c.tabulacoes.length < 3) p.push("Definir ao menos 3 tabulações");
-      if (!c.pausas.length) p.push("Definir os motivos de pausa");
+      if (!c.tabulacoes || c.tabulacoes.length === 0) p.push("Cadastrar ao menos uma tabulação de atendimento");
+      if (!c.pausas || c.pausas.length === 0) p.push("Definir os motivos de pausa dos atendentes");
       return p;
     },
     render() {
@@ -901,8 +952,14 @@ const BLOCKS = [
     when: () => S.contrato.integracao,
     check() {
       const p = [], g = S.integ;
-      if (!g.sistema) p.push("Nome do sistema / ERP a integrar");
-      if (!g.contatoNome || !vEmail(g.contatoEmail)) p.push("Contato técnico da integração");
+      if (!g.sistema || !String(g.sistema).trim()) p.push("Nome do sistema / ERP a integrar");
+      if (!g.contatoNome && !g.contatoEmail) {
+        p.push("Contato técnico da integração (nome e e-mail)");
+      } else if (!g.contatoNome || !String(g.contatoNome).trim()) {
+        p.push("Nome do contato técnico da integração");
+      } else if (!vEmail(g.contatoEmail)) {
+        p.push("E-mail do contato técnico da integração");
+      }
       return p;
     },
     render() {
@@ -919,6 +976,7 @@ const BLOCKS = [
           kicker: "Alinhamento Técnico",
           title: "Configuração do Sistema / ERP *",
           desc: "Especifique o software que será integrado e os dados do responsável técnico da sua empresa.",
+          actions: `<button type="button" class="btn-text-tpl" onclick="copiarContatoParaInteg()">${ico('copy')} Copiar do Contato de TI / Projeto</button>`,
           content: `
             <div class="grid2">
               ${fi("Nome do Sistema / Software *", "integ.sistema", "text", "Ex.: Salesforce, Tasy, MV, HubSpot, Totvs, Bling")}

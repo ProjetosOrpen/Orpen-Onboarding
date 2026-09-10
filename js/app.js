@@ -207,8 +207,20 @@ function drawSum() {
       `;
     }
   } else if (cur === "contrato") {
-    const preenchidos = [S.contatos.projNome, S.contatos.finNome, S.contatos.legNome, (has("Voz")||c.integracao ? S.contatos.tiNome : true)].filter(Boolean).length;
-    const totalResp = has("Voz") || c.integracao ? 4 : 3;
+    const projOk = Boolean(S.contatos.projNome && String(S.contatos.projNome).trim() && vEmail(S.contatos.projEmail));
+    const finNomeVal = S.contatos.finMesmoProj ? (S.contatos.projNome || S.contatos.finNome) : S.contatos.finNome;
+    const finEmailVal = S.contatos.finMesmoProj ? (S.contatos.projEmail || S.contatos.finEmail) : S.contatos.finEmail;
+    const finOk = Boolean(finNomeVal && String(finNomeVal).trim() && vEmail(finEmailVal));
+
+    const legNomeVal = S.contatos.legMesmoProj ? (S.contatos.projNome || S.contatos.legNome) : S.contatos.legNome;
+    const legEmailVal = S.contatos.legMesmoProj ? (S.contatos.projEmail || S.contatos.legEmail) : S.contatos.legEmail;
+    const legOk = Boolean(legNomeVal && String(legNomeVal).trim() && vEmail(legEmailVal));
+
+    const needsTi = has("Voz") || has("Teams") || c.integracao;
+    const tiOk = needsTi ? Boolean(S.contatos.tiNome && vEmail(S.contatos.tiEmail)) : true;
+    const preenchidos = [projOk, finOk, legOk, (needsTi ? tiOk : null)].filter(Boolean).length;
+    const totalResp = needsTi ? 4 : 3;
+
     contextCardHtml = `
       <div class="side-context-card">
         <span class="side-context-kicker">Resumo do Contrato</span>
@@ -254,7 +266,7 @@ function drawSum() {
         ${line("Canais Ativos", canaisAtivos.join(" · ") || "Nenhum", !canaisAtivos.length)}
         ${has("WhatsApp") ? line("WhatsApp", S.whats.numero || "Pendente", !S.whats.numero) : ""}
         ${has("Voz") ? line("Voz / Telefonia", S.voz.operadora || "Pendente", !S.voz.operadora) : ""}
-        ${has("Webchat") ? line("Webchat", S.canaisConfig?.webchat?.urlSite || "Configurado", !S.canaisConfig?.webchat?.urlSite) : ""}
+        ${has("Webchat") ? line("Webchat", S.canaisConfig?.webchat?.url || "Pendente", !S.canaisConfig?.webchat?.url) : ""}
         ${has("Teams") ? line("Teams", S.canaisConfig?.teams?.tenantId ? "Configurado" : "Pendente", !S.canaisConfig?.teams?.tenantId) : ""}
         ${has("Telegram") ? line("Telegram", S.canaisConfig?.telegram?.botUsername || "Pendente", !S.canaisConfig?.telegram?.botUsername) : ""}
         ${has("Instagram") ? line("Instagram", S.canaisConfig?.instagram?.perfil || "Pendente", !S.canaisConfig?.instagram?.perfil) : ""}
@@ -262,12 +274,13 @@ function drawSum() {
       </div>
     `;
   } else if (cur === "integ") {
+    const emailIntegOk = vEmail(S.integ.contatoEmail);
     contextCardHtml = `
       <div class="side-context-card">
         <span class="side-context-kicker">Integrações de Sistemas</span>
         ${line("Sistema / ERP", S.integ.sistema || "Pendente", !S.integ.sistema)}
         ${line("Responsável Técnico", S.integ.contatoNome || "Pendente", !S.integ.contatoNome)}
-        ${line("E-mail Técnico", S.integ.contatoEmail || "Pendente", !S.integ.contatoEmail)}
+        ${line("E-mail Técnico", S.integ.contatoEmail || "Pendente", !emailIntegOk)}
       </div>
     `;
   } else if (cur === "revisao") {
@@ -322,6 +335,32 @@ function handleInputOrChange(e) {
   if (!p) return;
   const val = e.target.type === "checkbox" ? e.target.checked : e.target.value;
   set(p, val);
+
+  // Sincronização automática quando finMesmoProj ou legMesmoProj estiverem ativos
+  if (p.startsWith("contatos.proj")) {
+    const prop = p.replace("contatos.proj", "");
+    if (S.contatos.finMesmoProj) S.contatos["fin" + prop] = val;
+    if (S.contatos.legMesmoProj) S.contatos["leg" + prop] = val;
+  }
+  if (p.startsWith("contatos.fin") && p !== "contatos.finMesmoProj") {
+    S.contatos.finMesmoProj = false;
+  }
+  if (p.startsWith("contatos.leg") && p !== "contatos.legMesmoProj") {
+    S.contatos.legMesmoProj = false;
+  }
+
+  // Validação dinâmica em tempo real para inputs de e-mail
+  if (e.target.type === "email" || p.toLowerCase().includes("email")) {
+    const str = String(val || "").trim();
+    if (str && !vEmail(str)) {
+      e.target.classList.add("bad");
+      e.target.title = "Formato de e-mail inválido (ex.: nome@empresa.com.br)";
+    } else {
+      e.target.classList.remove("bad");
+      e.target.removeAttribute("title");
+    }
+  }
+
   soft();
 }
 

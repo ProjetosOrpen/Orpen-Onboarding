@@ -20,9 +20,9 @@ const S = {
   },
   contatos: {
     projNome: "", projEmail: "", projTel: "", projCargo: "",
-    finNome: "", finEmail: "", finTel: "",
-    legNome: "", legEmail: "", legTel: "",
-    tiNome: "", tiEmail: "", tiTel: ""
+    finNome: "", finEmail: "", finTel: "", finCargo: "", finMesmoProj: false,
+    legNome: "", legEmail: "", legTel: "", legCargo: "", legMesmoProj: false,
+    tiNome: "", tiEmail: "", tiTel: "", tiHorario: ""
   },
   operacao: {
     jornada: "comercial",
@@ -214,10 +214,10 @@ const vEmailOuId = v => {
   const str = String(v || "").trim();
   if (!str) return false;
   if (str.includes("@")) return vEmail(str);
-  return str.length >= 2;
+  return str.length >= 1;
 };
 const vTel = v => String(v || "").replace(/\D/g, "").length >= 10;
-const vLogin = v => String(v || "").trim().length >= 2;
+const vLogin = v => String(v || "").trim().length >= 1;
 
 function mascaraTelefone(el) {
   let v = el.value.replace(/\D/g, "");
@@ -240,7 +240,11 @@ function fi(l, p, t = "text", ph = "", extra = "") {
   const isTel = t === "tel" || p.toLowerCase().includes("tel") || l.toLowerCase().includes("telefone") || l.toLowerCase().includes("whatsapp");
   const maskAttr = isTel ? 'oninput="mascaraTelefone(this)" maxlength="15"' : '';
   const phFinal = ph || (isTel ? "(11) 99999-9999" : "");
-  return `<div class="f"><label>${l}</label><input type="${t === 'email' ? 'text' : (isTel ? 'tel' : t)}" data-path="${p}" value="${esc(v)}" placeholder="${esc(phFinal)}" ${maskAttr} ${extra}></div>`;
+  const isEmail = t === "email" || p.toLowerCase().includes("email");
+  const isBad = isEmail && v && !vEmail(v);
+  const badClass = isBad ? " bad" : "";
+  const titleAttr = isBad ? ' title="Informe um e-mail válido (ex.: nome@empresa.com.br)"' : '';
+  return `<div class="f"><label>${l}</label><input type="${isEmail ? 'email' : (isTel ? 'tel' : t)}" data-path="${p}" value="${esc(v)}" class="${badClass.trim()}" placeholder="${esc(phFinal)}" ${maskAttr} ${titleAttr} ${extra}></div>`;
 }
 function fin(p, ph) { return `<input type="text" data-path="${p}" value="${esc(get(p) ?? "")}" placeholder="${esc(ph)}">`; }
 function fta(p, ph) { return `<textarea data-path="${p}" placeholder="${esc(ph)}">${esc(get(p) ?? "")}</textarea>`; }
@@ -263,6 +267,49 @@ function next() {
 }
 
 /* ---------- ações auxiliares ---------- */
+function togglarMesmoProj(tipo) {
+  if (tipo === "fin") {
+    S.contatos.finMesmoProj = !S.contatos.finMesmoProj;
+    if (S.contatos.finMesmoProj) {
+      S.contatos.finNome = S.contatos.projNome || "";
+      S.contatos.finEmail = S.contatos.projEmail || "";
+      S.contatos.finTel = S.contatos.projTel || "";
+      S.contatos.finCargo = S.contatos.projCargo || "";
+    }
+  } else if (tipo === "leg") {
+    S.contatos.legMesmoProj = !S.contatos.legMesmoProj;
+    if (S.contatos.legMesmoProj) {
+      S.contatos.legNome = S.contatos.projNome || "";
+      S.contatos.legEmail = S.contatos.projEmail || "";
+      S.contatos.legTel = S.contatos.projTel || "";
+      S.contatos.legCargo = S.contatos.projCargo || "";
+    }
+  }
+  draw();
+}
+
+function copiarContato(de, para) {
+  if (de === "proj") {
+    S.contatos[para + "Nome"] = S.contatos.projNome || "";
+    S.contatos[para + "Cargo"] = S.contatos.projCargo || "";
+    S.contatos[para + "Email"] = S.contatos.projEmail || "";
+    S.contatos[para + "Tel"] = S.contatos.projTel || "";
+    if (para === "fin") S.contatos.finMesmoProj = true;
+    if (para === "leg") S.contatos.legMesmoProj = true;
+    toast(`Dados do Contato Principal copiados para ${para === 'fin' ? 'Financeiro' : 'Assinatura'}!`);
+    draw();
+  }
+}
+
+function copiarContatoParaInteg() {
+  const fonte = (S.contatos.tiNome && S.contatos.tiEmail) ? "ti" : "proj";
+  S.integ.contatoNome = S.contatos[fonte + "Nome"] || "";
+  S.integ.contatoEmail = S.contatos[fonte + "Email"] || "";
+  S.integ.contatoTel = S.contatos[fonte + "Tel"] || "";
+  toast(`Dados de contato (${fonte === 'ti' ? 'TI' : 'Projeto'}) copiados para a Integração!`);
+  draw();
+}
+
 function togCanal(c) {
   if (!S.contrato.canais) S.contrato.canais = [];
   const i = S.contrato.canais.indexOf(c);
