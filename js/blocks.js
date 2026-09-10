@@ -883,6 +883,8 @@ const BLOCKS = [
       const p = [];
       if (!S.ia.v2Messages || S.ia.v2Messages.length === 0) {
         p.push("Iniciar entrevista com a IA");
+      } else if (!S.ia.triagemConcluida) {
+        p.push("Concluir triagem com a IA");
       }
       return p;
     },

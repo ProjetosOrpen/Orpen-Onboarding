@@ -69,7 +69,7 @@ function renderChatQuickChips() {
   }
   return `
     <button type="button" class="chat-quick-chip" onclick="reiniciarChatAuditora()">Reiniciar Conversa</button>
-    <button type="button" class="chat-quick-chip" onclick="abrirModalPromptFinal()">Ver System Prompt</button>
+    <button type="button" class="chat-quick-chip" onclick="abrirModalPromptFinal()">${S.ia.triagemConcluida ? '✨ Ver System Prompt' : '🔒 Prompt (Aguardando Triagem)'}</button>
   `;
 }
 
@@ -89,7 +89,7 @@ function renderAuditorBanner() {
         </div>
         <p>A Auditora analisa em tempo real a densidade do prompt, prevenindo alucinações e otimizando fluxos de transbordo humano.</p>
         <div class="auditor-actions">
-          <button type="button" class="auditor-chip" onclick="abrirModalPromptFinal()">Ver System Prompt Compilado</button>
+          <button type="button" class="auditor-chip" onclick="abrirModalPromptFinal()">${S.ia.triagemConcluida ? '✨ Ver System Prompt Compilado' : '🔒 System Prompt (Aguardando Triagem)'}</button>
           <button type="button" class="auditor-chip" onclick="aplicarPerfilClinica()">Perfil Clínicas / Saúde</button>
           <button type="button" class="auditor-chip" onclick="aplicarPerfilComercial()">Perfil Comercial / Vendas</button>
           <button type="button" class="auditor-chip" onclick="setIaViewMode('${isChat ? 'form' : 'chat'}')">
@@ -130,7 +130,7 @@ function renderAuditorChatBox() {
 
       <div style="padding:12px 16px;background:var(--color-surface);border-top:1px solid var(--color-border);display:flex;justify-content:space-between;align-items:center">
         <button class="btn btn-s" onclick="setIaViewMode('form')">← Voltar ao Formulário Guiado</button>
-        <button class="btn btn-p" onclick="abrirModalPromptFinal()">Ver System Prompt Compilado</button>
+        <button class="btn ${S.ia.triagemConcluida ? 'btn-p' : 'btn-s'}" onclick="abrirModalPromptFinal()">${S.ia.triagemConcluida ? '✨ Ver System Prompt Compilado' : '🔒 System Prompt (Aguardando Triagem)'}</button>
       </div>
     </div>
   `;
@@ -673,6 +673,8 @@ function montarPayloadIaEspecialista() {
   }).join("\n\n");
 
   return {
+    message: `Por favor, elabore o System Prompt Final corporativo com base nas 8 seções obrigatórias e em todo o histórico de triagem da empresa ${S.contrato.razaoSocial || 'Cliente'}.`,
+    chatInput: `Gerar System Prompt Final para ${S.ia.nome || 'Assistente'} (${S.contrato.razaoSocial || 'Empresa'})`,
     threadId: S.ia.v2SessionId || `onb_session_${Date.now()}`,
     sessionId: S.ia.v2SessionId || `onb_session_${Date.now()}`,
     solicitante: "Orpen Onboarding",
@@ -850,8 +852,19 @@ function renderPromptModalConteudo() {
   const btnLocal = document.getElementById("btn_fonte_local");
   const btnIa = document.getElementById("btn_fonte_ia");
 
-  const isIa = S.ia.promptFonteAtiva === 'ia' && !!S.ia.promptGeradoIa;
-  const promptCode = isIa ? S.ia.promptGeradoIa : gerarPromptFinalCompilado();
+  const isIa = S.ia.promptFonteAtiva === 'ia';
+  let promptCode = "";
+  if (isIa) {
+    if (S.ia.promptGeradoIa) {
+      promptCode = S.ia.promptGeradoIa;
+    } else if (S.ia.promptIaLoading) {
+      promptCode = "/* A IA Especialista em Engenharia de Prompts está gerando o System Prompt corporativo...\nPor favor, aguarde alguns instantes enquanto o N8N processa o histórico completo da triagem e contexto da empresa. */";
+    } else {
+      promptCode = gerarPromptFinalCompilado();
+    }
+  } else {
+    promptCode = gerarPromptFinalCompilado();
+  }
 
   if (codeBox) codeBox.textContent = promptCode;
 
@@ -914,6 +927,18 @@ function salvarConfigWebhookPrompt() {
 }
 
 function abrirModalPromptFinal() {
+  if (!S.ia.triagemConcluida) {
+    toast("⚠️ A triagem ainda não foi concluída! Continue a conversa com a IA no chat para estruturar as diretrizes e liberar o System Prompt.");
+    return;
+  }
+
+  // Se a triagem foi concluída e o prompt da IA Especialista ainda não foi gerado,
+  // aciona automaticamente o Criador de Prompt via Webhook enviando todo o histórico e contexto!
+  if (!S.ia.promptGeradoIa && !S.ia.promptIaLoading) {
+    S.ia.promptFonteAtiva = "ia";
+    solicitarPromptIaEspecialista();
+  }
+
   renderPromptModalConteudo();
   document.getElementById("modal_prompt_backdrop").classList.add("open");
   if (window.lucide) {

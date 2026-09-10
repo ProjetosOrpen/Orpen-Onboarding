@@ -116,6 +116,7 @@ const S = {
     promptGeradoIa: "",
     promptFonteAtiva: "local", // "ia" | "local"
     promptIaLoading: false,
+    triagemConcluida: false, // Flag que controla se a entrevista/triagem foi finalizada pela IA
     v2SessionId: "",
     v2Messages: [],
 

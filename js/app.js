@@ -132,9 +132,15 @@ function drawSum() {
       ${line("Base Conhecimento", S.ia.baseUrl ? "Vinculada" : "Pendente", !S.ia.baseUrl)}
       ${line("Integração", S.contrato.integracao ? (S.integ.sistema || "Aguardando") : "Não contratado", !S.integ.sistema)}
 
-      <button class="btn btn-p" style="width:100%;margin-top:12px;justify-content:center;" onclick="abrirModalPromptFinal()">
-        Visualizar Prompt Final da IA
-      </button>
+      ${S.ia.triagemConcluida ? `
+        <button class="btn btn-p" style="width:100%;margin-top:12px;justify-content:center;" onclick="abrirModalPromptFinal()">
+          ${ico('sparkles')} Visualizar Prompt Final da IA
+        </button>
+      ` : `
+        <button class="btn btn-s" style="width:100%;margin-top:12px;justify-content:center;opacity:0.75;" onclick="toast('⚠️ Conclua a triagem no chat da IA para estruturar as informações e liberar o System Prompt.')" title="Disponível após a conclusão da triagem">
+          ${ico('lock')} Prompt Bloqueado (Aguardando Triagem)
+        </button>
+      `}
     `;
   } else if (cur === "contrato") {
     const preenchidos = [S.contatos.projNome, S.contatos.finNome, S.contatos.legNome, (has("Voz")||c.integracao ? S.contatos.tiNome : true)].filter(Boolean).length;

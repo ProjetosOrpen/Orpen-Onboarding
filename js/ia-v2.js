@@ -119,6 +119,13 @@ function sincronizarVariaveisExtraidas(data) {
   setIf("faqRespNome", data.faqRespNome);
   setIf("faqRespEmail", data.faqRespEmail);
 
+  if (data.triagemConcluida === true || data.concluido === true || data.finished === true || data.status === "concluido") {
+    if (!S.ia.triagemConcluida) {
+      S.ia.triagemConcluida = true;
+      updated = true;
+    }
+  }
+
   if (updated) {
     toast("Variáveis do assistente sincronizadas em tempo real via IA!");
     soft();
@@ -131,9 +138,9 @@ function extrairVariaveisDeTexto(botReply, userText) {
   if (!botReply || typeof botReply !== "string") return;
   let updated = false;
 
-  // 1. Extração do Nome da IA (ex: "### Resumo da Ires", "Nome: Ires")
+  // 1. Extração do Nome da IA (ex: "Assistente: Max", "### Resumo da Ires")
   const mNome = botReply.match(/###\s*Resumo\s+d[ao]\s+([A-Za-zÀ-ÿ0-9_-]+)/i) ||
-                botReply.match(/(?:nome\s+d[ao]\s+assistente|nome\s+da\s+ia):\s*([A-Za-zÀ-ÿ0-9_-]+)/i);
+                botReply.match(/(?:Assistente|nome\s+d[ao]\s+assistente|nome\s+da\s+ia):\s*([A-Za-zÀ-ÿ0-9_-]+)/i);
   if (mNome && mNome[1]) {
     const cleanNome = mNome[1].trim();
     if (cleanNome && cleanNome !== S.ia.nome) {
@@ -160,16 +167,17 @@ function extrairVariaveisDeTexto(botReply, userText) {
   }
 
   // 4. Extração de Blindagens e Restrições
-  const mBlind = botReply.match(/Blindagens:\s*([^\n\r]+)/i);
+  const mBlind = botReply.match(/###\s*Restrições\s+e\s+blindagens\s*\n+([\s\S]+?)(?:\n\s*Transbordo|\n\s*Parabéns|\n\s*\n\s*\n|$)/i) ||
+                botReply.match(/(?:Blindagens|Restrições):\s*([^\n\r]+)/i);
   if (mBlind && mBlind[1] && mBlind[1].length > 10) {
     S.ia.restricoes = mBlind[1].trim();
     updated = true;
   }
 
   // 5. Extração de Transbordo Humano / Filas
-  const mTrans = botReply.match(/Transbordo\s+humano:\s*([^\n\r]+)/i);
+  const mTrans = botReply.match(/Transbordo(?:\s+humano)?:\s*([^\n\r]+)/i);
   if (mTrans && mTrans[1]) {
-    const filas = mTrans[1].match(/Fila\s+de\s+[^,;\.\)]+/gi);
+    const filas = mTrans[1].match(/(?:Fila|fila)\s+[^\s,;\.\)]+/gi);
     if (filas && filas.length) {
       S.ia.topicosTransbordo = Array.from(new Set(filas.map(f => f.trim())));
       updated = true;
@@ -185,15 +193,35 @@ function extrairVariaveisDeTexto(botReply, userText) {
   }
 
   // 7. Extração de Destinos das filas se especificados
-  if (mTrans && S.ia.fluxosPreAtendimento) {
-    if (/consultas/i.test(mTrans[1])) {
+  const mDestConsulta = botReply.match(/Triagem\s+de\s+consultas[\s\S]*?Destino:\s*([^\n\r\.]+)/i);
+  const mDestExame = botReply.match(/Triagem\s+de\s+exames[\s\S]*?Destino:\s*([^\n\r\.]+)/i);
+
+  if (S.ia.fluxosPreAtendimento) {
+    if (mDestConsulta && mDestConsulta[1]) {
+      const fConsulta = S.ia.fluxosPreAtendimento.find(f => /consulta/i.test(f.nome));
+      if (fConsulta) fConsulta.destino = mDestConsulta[1].trim();
+    } else if (mTrans && /consultas/i.test(mTrans[1])) {
       const fConsulta = S.ia.fluxosPreAtendimento.find(f => /consulta/i.test(f.nome));
       if (fConsulta) fConsulta.destino = "Fila de Consultas";
     }
-    if (/atendimento/i.test(mTrans[1])) {
+
+    if (mDestExame && mDestExame[1]) {
+      const fExame = S.ia.fluxosPreAtendimento.find(f => /exame/i.test(f.nome));
+      if (fExame) fExame.destino = mDestExame[1].trim();
+    } else if (mTrans && /atendimento/i.test(mTrans[1])) {
       const fExame = S.ia.fluxosPreAtendimento.find(f => /exame/i.test(f.nome));
       if (fExame) fExame.destino = "Fila de Atendimento";
     }
+  }
+
+  // 8. Detecção heurística de Conclusão da Triagem / Atendimento da IA
+  const isConcluidoTexto = /auditoria concluída|setup concluído|parabéns.*estrutura inicial|estrutura inicial.*validada|triagem concluída|mapeamento concluído|onboarding concluído/i.test(botReply) ||
+    (/###\s*Resumo\s+d[ao]/i.test(botReply) && /Transbordo/i.test(botReply));
+
+  if (isConcluidoTexto && !S.ia.triagemConcluida) {
+    S.ia.triagemConcluida = true;
+    updated = true;
+    toast("🎉 Triagem da IA concluída com sucesso! O System Prompt foi liberado.");
   }
 
   if (updated) {
@@ -351,6 +379,9 @@ async function sendIaV2Message(customText) {
         if (!extracted) {
           extracted = obj.extractedData || obj.state || obj.parsed_ai;
         }
+        if (obj.triagemConcluida === true || obj.concluido === true || obj.finished === true || obj.status === "concluido") {
+          S.ia.triagemConcluida = true;
+        }
       }
     }
 
@@ -405,9 +436,20 @@ function reiniciarChatIaV2() {
   const slug = (S.contrato.razaoSocial || "cliente").toLowerCase().replace(/[^a-z0-9]/g, "_").slice(0, 18);
   S.ia.v2SessionId = `onb_${slug}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
   S.ia.v2Messages = [];
+  S.ia.triagemConcluida = false;
+  S.ia.promptGeradoIa = "";
+  S.ia.promptFonteAtiva = "local";
   IA_V2_LOADING = false;
   draw();
   toast("Conversa reiniciada com nova sessão!");
+}
+
+function finalizarTriagemManual() {
+  S.ia.triagemConcluida = true;
+  toast("✅ Triagem finalizada com sucesso! O System Prompt foi liberado.");
+  soft();
+  draw();
+  abrirModalPromptFinal();
 }
 
 function renderIaV2MessagesHtml() {
@@ -455,6 +497,25 @@ function renderIaV2MessagesHtml() {
     `;
   }
 
+  if (S.ia.triagemConcluida && !IA_V2_LOADING) {
+    html += `
+      <div class="ia-triagem-concluida-card">
+        <div class="ia-triagem-badge-row">
+          <span class="badge-status-concluido">${ico('check-circle')} Triagem Finalizada com Sucesso</span>
+        </div>
+        <h3 class="ia-triagem-card-title">Mapeamento da ${esc(S.ia.nome || 'IA')} Concluído!</h3>
+        <p class="ia-triagem-card-desc">
+          Todas as diretrizes de persona, autonomia, restrições e filas foram apuradas. Ao clicar abaixo, todo o histórico e contexto da conversa serão enviados automaticamente para a IA Especialista gerar o System Prompt corporativo.
+        </p>
+        <div class="ia-triagem-actions-row">
+          <button type="button" class="btn btn-p ia-btn-pulse" onclick="abrirModalPromptFinal()">
+            ${ico('sparkles')} Visualizar System Prompt Final
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
   return html;
 }
 
@@ -487,8 +548,24 @@ function renderIaV2Chat() {
         </div>
 
         <div class="ia-v2-header-actions">
+          ${S.ia.triagemConcluida ? `
+            <span class="badge-status-concluido">${ico('check-circle')} Triagem Concluída</span>
+            <button type="button" class="btn btn-p sm ia-btn-pulse" onclick="abrirModalPromptFinal()" title="Visualizar System Prompt Final">
+              ${ico('sparkles')} Ver Prompt Final
+            </button>
+          ` : `
+            <span class="badge-status-em-andamento">${ico('clock')} Triagem em Andamento</span>
+            <button type="button" class="btn btn-s sm" style="opacity:0.65;cursor:not-allowed;" onclick="toast('⚠️ Conclua a triagem no chat da IA para estruturar as informações e liberar o System Prompt.')" title="Disponível após a conclusão da triagem">
+              ${ico('lock')} Prompt Bloqueado
+            </button>
+            ${(S.ia.v2Messages && S.ia.v2Messages.length >= 2) ? `
+              <button type="button" class="btn btn-s sm" onclick="finalizarTriagemManual()" title="Concluir triagem e liberar prompt">
+                ${ico('check')} Concluir Triagem
+              </button>
+            ` : ''}
+          `}
           <button type="button" class="btn btn-s sm" onclick="reiniciarChatIaV2()" title="Limpar mensagens e reiniciar">
-            ${ico('refresh-cw')} Reiniciar Conversa
+            ${ico('refresh-cw')} Reiniciar
           </button>
         </div>
       </div>
